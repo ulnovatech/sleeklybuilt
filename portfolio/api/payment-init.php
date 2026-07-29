@@ -120,7 +120,7 @@ try {
                 'name' => $fullName,
             ],
             'customizations' => [
-                'title' => 'UlnovaTech Template Deposit',
+                'title' => 'SleeklyBuilt Template Deposit',
                 'description' => 'Choose ' . $templateKey . ' — ' . $package['title'],
                 'logo' => $cfg['logo_url'],
             ],

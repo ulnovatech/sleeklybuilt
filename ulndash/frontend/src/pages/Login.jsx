@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { siteConfig } from '../site.config'
 
 export default function Login() {
   const { user, login } = useAuth()
@@ -33,7 +34,7 @@ export default function Login() {
     <div className="min-h-screen bg-[#0b1220] flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-2xl border border-gray-800 bg-[#111827] p-8 shadow-2xl">
         <div className="mb-8 text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-brand">UlnovaTech</p>
+          <p className="text-sm font-semibold uppercase tracking-widest text-brand">{siteConfig.name}</p>
           <h1 className="mt-2 text-2xl font-bold text-white">CRM Sign In</h1>
           <p className="mt-2 text-sm text-slate-400">Access leads, companies, and requests securely.</p>
         </div>

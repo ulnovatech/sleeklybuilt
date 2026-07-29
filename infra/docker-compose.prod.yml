@@ -7,6 +7,10 @@ services:
 
   php-fpm:
     restart: always
+    volumes:
+      - /opt/ulnovatech/data/template-imports:/var/lib/ulnovatech/template-imports
+      - /opt/ulnovatech/logs/template-import:/var/log/ulnovatech/template-import
+      - /opt/ulnovatech/data/template-profiles:/var/lib/ulnovatech/template-profiles
 
   nginx:
     restart: always

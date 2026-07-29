@@ -34,6 +34,9 @@ services:
       - ${PUBLIC_HTML_PATH:-../public_html}:/var/www/public_html
       - ${ULNOVATECH_ENV_FILE:-./env/docker.ulnovatech.env.example}:/var/www/public_html/php/.env:ro
       - ${ULNOVATECH_ENV_FILE:-./env/docker.ulnovatech.env.example}:/var/www/public_html/ulndash/backend/.env:ro
+      - template_import_data:/var/lib/ulnovatech/template-imports
+      - template_import_logs:/var/log/ulnovatech/template-import
+      - template_profile_data:/var/lib/ulnovatech/template-profiles
     depends_on:
       mysql:
         condition: service_healthy
@@ -58,6 +61,9 @@ services:
 
 volumes:
   mysql_data:
+  template_import_data:
+  template_import_logs:
+  template_profile_data:
 
 networks:
   ulnovatech:

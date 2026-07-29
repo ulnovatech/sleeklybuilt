@@ -1,27 +1,29 @@
 <?php
-require 'db.php';
 
-$category = 'Health'; // Example
-$baseDir = $_SERVER['DOCUMENT_ROOT'] . "/portfolio/frontend/portfolio/";
-$folders = array_diff(scandir($baseDir), ['.', '..']);
+declare(strict_types=1);
 
-foreach ($folders as $folder) {
-    $folderPath = $baseDir . $folder;
-    if (is_dir($folderPath)) {
-        // Check if already in DB
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM templates WHERE folder_name = ?");
-        $stmt->execute([$folder]);
-        if ($stmt->fetchColumn() == 0) {
-            // Generate next name
-            $stmt = $pdo->prepare("SELECT COUNT(*) FROM templates WHERE category = ?");
-            $stmt->execute([$category]);
-            $count = $stmt->fetchColumn() + 1;
-            $name = "$category " . ["One","Core","Line","Prime"][$count-1];
-            
-            // Insert into DB
-            $stmt = $pdo->prepare("INSERT INTO templates (name, category, folder_name) VALUES (?, ?, ?)");
-            $stmt->execute([$name, $category, $folder]);
-        }
-    }
+/**
+ * Retired legacy endpoint.
+ *
+ * This script previously scanned an obsolete directory, assigned every
+ * template to a hardcoded category, and mutated the database without
+ * authentication. Template publication is now owned by the authenticated
+ * Unldash import workflow.
+ */
+
+$message = [
+    'error' => 'Template registration through rename_template.php has been retired.',
+    'code' => 'TEMPLATE_IMPORT_LEGACY_ENDPOINT_RETIRED',
+    'next' => 'Use the authenticated Unldash Templates workflow.',
+];
+
+if (PHP_SAPI === 'cli') {
+    fwrite(STDERR, $message['error'] . PHP_EOL);
+    fwrite(STDERR, $message['next'] . PHP_EOL);
+    exit(1);
 }
-echo "Templates updated!";
+
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+http_response_code(410);
+echo json_encode($message, JSON_UNESCAPED_SLASHES);

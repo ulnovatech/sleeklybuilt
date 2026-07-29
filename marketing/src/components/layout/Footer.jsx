@@ -6,46 +6,35 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer id="footer" className="bg-[#000910] text-slate-200">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <a href={siteConfig.links.home} className="inline-flex items-center gap-3">
-              <img
-                src={siteConfig.links.logo}
-                alt={siteConfig.name}
-                className="h-10 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none'
-                }}
-              />
-              <span className="text-lg font-semibold text-white">{siteConfig.name}</span>
-            </a>
-            <p className="mt-4 text-sm text-slate-400">{siteConfig.tagline}</p>
-            <div className="mt-5 space-y-2 text-sm text-slate-300">
+    <footer id="footer" className="mt-16 border-t border-cream-deep bg-emerald-deep text-cream">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10 lg:py-20">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
+          <div className="lg:col-span-5">
+            <div className="serif max-w-md text-3xl leading-[1.1] md:text-4xl">
+              Software built sleek, delivered with care.
+            </div>
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-cream/70">{siteConfig.description}</p>
+            <div className="mt-6 space-y-2 text-sm text-cream/85">
               <p>{siteConfig.location}</p>
-              {siteConfig.phones.map((phone) => (
-                <p key={phone}>
-                  <a href={`tel:${phone.replace(/\s/g, '')}`} className="hover:text-brand">
-                    {phone}
-                  </a>
-                </p>
-              ))}
               <p>
-                <a href={`mailto:${siteConfig.email}`} className="hover:text-brand">
+                <a href={`mailto:${siteConfig.email}`} className="hover:text-gold focus:outline-none focus-visible:underline">
                   {siteConfig.email}
                 </a>
               </p>
-              <p className="text-slate-500">{siteConfig.addressNote}</p>
+              <p>
+                <a href={`tel:${siteConfig.primaryPhone}`} className="hover:text-gold focus:outline-none focus-visible:underline">
+                  {siteConfig.primaryPhone}
+                </a>
+              </p>
             </div>
-            <div className="mt-5 flex gap-3">
+            <div className="mt-5 flex flex-wrap gap-2">
               {Object.entries(siteConfig.social).map(([key, href]) => (
                 <a
                   key={key}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-md border border-slate-700 px-2.5 py-1 text-xs uppercase tracking-wide text-slate-300 hover:border-brand hover:text-brand"
+                  className="rounded-full border border-cream/20 px-3 py-1 text-xs uppercase tracking-wide text-cream/80 transition hover:border-gold hover:text-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                 >
                   {key}
                 </a>
@@ -53,29 +42,25 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="lg:col-span-2">
-            <FooterLinks title="Useful Links" links={footerUsefulLinks} />
+          <div className="grid gap-10 sm:grid-cols-2 lg:col-span-4">
+            <FooterLinks title="Explore" links={footerUsefulLinks} />
+            <FooterLinks title="Services" links={footerServiceLinks} />
           </div>
 
-          <div className="lg:col-span-2">
-            <FooterLinks title="Our Services" links={footerServiceLinks} />
-          </div>
-
-          <div className="lg:col-span-4">
-            <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white">Our Newsletter</h4>
-            <p className="mb-4 text-sm text-slate-400">
-              Subscribe for updates about our products and services.
+          <div className="lg:col-span-3">
+            <p className="eyebrow mb-4 text-gold">Newsletter</p>
+            <p className="mb-4 text-sm leading-relaxed text-cream/70">
+              Updates on new templates, services, and product news.
             </p>
             <NewsletterForm />
           </div>
         </div>
-      </div>
 
-      <div className="border-t border-slate-800">
-        <div className="mx-auto max-w-7xl px-4 py-6 text-center text-sm text-slate-500 sm:px-6 lg:px-8">
+        <div className="mt-14 flex flex-col justify-between gap-3 border-t border-cream/15 pt-8 text-xs text-cream/55 md:flex-row">
           <p>
-            © {year} <strong className="text-slate-300">{siteConfig.name}</strong>. All rights reserved.
+            © {year} {siteConfig.name}. All rights reserved.
           </p>
+          <p>Designed and built with intention.</p>
         </div>
       </div>
     </footer>

@@ -154,3 +154,54 @@ export const ProspectsAPI = {
       headers: {},
     }),
 };
+
+export const TemplatesAPI = {
+  list: () => request('/templates'),
+  sections: (slug) =>
+    request(`/templates/${encodeURIComponent(slug)}/sections`),
+  previewSections: (slug, payload) =>
+    request(`/templates/${encodeURIComponent(slug)}/sections/preview`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  applySectionDraft: (slug, token) =>
+    request(
+      `/templates/${encodeURIComponent(slug)}/section-drafts/${encodeURIComponent(token)}/apply`,
+      { method: 'POST' },
+    ),
+  rollbackSections: (slug) =>
+    request(`/templates/${encodeURIComponent(slug)}/sections/rollback`, {
+      method: 'POST',
+    }),
+  update: (slug, payload) =>
+    request(`/templates/${encodeURIComponent(slug)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+};
+
+export const TemplateImportsAPI = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/template-imports${qs ? `?${qs}` : ''}`);
+  },
+  get: (id) => request(`/template-imports/${encodeURIComponent(id)}`),
+  create: (payload) =>
+    request('/template-imports', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  publish: (id, force = false) =>
+    request(`/template-imports/${encodeURIComponent(id)}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({ force }),
+    }),
+  rollback: (id) =>
+    request(`/template-imports/${encodeURIComponent(id)}/rollback`, {
+      method: 'POST',
+    }),
+  discard: (id) =>
+    request(`/template-imports/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+};

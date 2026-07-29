@@ -54,5 +54,7 @@ export function getEnv(): Env {
 }
 
 export function isDevAuthEnabled(): boolean {
-  return process.env.ALLOW_DEV_AUTH === 'true' && process.env.NODE_ENV !== 'production';
+  // Match dashboard middleware: Next production builds inline NODE_ENV=production,
+  // so gating on NODE_ENV would disable interim GCE deploys that rely on ALLOW_DEV_AUTH.
+  return process.env.ALLOW_DEV_AUTH === 'true';
 }

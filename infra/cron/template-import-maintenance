@@ -1,0 +1,4 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+17 3 * * * root /bin/bash /opt/ulnovatech/repo/infra/scripts/run-template-import-maintenance.sh 2>&1 | /usr/bin/logger -t ulnovatech-template-import-maintenance

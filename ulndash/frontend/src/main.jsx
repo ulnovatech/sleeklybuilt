@@ -1,9 +1,9 @@
-import { lazy, Suspense, StrictMode } from 'react'
+import { lazy, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
-import RouteFallback from './components/RouteFallback'
+import LazyPage from './components/LazyPage'
 import App from './App'
 import Login from './pages/Login'
 import './index.css'
@@ -20,10 +20,7 @@ const ImportCSV = lazy(() => import('./pages/ImportCSV'))
 const ImportCompetitors = lazy(() => import('./pages/ImportCompetitors'))
 const Prospects = lazy(() => import('./pages/Prospects'))
 const ImportProspects = lazy(() => import('./pages/ImportProspects'))
-
-function LazyPage({ children }) {
-  return <Suspense fallback={<RouteFallback />}>{children}</Suspense>
-}
+const Templates = lazy(() => import('./pages/Templates'))
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -51,6 +48,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="import" element={<LazyPage><ImportCSV /></LazyPage>} />
             <Route path="import/competitors" element={<LazyPage><ImportCompetitors /></LazyPage>} />
             <Route path="import/prospects" element={<LazyPage><ImportProspects /></LazyPage>} />
+            <Route path="templates" element={<LazyPage><Templates /></LazyPage>} />
             <Route path="*" element={<div className="p-8 text-center text-red-500">404 — Page Not Found</div>} />
           </Route>
         </Routes>

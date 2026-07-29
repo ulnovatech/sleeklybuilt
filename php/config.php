@@ -19,6 +19,9 @@ $isLocalHost = $httpHost === 'localhost'
 $isLocalBaseUrl = str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1');
 $ENV = ($isLocalHost || $isLocalBaseUrl) ? 'local' : 'production';
 
+/** Customer-facing brand name (override via BRAND_NAME env). */
+$BRAND_NAME = getenv('BRAND_NAME') ?: 'SleeklyBuilt';
+
 // 2️⃣ Base URL
 $BASE_URL = getenv('BASE_URL') ?: ($ENV === 'local' ? 'http://localhost/ulnovatech' : 'https://ulnovatech.store');
 

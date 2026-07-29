@@ -1,4 +1,5 @@
-import SectionTitle from './SectionTitle'
+import { Section, SectionHeading } from '../site/Section'
+import { SurfaceCard } from '../site/ui'
 import {
   FaBriefcase,
   FaClipboardCheck,
@@ -64,50 +65,51 @@ export default function ServicesExtendedSection({ onOpenInquiry }) {
   ]
 
   return (
-    <section id="services-2" className="scroll-mt-24 bg-gray-50 py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <SectionTitle title="Services" description="CHECK OUT OUR SERVICES" />
+    <Section id="services-2" className="scroll-mt-24 bg-cream-deep/40 py-16 md:py-24">
+      <SectionHeading
+        eyebrow="More services"
+        title="Everything you need to launch and grow"
+        intro="From design and integrations to marketing and ongoing support."
+        align="center"
+        className="mx-auto"
+      />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {items.map((item) => (
-            <article
-              key={item.title}
-              className="group relative flex gap-4 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:border-brand/40 hover:shadow-md"
-            >
-              <div className="mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand ring-1 ring-brand/15">
-                <span className="text-lg">{item.icon}</span>
+      <div className="mt-12 grid gap-4 md:grid-cols-2">
+        {items.map((item) => (
+          <SurfaceCard key={item.title} interactive as="article" className="flex gap-4">
+            <div className="mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-deep/10 text-emerald-deep ring-1 ring-emerald/15">
+              <span className="text-lg">{item.icon}</span>
+            </div>
+
+            <div className="min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <a
+                  href={item.href}
+                  className="truncate text-base font-semibold text-emerald-deep hover:text-emerald"
+                  aria-label={item.title}
+                >
+                  {item.title}
+                </a>
+                <FaArrowRight className="mt-1 shrink-0 text-cream-deep transition group-hover:text-emerald" />
               </div>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{item.description}</p>
 
-              <div className="min-w-0">
-                <div className="flex items-start justify-between gap-3">
-                  <a
-                    href={item.href}
-                    className="truncate text-base font-semibold text-gray-900 hover:text-brand"
-                    aria-label={item.title}
+              {item.inquiryId && typeof onOpenInquiry === 'function' ? (
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => onOpenInquiry(item.inquiryId)}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-deep hover:text-emerald focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald focus-visible:ring-offset-2"
                   >
-                    {item.title}
-                  </a>
-                  <FaArrowRight className="mt-1 shrink-0 text-gray-300 transition group-hover:text-brand" />
+                    Request a quote <span aria-hidden="true">→</span>
+                  </button>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">{item.description}</p>
-
-                {item.inquiryId && typeof onOpenInquiry === 'function' ? (
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => onOpenInquiry(item.inquiryId)}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:text-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                    >
-                      Request a quote <span aria-hidden="true">→</span>
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-            </article>
-          ))}
-        </div>
+              ) : null}
+            </div>
+          </SurfaceCard>
+        ))}
       </div>
-    </section>
+    </Section>
   )
 }
 

@@ -2,18 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Foundation only (Chunk 1). Real design tokens come later. */
+/* SleeklyBuilt design tokens — adapted from Clarity inspiration */
+:root {
+  --cream: #f8f4ec;
+  --cream-deep: #ede5d6;
+  --emerald-deep: #2d5346;
+  --emerald: #3f7a62;
+  --emerald-soft: #5f9a82;
+  --gold: #d4a84b;
+  --gold-soft: #e4c47a;
+  --ink: #38342e;
+  --ink-soft: #5c5852;
+  --radius: 0.5rem;
+}
+
 html,
 body {
   height: 100%;
 }
 
-body {
-  margin: 0;
-}
-
 html {
   scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--cream);
+  color: var(--ink);
+  font-family: 'Work Sans', system-ui, sans-serif;
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-emerald;
+  }
+
+  .serif {
+    font-family: 'Instrument Serif', Georgia, serif;
+  }
+
+  .hairline {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--gold) 55%, transparent),
+      transparent
+    );
+  }
 }
 
 @keyframes portfolio-twinkle {

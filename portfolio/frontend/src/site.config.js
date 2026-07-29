@@ -1,11 +1,13 @@
 export const siteConfig = {
-  name: 'UlnovaTech',
+  name: 'SleeklyBuilt',
+  tagline: 'Websites, apps & systems — built sleek, built right',
   email: 'ulnovatech@gmail.com',
   location: 'Kampala, Uganda',
   phones: ['+256 791779448', '+256 749594464', '+256 772169960'],
   primaryPhone: '+256791779448',
   whatsapp: 'https://wa.me/256749594464',
   scheduleCall: 'tel:+256791779448',
+  homeUrl: import.meta.env.DEV ? 'http://localhost/ulnovatech/' : '/',
 }
 
 export const apiEndpoints = {

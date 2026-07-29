@@ -8,8 +8,26 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#ff4a17',
-          dark: '#e03e10',
+          DEFAULT: '#3f7a62',
+          dark: '#2d5346',
+          light: '#5f9a82',
+        },
+        cream: {
+          DEFAULT: '#f8f4ec',
+          deep: '#ede5d6',
+        },
+        emerald: {
+          deep: '#2d5346',
+          DEFAULT: '#3f7a62',
+          soft: '#5f9a82',
+        },
+        gold: {
+          DEFAULT: '#d4a84b',
+          soft: '#e4c47a',
+        },
+        ink: {
+          DEFAULT: '#38342e',
+          soft: '#5c5852',
         },
       },
       animation: {

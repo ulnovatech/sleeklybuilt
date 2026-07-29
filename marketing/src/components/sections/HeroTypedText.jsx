@@ -23,8 +23,8 @@ export default function HeroTypedText() {
     if (!ready) return
     if (!prefixRef.current || !swapRef.current || !suffixRef.current) return
 
-    const greenColor = 'green'
-    const accentColor = '#ff4a17'
+    const greenColor = '#5f9a82'
+    const accentColor = '#d4a84b'
 
     const swapWords = ['APPS', 'WEBSITES', 'GRAPHICS', 'SOFTWARE']
     const phase1Text = ['BUILDING', 'TECH', 'THAT WORK — YOUR WAY.']
@@ -150,7 +150,7 @@ export default function HeroTypedText() {
   return (
     <span
       id="animated-sentence"
-      className="block text-balance text-center text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl"
+      className="block text-balance text-center text-3xl font-extrabold leading-tight tracking-tight text-cream sm:text-5xl"
       aria-label="Building tech that works — your way"
     >
       <span className="inline-flex flex-col items-center">

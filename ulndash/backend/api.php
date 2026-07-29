@@ -13,6 +13,8 @@ require_once __DIR__ . '/controllers/ImportController.php';
 require_once __DIR__ . '/controllers/InteractionController.php';
 require_once __DIR__ . '/controllers/CompetitorsController.php';
 require_once __DIR__ . '/controllers/ProspectsController.php';
+require_once __DIR__ . '/controllers/TemplateImportController.php';
+require_once __DIR__ . '/controllers/TemplateCatalogController.php';
 
 $auth = new SessionAuth();
 $mobileAuth = new MobileTokenAuth();
@@ -76,9 +78,186 @@ try {
     $interactionController = new InteractionController($pdo);
     $competitorsController = new CompetitorsController($pdo);
     $prospectsController = new ProspectsController($pdo);
+    $templateImportController = new TemplateImportController(
+        $pdo,
+        new TemplateImportLauncher()
+    );
+    $templateCatalogController = new TemplateCatalogController(
+        null,
+        new TemplateAuditLogger($pdo)
+    );
 
     // Normalize path
     $path = rtrim($path, '/');
+
+    if (strpos($path, '/api/template-imports') === 0) {
+        try {
+            if ($method === 'GET' && $path === '/api/template-imports') {
+                echo json_encode($templateImportController->index($_GET));
+            } elseif (
+                $method === 'GET' &&
+                preg_match(
+                    '#^/api/template-imports/(\d+)/preview(?:/(.*))?$#',
+                    $path,
+                    $matches
+                )
+            ) {
+                $templateImportController->servePreview(
+                    (int) $matches[1],
+                    (string) ($matches[2] ?? '')
+                );
+            } elseif (
+                $method === 'GET' &&
+                preg_match('#^/api/template-imports/(\d+)$#', $path, $matches)
+            ) {
+                echo json_encode($templateImportController->show((int) $matches[1]));
+            } elseif ($method === 'POST' && $path === '/api/template-imports') {
+                $job = $templateImportController->create(json_body(), $apiAuth->user());
+                http_response_code(201);
+                echo json_encode($job);
+            } elseif (
+                $method === 'POST' &&
+                preg_match('#^/api/template-imports/(\d+)/publish$#', $path, $matches)
+            ) {
+                $body = json_body();
+                $force = array_key_exists('force', $body) && $body['force'] === true;
+                echo json_encode(
+                    $templateImportController->publish(
+                        (int) $matches[1],
+                        $force,
+                        $apiAuth->user()
+                    )
+                );
+            } elseif (
+                $method === 'POST' &&
+                preg_match('#^/api/template-imports/(\d+)/rollback$#', $path, $matches)
+            ) {
+                echo json_encode(
+                    $templateImportController->rollback(
+                        (int) $matches[1],
+                        $apiAuth->user()
+                    )
+                );
+            } elseif (
+                $method === 'DELETE' &&
+                preg_match('#^/api/template-imports/(\d+)$#', $path, $matches)
+            ) {
+                echo json_encode(
+                    $templateImportController->discard(
+                        (int) $matches[1],
+                        $apiAuth->user()
+                    )
+                );
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+        } catch (InvalidArgumentException | RuntimeException $e) {
+            $code = (int) $e->getCode();
+            if ($code < 400 || $code > 599) {
+                $code = 500;
+            }
+            if ($code === 429) {
+                header('Retry-After: 3600');
+            }
+            http_response_code($code);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    if (strpos($path, '/api/templates') === 0) {
+        try {
+            if ($method === 'GET' && $path === '/api/templates') {
+                echo json_encode($templateCatalogController->index());
+            } elseif (
+                $method === 'GET' &&
+                preg_match(
+                    '#^/api/templates/([^/]+)/section-drafts/([a-f0-9]{48})/preview(?:/(.*))?$#',
+                    $path,
+                    $matches
+                )
+            ) {
+                $templateCatalogController->serveSectionDraft(
+                    $matches[1],
+                    $matches[2],
+                    (string) ($matches[3] ?? ''),
+                    $apiAuth->user()
+                );
+            } elseif (
+                $method === 'GET' &&
+                preg_match('#^/api/templates/([^/]+)/sections$#', $path, $matches)
+            ) {
+                echo json_encode($templateCatalogController->sections($matches[1]));
+            } elseif (
+                $method === 'POST' &&
+                preg_match(
+                    '#^/api/templates/([^/]+)/sections/preview$#',
+                    $path,
+                    $matches
+                )
+            ) {
+                echo json_encode(
+                    $templateCatalogController->previewSections(
+                        $matches[1],
+                        json_body(),
+                        $apiAuth->user()
+                    )
+                );
+            } elseif (
+                $method === 'POST' &&
+                preg_match(
+                    '#^/api/templates/([^/]+)/section-drafts/([a-f0-9]{48})/apply$#',
+                    $path,
+                    $matches
+                )
+            ) {
+                echo json_encode(
+                    $templateCatalogController->applySectionDraft(
+                        $matches[1],
+                        $matches[2],
+                        $apiAuth->user()
+                    )
+                );
+            } elseif (
+                $method === 'POST' &&
+                preg_match(
+                    '#^/api/templates/([^/]+)/sections/rollback$#',
+                    $path,
+                    $matches
+                )
+            ) {
+                echo json_encode(
+                    $templateCatalogController->rollbackSections(
+                        $matches[1],
+                        $apiAuth->user()
+                    )
+                );
+            } elseif (
+                $method === 'PATCH' &&
+                preg_match('#^/api/templates/([^/]+)$#', $path, $matches)
+            ) {
+                echo json_encode(
+                    $templateCatalogController->update(
+                        $matches[1],
+                        json_body(),
+                        $apiAuth->user()
+                    )
+                );
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+        } catch (InvalidArgumentException | RuntimeException $e) {
+            $code = (int) $e->getCode();
+            if ($code < 400 || $code > 599) {
+                $code = 500;
+            }
+            http_response_code($code);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
 
     if (strpos($path, '/api/companies') === 0) {
         if ($method === 'GET') {

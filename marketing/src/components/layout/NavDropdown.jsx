@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { buttonClass } from './NavMenu'
 
 function NavLink({ item, onNavigate, className = '', style, ...rest }) {
   if (!item.href) {
@@ -25,21 +26,21 @@ function NavLink({ item, onNavigate, className = '', style, ...rest }) {
   )
 }
 
-function DropdownPanel({ items, depth = 0, onNavigate }) {
+function DropdownPanel({ items, depth = 0, onNavigate, tone }) {
   return (
     <ul
-      className={`min-w-[14rem] rounded-xl border border-slate-700/80 bg-[#0b1218] py-2 shadow-xl ${
+      className={`min-w-[14rem] rounded-xl border border-cream-deep bg-white py-2 shadow-lg ring-1 ring-black/5 ${
         depth > 0 ? 'ml-1' : ''
       }`}
     >
       {items.map((item) => (
-        <NavDropdownItem key={`${item.label}-${depth}`} item={item} depth={depth} onNavigate={onNavigate} />
+        <NavDropdownItem key={`${item.label}-${depth}`} item={item} depth={depth} onNavigate={onNavigate} tone={tone} />
       ))}
     </ul>
   )
 }
 
-function NavDropdownItem({ item, depth, onNavigate }) {
+function NavDropdownItem({ item, depth, onNavigate, tone }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -52,12 +53,15 @@ function NavDropdownItem({ item, depth, onNavigate }) {
     return () => document.removeEventListener('mousedown', close)
   }, [open])
 
+  const itemClass =
+    'block px-4 py-2.5 text-sm text-ink-soft hover:bg-cream hover:text-emerald-deep focus:outline-none focus-visible:bg-cream focus-visible:text-emerald-deep'
+
   if (item.children?.length) {
     return (
       <li ref={ref} className="relative">
         <button
           type="button"
-          className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm text-slate-200 hover:bg-white/5 hover:text-brand"
+          className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm ${itemClass}`}
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
@@ -66,7 +70,7 @@ function NavDropdownItem({ item, depth, onNavigate }) {
         </button>
         {open && (
           <div className={`${depth === 0 ? 'absolute left-0 top-full z-50 pt-2' : 'pl-3 pt-1'}`}>
-            <DropdownPanel items={item.children} depth={depth + 1} onNavigate={onNavigate} />
+            <DropdownPanel items={item.children} depth={depth + 1} onNavigate={onNavigate} tone={tone} />
           </div>
         )}
       </li>
@@ -75,17 +79,13 @@ function NavDropdownItem({ item, depth, onNavigate }) {
 
   return (
     <li>
-      <NavLink
-        item={item}
-        onNavigate={onNavigate}
-        className="block px-4 py-2.5 text-sm text-slate-200 hover:bg-white/5 hover:text-brand"
-      />
+      <NavLink item={item} onNavigate={onNavigate} className={itemClass} />
     </li>
   )
 }
 
 /** Desktop dropdown (single or nested). */
-export default function NavDropdown({ label, items, onNavigate }) {
+export default function NavDropdown({ label, items, onNavigate, tone = 'light' }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
@@ -107,7 +107,7 @@ export default function NavDropdown({ label, items, onNavigate }) {
     <li ref={ref} className="relative">
       <button
         type="button"
-        className="inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-slate-200 transition hover:text-brand"
+        className={`inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 ${buttonClass[tone]}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="true"
@@ -117,7 +117,7 @@ export default function NavDropdown({ label, items, onNavigate }) {
       </button>
       {open && (
         <div className="absolute left-0 top-full z-50 pt-2">
-          <DropdownPanel items={items} onNavigate={handleNavigate} />
+          <DropdownPanel items={items} onNavigate={handleNavigate} tone={tone} />
         </div>
       )}
     </li>

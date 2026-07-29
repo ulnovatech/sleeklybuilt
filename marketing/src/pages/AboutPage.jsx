@@ -6,15 +6,15 @@ import { siteConfig } from '../site.config'
 
 export default function AboutPage() {
   useEffect(() => {
-    document.title = 'About Us — UlnovaTech'
+    document.title = `About Us — ${siteConfig.name}`
   }, [])
 
   return (
     <>
-      <section className="bg-[#000910] py-16 text-white md:py-20">
+      <section className="bg-emerald-deep py-16 text-cream md:py-20">
         <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-sm font-semibold uppercase tracking-wider text-brand">About UlnovaTech</p>
+            <p className="eyebrow text-gold">About {siteConfig.name}</p>
             <h1 className="mt-3 text-3xl font-bold md:text-5xl">Your tech partner from concept to launch — and beyond</h1>
           </Reveal>
         </div>
@@ -25,7 +25,7 @@ export default function AboutPage() {
           <Reveal>
             <img
               src="/assets/img/about.jpg"
-              alt="UlnovaTech team at work"
+              alt={`${siteConfig.name} team at work`}
               className="w-full rounded-2xl object-cover shadow-lg"
               onError={(e) => {
                 e.currentTarget.src = siteConfig.links.logo
@@ -33,7 +33,7 @@ export default function AboutPage() {
             />
             <div className="mt-6 space-y-4 text-gray-600">
               <p>
-                At UlnovaTech, we believe every great idea deserves a solid digital foundation. We turn concepts into
+                At {siteConfig.name}, we believe every great idea deserves a solid digital foundation. We turn concepts into
                 dependable digital solutions — custom software, robust websites, and intuitive mobile apps.
               </p>
               <p>
@@ -66,7 +66,7 @@ export default function AboutPage() {
               </div>
               <img
                 src="/assets/img/about-2.jpg"
-                alt="UlnovaTech collaboration"
+                alt={`${siteConfig.name} collaboration`}
                 className="w-full rounded-2xl object-cover shadow-md"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none'

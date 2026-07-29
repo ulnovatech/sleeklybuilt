@@ -1,11 +1,11 @@
 /**
- * UlnoVaTech CRM dashboard — external app links and env-driven URLs.
+ * SleeklyBuilt CRM dashboard — external app links and env-driven URLs.
  */
 
 const isDev = import.meta.env.DEV
 
 export const siteConfig = {
-  name: 'Ulnova Tech',
+  name: 'SleeklyBuilt',
   tagline: 'Reachout Dashboard',
 }
 

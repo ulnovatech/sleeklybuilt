@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { FiArrowRight, FiCheck } from 'react-icons/fi'
 import Reveal from '../components/motion/Reveal'
 import { appPackages, formatUgx, websitePackages } from '../config/pricing'
+import { siteConfig } from '../site.config'
 
 function PriceCard({ pkg }) {
   const price = pkg.priceLabel || formatUgx(pkg.priceUgx)
@@ -50,17 +51,17 @@ export default function PricesPage() {
   const [tab, setTab] = useState('websites')
 
   useEffect(() => {
-    document.title = 'Pricing — UlnovaTech'
+    document.title = `Pricing — ${siteConfig.name}`
   }, [])
 
   const packages = tab === 'websites' ? websitePackages : appPackages
 
   return (
     <>
-      <section className="bg-[#000910] py-16 text-white md:py-20">
+      <section className="bg-emerald-deep py-16 text-cream md:py-20">
         <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
-            <p className="text-sm font-semibold uppercase tracking-wider text-brand">Transparent pricing</p>
+            <p className="eyebrow text-gold">Transparent pricing</p>
             <h1 className="mt-3 text-3xl font-bold md:text-5xl">Packages built for Ugandan businesses</h1>
             <p className="mx-auto mt-4 max-w-2xl text-slate-300">
               Website templates from our portfolio include deposit checkout. Custom apps and systems — let&apos;s talk.

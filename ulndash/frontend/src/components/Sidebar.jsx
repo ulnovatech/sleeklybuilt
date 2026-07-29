@@ -7,17 +7,19 @@ import {
   BookOpenIcon,
   PhoneIcon,
   MagnifyingGlassCircleIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { PresentationChartBarIcon } from '@heroicons/react/24/solid'
 import ulnLogo from '../assets/uln-logo.png'
-import { appLinks } from '../site.config'
+import { appLinks, siteConfig } from '../site.config'
 
-function externalAppLink(href, label, Icon) {
+function externalAppLink(href, label, Icon, onClick) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={onClick}
       className="flex items-center gap-3 px-4 py-3 rounded-sm transition text-muted hover:bg-gray-800/40"
     >
       <Icon className="w-5 h-5" />
@@ -26,10 +28,11 @@ function externalAppLink(href, label, Icon) {
   )
 }
 
-export default function Sidebar() {
-  const navItem = (to, label, Icon) => (
+export default function Sidebar({ open = false, onClose = () => {} }) {
+  const navItem = (to, label, icon) => (
     <NavLink
       to={to}
+      onClick={onClose}
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-3 rounded-sm transition ${
           isActive
@@ -38,23 +41,28 @@ export default function Sidebar() {
         }`
       }
     >
-      <Icon className="w-5 h-5" />
+      {React.createElement(icon, { className: 'w-5 h-5' })}
       <span className="text-sm font-medium">{label}</span>
     </NavLink>
   )
 
   return (
-    <aside className="w-60 bg-bg-800 border-r border-gray-800 p-4 flex flex-col gap-6">
+    <aside className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col gap-6 overflow-y-auto border-r border-gray-800 bg-bg-800 p-4 transition-transform duration-200 lg:static lg:z-auto lg:w-60 lg:translate-x-0 ${
+      open ? 'translate-x-0' : '-translate-x-full'
+    }`}>
       <div className="flex items-center gap-3 px-2">
         <img
           src={ulnLogo}
-          alt="UlnovaTech Logo"
+          alt={`${siteConfig.name} logo`}
           className="w-10 h-10 rounded-lg object-contain p-1"
         />
         <div>
-          <div className="text-white font-semibold">Ulnova Tech</div>
-          <div className="text-xs text-muted">Reachout Dashboard</div>
+          <div className="text-white font-semibold">{siteConfig.name}</div>
+          <div className="text-xs text-muted">{siteConfig.tagline}</div>
         </div>
+        <button type="button" onClick={onClose} className="btn-icon ml-auto border-0 bg-transparent lg:hidden" aria-label="Close navigation">
+          <XMarkIcon className="h-5 w-5" />
+        </button>
       </div>
 
       <nav className="flex-1 flex flex-col gap-1">
@@ -74,10 +82,10 @@ export default function Sidebar() {
           Apps
         </h3>
         <div className="flex flex-col gap-1">
-          {externalAppLink(appLinks.discoveryIntelligence, 'Discovery Intelligence', MagnifyingGlassCircleIcon)}
-          {externalAppLink(appLinks.homeSite, 'Home Site', HomeIcon)}
-          {externalAppLink(appLinks.blog, 'Blog', BookOpenIcon)}
-          {externalAppLink(appLinks.portfolio, 'Portfolio', BriefcaseIcon)}
+          {externalAppLink(appLinks.discoveryIntelligence, 'Discovery Intelligence', MagnifyingGlassCircleIcon, onClose)}
+          {externalAppLink(appLinks.homeSite, 'Home Site', HomeIcon, onClose)}
+          {externalAppLink(appLinks.blog, 'Blog', BookOpenIcon, onClose)}
+          {externalAppLink(appLinks.portfolio, 'Portfolio', BriefcaseIcon, onClose)}
         </div>
       </div>
     </aside>

@@ -1,8 +1,11 @@
 import HeroSection from '../components/sections/HeroSection'
 import ServicesSection from '../components/sections/ServicesSection'
 import ServicesExtendedSection from '../components/sections/ServicesExtendedSection'
-import WhyUsSection from '../components/sections/WhyUsSection'
+import BeforeAfterSection from '../components/sections/BeforeAfterSection'
+import ProcessSection from '../components/sections/ProcessSection'
+import TrustProofSection from '../components/sections/TrustProofSection'
 import ContactInfoSection from '../components/sections/ContactInfoSection'
+import ContactCtaBand from '../components/site/ContactCtaBand'
 import PortfolioBannerSection from '../components/sections/PortfolioBannerSection'
 import GamifiedContactForm from '../components/forms/GamifiedContactForm'
 import Reveal from '../components/motion/Reveal'
@@ -27,6 +30,18 @@ export default function HomePage({ onOpenInquiry }) {
       </Reveal>
 
       <Reveal delay={0.05}>
+        <BeforeAfterSection />
+      </Reveal>
+
+      <Reveal delay={0.05}>
+        <ProcessSection />
+      </Reveal>
+
+      <Reveal delay={0.05}>
+        <TrustProofSection />
+      </Reveal>
+
+      <Reveal delay={0.05}>
         <WhyUsSection />
       </Reveal>
 
@@ -34,10 +49,10 @@ export default function HomePage({ onOpenInquiry }) {
         <ContactInfoSection />
       </Reveal>
 
-      <section className="bg-white pb-16">
+      <section className="pb-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <Reveal>
-            <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6 shadow-sm sm:p-8">
+            <div className="rounded-3xl border border-cream-deep bg-white p-6 shadow-sm sm:p-8">
               <GamifiedContactForm />
             </div>
           </Reveal>
@@ -45,9 +60,12 @@ export default function HomePage({ onOpenInquiry }) {
       </section>
 
       <Reveal delay={0.05}>
+        <ContactCtaBand />
+      </Reveal>
+
+      <Reveal delay={0.05}>
         <PortfolioBannerSection />
       </Reveal>
     </>
   )
 }
-

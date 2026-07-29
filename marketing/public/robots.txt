@@ -5,4 +5,4 @@ Disallow: /dash/
 Disallow: /ulndash/
 Disallow: /api/
 
-Sitemap: https://ulnovatech.store/sitemap.xml
+Sitemap: http://hub.34.66.94.12.nip.io/sitemap.xml

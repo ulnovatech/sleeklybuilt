@@ -1,14 +1,22 @@
 import React from 'react'
 import { useAuth } from '../context/AuthContext'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 
-export default function Topbar() {
+export default function Topbar({ onMenu }) {
   const { user, logout } = useAuth()
 
   return (
-    <header className="h-16 bg-transparent flex items-center justify-between px-6 border-b border-gray-800">
+    <header className="h-16 bg-transparent flex items-center justify-between px-4 sm:px-6 border-b border-gray-800">
       <div className="flex items-center gap-4">
-        <button type="button" className="p-2 rounded-md hover:bg-gray-800/40">☰</button>
-        <div className="text-sm text-muted">
+        <button
+          type="button"
+          onClick={onMenu}
+          className="btn-icon border-0 bg-transparent lg:hidden"
+          aria-label="Open navigation"
+        >
+          <Bars3Icon className="h-5 w-5" />
+        </button>
+        <div className="hidden text-sm text-muted sm:block">
           Welcome back — <span className="text-white">{user?.username || 'Team'}</span>
         </div>
       </div>

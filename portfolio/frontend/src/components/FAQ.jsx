@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const faqData = [
   {
-    question: "What Services Does UlnovaTech Offer?",
+    question: 'What services does SleeklyBuilt offer?',
     answer: "We provide a range of I.T. services, including: Website development, Web App Development, UI/UX Design, Mobile App Development, Software Applications Development, Pitch Deck Design, Dashboard UI Design, SEO & Performance Optimization"
   },
   {

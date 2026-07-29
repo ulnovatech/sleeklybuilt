@@ -89,10 +89,23 @@ log "Creating ${DEPLOY_ROOT} layout"
 install -d -m 0755 -o "$DEPLOY_USER" -g "$DEPLOY_USER" \
   "${DEPLOY_ROOT}/secrets" \
   "${DEPLOY_ROOT}/env" \
+  "${DEPLOY_ROOT}/data" \
+  "${DEPLOY_ROOT}/logs" \
   "${DEPLOY_ROOT}/public_html" \
   "${DEPLOY_ROOT}/repo"
 
 chmod 700 "${DEPLOY_ROOT}/secrets" "${DEPLOY_ROOT}/env"
+install -d -m 0700 -o 33 -g 33 \
+  "${DEPLOY_ROOT}/data/template-imports" \
+  "${DEPLOY_ROOT}/data/template-profiles" \
+  "${DEPLOY_ROOT}/logs/template-import"
+
+if ! command -v crontab >/dev/null 2>&1; then
+  log "Installing cron"
+  apt-get update -qq
+  apt-get install -y -qq cron
+  systemctl enable --now cron
+fi
 # Env *.env files must be readable by php-fpm (www-data) after bind-mount — use 644 when created.
 
 # --- Hardening hints ---

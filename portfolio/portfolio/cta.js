@@ -1,5 +1,5 @@
 /**
- * UlnovaTech preview purchase dock — compact glass card (desktop) / bottom sheet (mobile).
+ * SleeklyBuilt preview purchase dock — compact glass card (desktop) / bottom sheet (mobile).
  * Served at /portfolio/portfolio/cta.js (relative ../cta.js from each template).
  */
 (function () {
@@ -50,16 +50,98 @@
       });
   }
 
-  function removeWebflowBadge() {
-    document.querySelectorAll('.w-webflow-badge, a.w-webflow-badge').forEach(function (el) {
+  /* Seller promo docks (e.g. .hireus-badge-wrapper) ship in template HTML.
+     Kill by known shells + seller URLs. Never touch #uln-preview-root. */
+  var SELLER_SHELL_SEL = [
+    '.hireus-badge-wrapper',
+    '.hireus-content-wrapper',
+    '.hireus-inner-content',
+    '.w-webflow-badge',
+    'a.w-webflow-badge',
+  ].join(',');
+
+  var SELLER_HOST_RE =
+    /webocean|webflow\.com\/templates|webflow\.com\/dashboard|webflow\.com\/made-in-webflow|fiverr\.com\/|themeforest\.net|buywebflowtemplate/i;
+
+  function isOurDock(el) {
+    if (!el) return false;
+    if (el.id === 'uln-preview-root' || el.id === 'uln-preview-dock' || el.id === 'uln-preview-fab') {
+      return true;
+    }
+    return !!(el.closest && el.closest('#uln-preview-root, [data-uln-preview-dock]'));
+  }
+
+  function hrefLooksSeller(href) {
+    if (!href) return false;
+    return SELLER_HOST_RE.test(String(href));
+  }
+
+  function hideNode(el) {
+    if (!el || isOurDock(el)) return;
+    try {
       el.remove();
-    });
-    document.querySelectorAll('a[href*="webflow.com"]').forEach(function (el) {
-      var t = (el.getAttribute('title') || el.textContent || '').toLowerCase();
-      if (t.indexOf('made in webflow') !== -1 || el.classList.contains('w-webflow-badge')) {
-        el.remove();
+    } catch (e) {
+      el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+      el.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function neutralizeLink(a) {
+    if (!a || isOurDock(a)) return;
+    a.removeAttribute('href');
+    a.setAttribute('aria-hidden', 'true');
+    a.setAttribute('tabindex', '-1');
+    a.style.setProperty('pointer-events', 'none', 'important');
+  }
+
+  function findHireusRoot(from) {
+    if (!from || !from.closest) return null;
+    return (
+      from.closest('.hireus-badge-wrapper') ||
+      from.closest('.hireus-content-wrapper') ||
+      from.closest('[class*="hireus"]')
+    );
+  }
+
+  function neutralizeSellerPromos() {
+    document.querySelectorAll(SELLER_SHELL_SEL).forEach(hideNode);
+
+    document.querySelectorAll('a[href]').forEach(function (a) {
+      if (isOurDock(a)) return;
+      var href = a.getAttribute('href') || '';
+      var title = (a.getAttribute('title') || a.textContent || '').toLowerCase();
+      var sellerHref = hrefLooksSeller(href);
+      var madeIn = title.indexOf('made in webflow') !== -1 || a.classList.contains('w-webflow-badge');
+      if (!sellerHref && !madeIn) return;
+
+      var shell = findHireusRoot(a);
+      if (shell) {
+        hideNode(shell);
+        return;
       }
+      neutralizeLink(a);
     });
+  }
+
+  function installSellerClickShield() {
+    if (window.__ulnSellerShield) return;
+    window.__ulnSellerShield = true;
+    document.addEventListener(
+      'click',
+      function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!a || isOurDock(a)) return;
+        if (!hrefLooksSeller(a.getAttribute('href') || '')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var shell = findHireusRoot(a);
+        if (shell) hideNode(shell);
+        else neutralizeLink(a);
+      },
+      true
+    );
   }
 
   function injectStyles() {
@@ -67,7 +149,10 @@
     var style = document.createElement('style');
     style.id = 'uln-preview-dock-styles';
     style.textContent = [
-      '.w-webflow-badge,a.w-webflow-badge{display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;}',
+      '.w-webflow-badge,a.w-webflow-badge,',
+      '.hireus-badge-wrapper,.hireus-content-wrapper,.hireus-inner-content,[class*="hireus-"]{',
+      'display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;height:0!important;overflow:hidden!important;}',
+      'a[href*="webocean"],a[href*="webflow.com/templates"],a[href*="webflow.com/dashboard"]{pointer-events:none!important;}',
       '#uln-preview-root{position:fixed;z-index:2147483000;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;',
       'right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:auto;width:min(368px,calc(100vw - 24px));',
       'pointer-events:none;}',
@@ -177,14 +262,15 @@
   }
 
   function mount() {
-    removeWebflowBadge();
     injectStyles();
+    neutralizeSellerPromos();
 
     var key = templateKey();
     var orderHref = ORDER_BASE + '?template=' + encodeURIComponent(key);
 
     var root = document.createElement('div');
     root.id = 'uln-preview-root';
+    root.setAttribute('data-uln-preview-dock', '1');
 
     var dock = document.createElement('div');
     dock.id = 'uln-preview-dock';
@@ -193,7 +279,7 @@
     dock.innerHTML =
       '<div class="uln-head">' +
       '<div style="min-width:0;flex:1">' +
-      '<p class="uln-kicker">UlnovaTech preview</p>' +
+      '<p class="uln-kicker">SleeklyBuilt preview</p>' +
       '<div class="uln-title-row">' +
       '<span class="uln-label">Choose this template</span>' +
       '<span class="uln-dot" aria-hidden="true">·</span>' +
@@ -292,12 +378,22 @@
   }
 
   function start() {
+    installSellerClickShield();
     mount();
-    var observer = new MutationObserver(removeWebflowBadge);
+
+    var scrubQueued = false;
+    function queueScrub() {
+      if (scrubQueued) return;
+      scrubQueued = true;
+      requestAnimationFrame(function () {
+        scrubQueued = false;
+        neutralizeSellerPromos();
+      });
+    }
+
+    var observer = new MutationObserver(queueScrub);
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    setTimeout(function () {
-      observer.disconnect();
-    }, 15000);
+    setInterval(neutralizeSellerPromos, 3000);
   }
 
   if (document.readyState === 'loading') {

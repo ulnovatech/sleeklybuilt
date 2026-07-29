@@ -1,6 +1,13 @@
+/** Public site URL — interim nip.io host until custom domain is live */
+export const siteUrl =
+  import.meta.env.VITE_SITE_URL?.replace(/\/$/, '') || 'http://hub.34.66.94.12.nip.io'
+
 export const siteConfig = {
-  name: 'UlnovaTech',
-  tagline: 'Website, App & System development • IT services',
+  name: 'SleeklyBuilt',
+  legalName: 'SleeklyBuilt',
+  tagline: 'Websites, apps & systems — built sleek, built right',
+  description:
+    'SleeklyBuilt crafts custom websites, mobile apps, graphics, and business systems for clients in Uganda and beyond.',
   email: 'ulnovatech@gmail.com',
   location: 'Kampala, Uganda',
   addressNote: 'Office under development',
@@ -22,6 +29,7 @@ export const siteConfig = {
     getStarted: '/portfolio-app/',
     logo: '/assets/img/uln-logo.png',
   },
+  siteUrl,
 }
 
 const portfolioApi =

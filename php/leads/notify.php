@@ -6,7 +6,8 @@
 function uln_notify_lead(string $type, array $payload): void
 {
     $to = getenv('LEAD_NOTIFY_EMAIL') ?: 'ulnovatech@gmail.com';
-    $subject = '[UlnovaTech] New lead: ' . $type;
+    $brand = getenv('BRAND_NAME') ?: 'SleeklyBuilt';
+    $subject = '[' . $brand . '] New lead: ' . $type;
 
     $lines = [
         'Type: ' . $type,
