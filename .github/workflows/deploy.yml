@@ -183,9 +183,6 @@ jobs:
           docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
             sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio'
 
-          # nginx caches php-fpm upstream IPs at start; recreate refreshes after php-fpm rebuild
-          docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --force-recreate --no-deps nginx
-
           docker compose -f infra/docker-compose.full.yml run --rm discovery-migrate
 
           docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
@@ -196,6 +193,11 @@ jobs:
 
           docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
             php /var/www/public_html/ulndash/backend/scripts/merge_template_catalog.php
+
+          # nginx caches upstream IPs at start — refresh after migrations and discovery-web are up
+          sleep 3
+          docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d discovery-web
+          docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --force-recreate --no-deps nginx
 
           docker compose -f infra/docker-compose.full.yml ps
           REMOTE
