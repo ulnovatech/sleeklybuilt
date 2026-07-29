@@ -8,6 +8,10 @@ services:
   php-fpm:
     restart: always
     volumes:
+      # Override replaces base volumes — keep public_html + env mounts explicit.
+      - /opt/ulnovatech/public_html:/var/www/public_html
+      - /opt/ulnovatech/env/docker.ulnovatech.env:/var/www/public_html/php/.env:ro
+      - /opt/ulnovatech/env/docker.ulnovatech.env:/var/www/public_html/ulndash/backend/.env:ro
       - /opt/ulnovatech/data/template-imports:/var/lib/ulnovatech/template-imports
       - /opt/ulnovatech/logs/template-import:/var/log/ulnovatech/template-import
       - /opt/ulnovatech/data/template-profiles:/var/lib/ulnovatech/template-profiles
@@ -16,6 +20,13 @@ services:
     restart: always
     ports:
       - '80:80'
+    volumes:
+      - /opt/ulnovatech/public_html:/var/www/public_html:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./nginx/conf.d/ulnovatech.conf:/etc/nginx/conf.d/ulnovatech.conf:ro
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/conf.d/discovery.conf:/etc/nginx/conf.d/discovery.conf:ro
 
   postgres:
     restart: always
