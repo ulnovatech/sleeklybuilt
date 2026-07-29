@@ -4,6 +4,7 @@ import ServicesExtendedSection from '../components/sections/ServicesExtendedSect
 import BeforeAfterSection from '../components/sections/BeforeAfterSection'
 import ProcessSection from '../components/sections/ProcessSection'
 import TrustProofSection from '../components/sections/TrustProofSection'
+import WhyUsSection from '../components/sections/WhyUsSection'
 import ContactInfoSection from '../components/sections/ContactInfoSection'
 import ContactCtaBand from '../components/site/ContactCtaBand'
 import PortfolioBannerSection from '../components/sections/PortfolioBannerSection'

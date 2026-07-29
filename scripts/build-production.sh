@@ -73,7 +73,7 @@ cp -f scripts/htaccess/blog.htaccess "$PUBLIC_HTML/blog/.htaccess"
 cp -f scripts/htaccess/dash.htaccess "$PUBLIC_HTML/dash/.htaccess"
 cp -f scripts/htaccess/portfolio-app.htaccess "$PUBLIC_HTML/portfolio-app/.htaccess"
 
-cp -a assets "$PUBLIC_HTML/assets"
+cp -a assets/. "$PUBLIC_HTML/assets/"
 cp -a forms "$PUBLIC_HTML/forms"
 cp -a php "$PUBLIC_HTML/php"
 
