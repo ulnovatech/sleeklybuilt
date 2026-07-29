@@ -41,7 +41,7 @@ Copy-Item -Force (Join-Path $root 'scripts\htaccess\blog.htaccess') (Join-Path $
 Copy-Item -Force (Join-Path $root 'scripts\htaccess\dash.htaccess') (Join-Path $publicHtml 'dash\.htaccess')
 Copy-Item -Force (Join-Path $root 'scripts\htaccess\portfolio-app.htaccess') (Join-Path $publicHtml 'portfolio-app\.htaccess')
 
-Copy-Item -Recurse -Force (Join-Path $root 'assets') (Join-Path $publicHtml 'assets')
+Copy-Item -Recurse -Force (Join-Path $root 'assets\*') (Join-Path $publicHtml 'assets')
 Copy-Item -Recurse -Force (Join-Path $root 'forms') (Join-Path $publicHtml 'forms')
 Copy-Item -Recurse -Force (Join-Path $root 'php') (Join-Path $publicHtml 'php')
 New-Item -ItemType Directory -Force -Path (Join-Path $publicHtml 'portfolio\api') | Out-Null
