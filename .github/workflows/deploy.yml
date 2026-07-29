@@ -143,7 +143,12 @@ jobs:
           fi
 
           # php-fpm runs as www-data (uid 33); mode 600 owned by deploy is unreadable → DB connection failed
-          chmod 644 "$ULNOVATECH_ENV_FILE" "$DISCOVERY_ENV_FILE"
+          # Some env files may be root-owned after manual key injection — don't abort deploy.
+          chmod 644 "$ULNOVATECH_ENV_FILE" 2>/dev/null || true
+          chmod 644 "$DISCOVERY_ENV_FILE" 2>/dev/null || true
+          # Ensure files remain readable even when chmod is denied.
+          test -r "$ULNOVATECH_ENV_FILE"
+          test -r "$DISCOVERY_ENV_FILE"
           # Bind-mount targets must be files (not directories) before recreate
           mkdir -p /opt/ulnovatech/public_html/php /opt/ulnovatech/public_html/ulndash/backend
           : > /opt/ulnovatech/public_html/php/.env
