@@ -40,12 +40,13 @@ try {
             'title' => 'Lifecycle validation',
             'description' => 'Transient integration test job.',
             'category' => 'test',
+            'collection' => 'websites',
         ],
         ['username' => '_template_import_test']
     );
 
     $jobId = (int) $job['id'];
-    if ($job['status'] !== 'queued' || $job['slug'] !== $sourceHost) {
+    if ($job['status'] !== 'queued' || $job['slug'] !== $sourceHost || ($job['collection'] ?? null) !== 'websites') {
         throw new RuntimeException('Controller did not create the expected queued job.');
     }
 
@@ -55,6 +56,7 @@ try {
                 'source_url' => 'https://' . $sourceHost . '/another-page',
                 'title' => 'Duplicate lifecycle validation',
                 'category' => 'test',
+                'collection' => 'websites',
             ],
             ['username' => '_template_import_test']
         );

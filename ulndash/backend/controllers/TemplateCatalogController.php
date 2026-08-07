@@ -42,7 +42,7 @@ final class TemplateCatalogController
                 [
                     'fields' => array_values(array_intersect(
                         array_keys($input),
-                        ['title', 'description', 'category', 'aliases']
+                        ['title', 'description', 'category', 'collection', 'aliases']
                     )),
                 ]
             );

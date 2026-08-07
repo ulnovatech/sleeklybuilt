@@ -3,32 +3,33 @@ import { cn } from '../../lib/utils'
 export function Section({ children, className = '', id }) {
   return (
     <section id={id} className={cn('w-full', className)}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">{children}</div>
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">{children}</div>
     </section>
   )
 }
 
-export function Eyebrow({ children, className = '' }) {
+export function Eyebrow({ children, className = '', tone = 'default' }) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <span className="h-px w-8 bg-gold" aria-hidden="true" />
-      <span className="eyebrow">{children}</span>
+      <span className={tone === 'invert' ? 'eyebrow-invert' : 'eyebrow'}>{children}</span>
     </div>
   )
 }
 
-export function SectionHeading({ eyebrow, title, intro, align = 'left', className = '' }) {
-  const alignCls = align === 'center' ? 'text-center mx-auto' : ''
+/**
+ * Section headings are always left-aligned — there is deliberately no centre
+ * option. Pass tone="invert" on obsidian bands: emerald fails contrast on dark,
+ * so the heading switches to cream and the eyebrow to gold.
+ */
+export function SectionHeading({ eyebrow, title, intro, tone = 'default', className = '' }) {
+  const invert = tone === 'invert'
 
   return (
-    <div className={cn('max-w-3xl', alignCls, className)}>
-      {eyebrow ? (
-        <div className={align === 'center' ? 'flex justify-center' : ''}>
-          <Eyebrow>{eyebrow}</Eyebrow>
-        </div>
-      ) : null}
-      <h2 className="serif mt-5 text-3xl leading-[1.08] text-emerald-deep sm:text-4xl md:text-5xl">{title}</h2>
-      {intro ? <p className="mt-5 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">{intro}</p> : null}
+    <div className={cn('max-w-3xl', className)}>
+      {eyebrow ? <Eyebrow tone={tone}>{eyebrow}</Eyebrow> : null}
+      <h2 className={cn('display-section mt-5', invert ? 'text-cream' : 'text-emerald-deep')}>{title}</h2>
+      {intro ? <p className={cn('lead mt-5', invert ? 'text-cream/70' : 'text-ink-soft')}>{intro}</p> : null}
     </div>
   )
 }

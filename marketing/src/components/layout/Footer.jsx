@@ -6,8 +6,8 @@ export default function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer id="footer" className="mt-16 border-t border-cream-deep bg-emerald-deep text-cream">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-10 lg:py-20">
+    <footer id="footer" className="mt-16 bg-obsidian text-cream">
+      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-5">
             <div className="serif max-w-md text-3xl leading-[1.1] md:text-4xl">
@@ -34,7 +34,7 @@ export default function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-cream/20 px-3 py-1 text-xs uppercase tracking-wide text-cream/80 transition hover:border-gold hover:text-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                  className="rounded-full border border-cream/20 px-3 py-1 text-xs uppercase tracking-wide text-cream/80 transition hover:border-gold hover:text-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
                 >
                   {key}
                 </a>
@@ -50,13 +50,13 @@ export default function Footer() {
           <div className="lg:col-span-3">
             <p className="eyebrow mb-4 text-gold">Newsletter</p>
             <p className="mb-4 text-sm leading-relaxed text-cream/70">
-              Updates on new templates, services, and product news.
+              Updates on new layouts, services, and product news.
             </p>
             <NewsletterForm />
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col justify-between gap-3 border-t border-cream/15 pt-8 text-xs text-cream/55 md:flex-row">
+        <div className="mt-14 flex flex-col justify-between gap-3 border-t border-obsidian-line pt-8 text-xs text-cream/55 md:flex-row">
           <p>
             © {year} {siteConfig.name}. All rights reserved.
           </p>

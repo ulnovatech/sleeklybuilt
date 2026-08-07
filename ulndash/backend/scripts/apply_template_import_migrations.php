@@ -37,6 +37,7 @@ $files = [
     '007_template_import_jobs.sql',
     '008_template_import_rollback_state.sql',
     '009_template_import_audit_events.sql',
+    '010_template_import_collection.sql',
 ];
 
 foreach ($files as $file) {
@@ -45,8 +46,23 @@ foreach ($files as $file) {
     if ($sql === '') {
         throw new RuntimeException("Template import migration is empty: {$file}");
     }
-    $pdo->exec($sql);
-    fwrite(STDOUT, "OK: {$file}\n");
+    try {
+        $pdo->exec($sql);
+        fwrite(STDOUT, "OK: {$file}\n");
+    } catch (PDOException $e) {
+        // Idempotent re-runs: duplicate column / key from 010.
+        $message = $e->getMessage();
+        if (
+            str_contains($message, 'Duplicate column') ||
+            str_contains($message, 'Duplicate key') ||
+            (int) ($e->errorInfo[1] ?? 0) === 1060 ||
+            (int) ($e->errorInfo[1] ?? 0) === 1061
+        ) {
+            fwrite(STDOUT, "SKIP (already applied): {$file}\n");
+            continue;
+        }
+        throw $e;
+    }
 }
 
 fwrite(STDOUT, "Template import schema ready.\n");

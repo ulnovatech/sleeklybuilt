@@ -38,6 +38,7 @@ try {
             'source_url' => 'https://willey-fragrance.webflow.io/',
             'title' => 'Background import validation',
             'category' => 'test',
+            'collection' => 'websites',
         ],
         ['username' => '_template_import_background_test']
     );

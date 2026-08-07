@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SleeklyBuilt design tokens — adapted from Clarity inspiration */
+/* SleeklyBuilt design tokens — see DESIGN.md for the full system */
 :root {
+  /* Brand primitives — single source of hex values */
   --cream: #f8f4ec;
   --cream-deep: #ede5d6;
   --emerald-deep: #2d5346;
@@ -13,7 +14,110 @@
   --gold-soft: #e4c47a;
   --ink: #38342e;
   --ink-soft: #5c5852;
+  --obsidian: #0a0b0a;
+  --obsidian-raised: #131614;
+  --obsidian-line: #232823;
   --radius: 0.5rem;
+
+  /*
+   * Design OS semantic roles (color_system / design_tokens).
+   * New UI must prefer these over raw brand hex.
+   */
+  --color-surface-base: var(--cream);
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: var(--cream-deep);
+  --color-surface-overlay: rgb(10 11 10 / 0.6);
+  --color-surface-inverse: var(--obsidian);
+  --color-surface-inverse-raised: var(--obsidian-raised);
+
+  --color-border-subtle: var(--cream-deep);
+  --color-border-default: var(--obsidian-line);
+  --color-border-strong: var(--ink-soft);
+  --color-border-focus: var(--color-focus-ring);
+  --color-border-on-inverse: var(--obsidian-line);
+
+  --color-content-primary: var(--ink);
+  --color-content-secondary: var(--ink-soft);
+  --color-content-muted: #7a756c;
+  --color-content-disabled: #a39e94;
+  --color-content-inverse: var(--cream);
+  --color-content-link: var(--emerald);
+
+  --color-action-primary: var(--emerald);
+  --color-action-primary-hover: var(--emerald-deep);
+  --color-action-primary-active: #243f36;
+  --color-action-primary-soft: var(--emerald-soft);
+  --color-action-secondary: transparent;
+  --color-action-secondary-hover: rgb(45 83 70 / 0.08);
+  --color-action-danger: #a33b2b;
+  --color-action-danger-hover: #862f22;
+  --color-action-disabled: #c4bfb4;
+
+  --color-accent: var(--gold);
+  --color-accent-hover: var(--gold-soft);
+
+  /*
+   * Focus ring — reserved for keyboard focus only.
+   * Deliberately neither emerald (actions) nor gold (accent), so focus is
+   * never mistaken for a brand decoration. Inverse is for obsidian surfaces.
+   */
+  --color-focus-ring: #2a322e;
+  --color-focus-ring-inverse: var(--cream);
+
+  --color-status-success: #2f6f4e;
+  --color-status-success-surface: #e7f2ec;
+  --color-status-warning: #b8860b;
+  --color-status-warning-surface: #f7f0de;
+  --color-status-danger: #a33b2b;
+  --color-status-danger-surface: #f6e8e5;
+  --color-status-info: #3d6b8a;
+  --color-status-info-surface: #e8f0f5;
+
+  /* Spacing — 8pt grid (Design OS spacing_system) */
+  --space-xs: 0.25rem; /* 4 */
+  --space-sm: 0.5rem; /* 8 */
+  --space-md: 1rem; /* 16 */
+  --space-lg: 1.5rem; /* 24 */
+  --space-xl: 2rem; /* 32 */
+  --space-2xl: 2.5rem; /* 40 */
+  --space-3xl: 3rem; /* 48 */
+  --space-4xl: 4rem; /* 64 */
+
+  /* Radius — Design OS radius_system scale only */
+  --radius-none: 0;
+  --radius-xs: 0.125rem; /* 2 */
+  --radius-sm: 0.25rem; /* 4 */
+  --radius-md: var(--radius); /* 8 */
+  --radius-lg: 0.75rem; /* 12 */
+  --radius-xl: 1.25rem; /* 20 */
+  --radius-2xl: 2rem; /* 32 */
+  --radius-full: 9999px;
+
+  /* Elevation / shadow */
+  --shadow-color: 56 52 46;
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / 0.06);
+  --shadow-sm: 0 1px 3px rgb(var(--shadow-color) / 0.08), 0 1px 2px rgb(var(--shadow-color) / 0.04);
+  --shadow-md: 0 4px 12px rgb(var(--shadow-color) / 0.1), 0 2px 4px rgb(var(--shadow-color) / 0.05);
+  --shadow-lg: 0 12px 32px rgb(var(--shadow-color) / 0.14), 0 4px 8px rgb(var(--shadow-color) / 0.06);
+  --shadow-xl: 0 24px 48px rgb(var(--shadow-color) / 0.18), 0 8px 16px rgb(var(--shadow-color) / 0.08);
+
+  /* Motion — motion_system durations */
+  --motion-instant: 75ms;
+  --motion-fast: 150ms;
+  --motion-normal: 250ms;
+  --motion-slow: 400ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-default: var(--ease-out);
+
+  /* Z-index ladder */
+  --z-base: 0;
+  --z-dropdown: 20;
+  --z-sticky: 40;
+  --z-modal: 60;
+  --z-notification: 70;
 }
 
 html,
@@ -27,18 +131,76 @@ html {
 
 body {
   margin: 0;
-  background-color: var(--cream);
-  color: var(--ink);
+  background-color: var(--color-surface-base);
+  color: var(--color-content-primary);
   font-family: 'Work Sans', system-ui, sans-serif;
 }
 
-@layer components {
-  .eyebrow {
-    @apply text-xs font-semibold uppercase tracking-[0.18em] text-emerald;
+/*
+ * Reduced motion — constitution / motion_system requirement.
+ * Keeps colour and opacity feedback usable; removes travel and scroll hijacking.
+ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* ── Type roles ─────────────────────────────────────────────── */
+
+  .eyebrow {
+    @apply text-eyebrow font-semibold uppercase text-emerald;
+  }
+
+  /* Eyebrow on obsidian — emerald fails contrast on dark, so gold carries it */
+  .eyebrow-invert {
+    @apply text-eyebrow font-semibold uppercase text-gold;
+  }
+
+  .display-hero {
+    @apply font-serif text-display-hero;
+  }
+
+  .display-section {
+    @apply font-serif text-display-section;
+  }
+
+  .display-card {
+    @apply font-serif text-display-card;
+  }
+
+  .lead {
+    @apply max-w-measure-lead text-lead md:text-lead-lg;
+  }
+
+  .body-copy {
+    @apply max-w-measure text-body;
+  }
+
+  /** @deprecated Prefer the font-serif utility */
   .serif {
     font-family: 'Instrument Serif', Georgia, serif;
+  }
+
+  /* ── Section rhythm ─────────────────────────────────────────── */
+
+  .section-dark {
+    @apply py-28 md:py-36;
+  }
+
+  .section-light {
+    @apply py-20 md:py-28;
   }
 
   .hairline {
@@ -50,28 +212,49 @@ body {
       transparent
     );
   }
-}
 
-@keyframes portfolio-twinkle {
-  0% {
-    transform: scale(1);
-    opacity: 0.35;
-  }
-  50% {
-    transform: scale(1.7);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.35;
+  /* Keyboard focus util — prefer over ring-gold / ring-emerald */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2;
   }
 }
 
-.portfolio-star {
+/* ── Obsidian surface ─────────────────────────────────────────────
+   The "shiny black" band. Four layers over solid obsidian:
+     1. emerald bloom (top left)   — ties the dark tier to the brand
+     2. gold counter-glow (bottom right) — makes the frame feel lit
+     3. specular sheen (top edge)   — the shine itself
+     4. grain                        — prevents gradient banding
+   A seat gradient returns the last 12% to solid so the band meets the
+   cream section below on a clean edge.
+   ---------------------------------------------------------------- */
+.surface-obsidian {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--obsidian);
+  color: var(--cream);
+}
+
+.surface-obsidian::before {
+  content: '';
   position: absolute;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.75);
-  animation-name: portfolio-twinkle;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 35%),
+    linear-gradient(180deg, transparent 88%, var(--obsidian) 100%),
+    radial-gradient(60% 55% at 20% 15%, rgba(63, 122, 98, 0.28), transparent 60%),
+    radial-gradient(55% 50% at 80% 90%, rgba(212, 168, 75, 0.1), transparent 55%);
+}
+
+.surface-obsidian::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
 }

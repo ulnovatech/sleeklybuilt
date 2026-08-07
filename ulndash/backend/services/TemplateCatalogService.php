@@ -39,6 +39,10 @@ final class TemplateCatalogService
                     ? (string) $meta['description']
                     : '',
                 'category' => (string) ($meta['category'] ?? 'uncategorized'),
+                'collection' => TemplateImportPolicy::normalizeCollection(
+                    $meta['collection'] ?? null,
+                    false
+                ),
                 'aliases' => $this->normalizeAliases($meta['aliases'] ?? []),
                 'entry' => '/portfolio/portfolio/' . rawurlencode($slug) . '/',
                 'updated_at' => gmdate(
@@ -74,6 +78,7 @@ final class TemplateCatalogService
         $title = $this->requiredText($input, 'title', 160);
         $description = $this->requiredText($input, 'description', 5000);
         $category = $this->requiredText($input, 'category', 100);
+        $collection = TemplateImportPolicy::normalizeCollection($input['collection'] ?? null, true);
         if (!is_array($input['aliases'] ?? [])) {
             throw new InvalidArgumentException('Aliases must be an array.', 422);
         }
@@ -94,6 +99,7 @@ final class TemplateCatalogService
                 'title' => $title,
                 'description' => $description,
                 'category' => $category,
+                'collection' => $collection,
                 'aliases' => $aliases,
             ];
             ksort($catalog, SORT_NATURAL | SORT_FLAG_CASE);
@@ -108,6 +114,7 @@ final class TemplateCatalogService
             'title' => $title,
             'description' => $description,
             'category' => $category,
+            'collection' => $collection,
             'aliases' => $aliases,
             'entry' => '/portfolio/portfolio/' . rawurlencode($slug) . '/',
         ];

@@ -40,14 +40,22 @@ jobs:
         with:
           version: 9
 
+      - name: Resolve Discovery source (C0)
+        id: discovery
+        run: |
+          chmod +x scripts/resolve-discovery-src.sh
+          SRC="$(scripts/resolve-discovery-src.sh)"
+          echo "src=$SRC" >> "$GITHUB_OUTPUT"
+          echo "Resolved Discovery source: $SRC"
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: discovery/pnpm-lock.yaml
+          cache-dependency-path: ${{ steps.discovery.outputs.src }}/pnpm-lock.yaml
 
       - name: Verify Discovery Docker build context
-        working-directory: discovery
+        working-directory: ${{ steps.discovery.outputs.src }}
         env:
           DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
           NEXT_PUBLIC_APP_URL: http://discovery.34.66.94.12.nip.io
@@ -104,12 +112,14 @@ jobs:
             --exclude '.env' \
             infra/ "${DEPLOY_HOST}:/opt/ulnovatech/repo/infra/"
 
+          # C0: rsync resolved Lead Discover source (sibling or ./discovery junction)
+          DISCOVERY_SRC="$(./scripts/resolve-discovery-src.sh)"
           rsync -az -e "ssh $SSH_OPTS" \
             --exclude node_modules \
             --exclude .next \
             --exclude .turbo \
             --exclude .env \
-            discovery/ "${DEPLOY_HOST}:/opt/ulnovatech/repo/discovery/"
+            "${DISCOVERY_SRC}/" "${DEPLOY_HOST}:/opt/ulnovatech/repo/discovery/"
 
       - name: Deploy Docker stack and run migrations
         env:
@@ -132,6 +142,8 @@ jobs:
           export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
           export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
           export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+          # C0: on the VM, compose builds the rsynced tree (not the local sibling path)
+          export DISCOVERY_BUILD_CONTEXT=../discovery
 
           if [[ ! -f "$ULNOVATECH_ENV_FILE" ]]; then
             echo "Missing $ULNOVATECH_ENV_FILE — create from infra/env/docker.ulnovatech.env.example on the VM" >&2

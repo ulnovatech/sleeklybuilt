@@ -22,7 +22,7 @@ export default function NewsletterForm({ className = '' }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Enter your email"
-        className="min-w-0 flex-1 rounded-lg border border-cream/25 bg-cream/10 px-3 py-2 text-sm text-cream placeholder:text-cream/50 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/30"
+        className="min-w-0 flex-1 rounded-lg border border-cream/25 bg-cream/10 px-3 py-2.5 text-sm text-cream placeholder:text-cream/50 focus:border-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
       />
       <button
         type="submit"

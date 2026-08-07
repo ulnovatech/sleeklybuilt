@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { submitForm } from './submitForm'
 
-export function useFormSubmit({ url, onSuccess }) {
+export function useFormSubmit({ url, onSuccess, successToast = true }) {
   const [loading, setLoading] = useState(false)
 
   const submit = useCallback(
@@ -10,7 +10,7 @@ export function useFormSubmit({ url, onSuccess }) {
       setLoading(true)
       try {
         const result = await submitForm(url, payload)
-        toast.success(result.message || 'Submitted successfully!')
+        if (successToast) toast.success(result.message || 'Submitted successfully!')
         onSuccess?.(result)
         return result
       } catch (error) {
@@ -20,7 +20,7 @@ export function useFormSubmit({ url, onSuccess }) {
         setLoading(false)
       }
     },
-    [url, onSuccess],
+    [url, onSuccess, successToast],
   )
 
   return { submit, loading }

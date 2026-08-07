@@ -26,10 +26,12 @@ try {
         'title' => 'Catalog Test',
         'description' => 'Atomic catalog metadata validation.',
         'category' => 'test',
+        'collection' => 'sleek-pages',
         'aliases' => ['Test Alias', 'test alias', ''],
     ]);
     if (
         $updated['title'] !== 'Catalog Test' ||
+        $updated['collection'] !== 'sleek-pages' ||
         $updated['aliases'] !== ['Test Alias']
     ) {
         throw new RuntimeException('Catalog metadata normalization failed.');
@@ -42,7 +44,8 @@ try {
     ));
     if (
         count($match) !== 1 ||
-        $match[0]['description'] !== 'Atomic catalog metadata validation.'
+        $match[0]['description'] !== 'Atomic catalog metadata validation.' ||
+        ($match[0]['collection'] ?? null) !== 'sleek-pages'
     ) {
         throw new RuntimeException('Catalog listing did not return updated metadata.');
     }

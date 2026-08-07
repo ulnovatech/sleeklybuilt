@@ -35,6 +35,7 @@ try {
             'title' => "Hardening {$index}",
             'description' => 'Rate and audit integration test.',
             'category' => 'test',
+            'collection' => 'websites',
         ], ['username' => $actor]);
         $jobIds[] = (int) $job['id'];
     }
@@ -44,6 +45,7 @@ try {
             'source_url' => "https://{$prefix}-3.webflow.io/",
             'title' => 'Hardening 3',
             'category' => 'test',
+            'collection' => 'websites',
         ], ['username' => $actor]);
         throw new RuntimeException('Third import unexpectedly bypassed the hourly limit.');
     } catch (RuntimeException $e) {

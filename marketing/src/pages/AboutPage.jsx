@@ -1,17 +1,15 @@
-import { useEffect } from 'react'
 import { FiCheckCircle } from 'react-icons/fi'
 import Reveal from '../components/motion/Reveal'
-import { aboutStats } from '../config/pricing'
+import { trustCommitments } from '../config/proof'
 import { siteConfig } from '../site.config'
+import { usePageTitle } from '../lib/usePageTitle'
 
 export default function AboutPage() {
-  useEffect(() => {
-    document.title = `About Us — ${siteConfig.name}`
-  }, [])
+  usePageTitle('About')
 
   return (
     <>
-      <section className="bg-emerald-deep py-16 text-cream md:py-20">
+      <section className="bg-emerald-deep pb-16 pt-32 text-cream md:pb-20 md:pt-36">
         <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
             <p className="eyebrow text-gold">About {siteConfig.name}</p>
@@ -77,19 +75,27 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="border-y border-gray-200 bg-white py-12">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 sm:px-6 md:grid-cols-4 lg:px-8">
-          {aboutStats.map((stat) => (
-            <Reveal key={stat.label}>
-              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-6 text-center shadow-sm">
-                <div className="text-3xl" aria-hidden="true">
-                  {stat.icon}
-                </div>
-                <p className="mt-2 text-2xl font-bold text-gray-900">{stat.value}</p>
-                <p className="text-sm text-gray-600">{stat.label}</p>
-              </div>
-            </Reveal>
-          ))}
+      {/*
+        Verifiable commitments only — no invented client counts or emoji metrics.
+        See UX-GATE.md §7 and design-os content / agency honesty rules.
+      */}
+      <section className="border-y border-cream-deep bg-surface-raised py-12 md:py-16">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <p className="eyebrow">What you can count on</p>
+            <h2 className="display-section mt-4 text-emerald-deep">Promises we keep</h2>
+          </Reveal>
+
+          <ul className="mt-10 grid gap-6 sm:grid-cols-2">
+            {trustCommitments.map((item) => (
+              <Reveal key={item.title}>
+                <li className="rounded-2xl border border-cream-deep bg-surface-base p-6 shadow-sm">
+                  <h3 className="display-card text-emerald-deep">{item.title}</h3>
+                  <p className="mt-2 text-body text-ink-soft">{item.description}</p>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
         </div>
       </section>
     </>

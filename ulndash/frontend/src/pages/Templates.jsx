@@ -22,6 +22,14 @@ import TemplateSectionEditor from '../components/TemplateSectionEditor';
 const ACTIVE_STATES = new Set(['queued', 'running', 'scrubbing', 'validating']);
 const PHASES = ['queued', 'running', 'scrubbing', 'ready'];
 const CATEGORIES = ['business', 'ecommerce', 'food', 'health', 'beauty', 'services'];
+const COLLECTIONS = [
+  { id: 'websites', label: 'Websites' },
+  { id: 'sleek-pages', label: 'Sleek Pages' },
+];
+
+function collectionLabel(id) {
+  return COLLECTIONS.find((item) => item.id === id)?.label || id || 'Websites';
+}
 
 function cx(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -100,6 +108,9 @@ function TemplateCard({ template, onEditMetadata, onEditContent }) {
         </div>
         <span className="absolute right-4 top-4 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-200 backdrop-blur">
           {template.category}
+        </span>
+        <span className="absolute left-4 top-4 rounded-full border border-cyan-400/20 bg-cyan-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-100 backdrop-blur">
+          {collectionLabel(template.collection)}
         </span>
       </div>
       <div className="p-5">
@@ -225,6 +236,7 @@ function ImportForm({ onSubmit, submitting }) {
     title: '',
     description: '',
     category: '',
+    collection: 'websites',
   });
   const host = useMemo(() => {
     try {
@@ -267,7 +279,24 @@ function ImportForm({ onSubmit, submitting }) {
           className="form-input"
         />
       </Field>
-      <Field label="Category">
+      <Field
+        label="Collection"
+        hint="Product line shown on the marketing site. Distinct from industry category."
+      >
+        <select
+          required
+          value={form.collection}
+          onChange={change('collection')}
+          className="form-input"
+        >
+          {COLLECTIONS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Category" hint="Industry vertical for browsing (food, business, …).">
         <input
           required
           list="template-categories"
@@ -450,6 +479,7 @@ function EditTemplateForm({ template, saving, onSave }) {
     title: template.title,
     description: template.description,
     category: template.category,
+    collection: template.collection || 'websites',
     aliases: (template.aliases || []).join(', '),
   });
   const change = (key) => (event) => setForm((value) => ({ ...value, [key]: event.target.value }));
@@ -462,6 +492,7 @@ function EditTemplateForm({ template, saving, onSave }) {
           title: form.title,
           description: form.description,
           category: form.category,
+          collection: form.collection,
           aliases: form.aliases.split(',').map((value) => value.trim()).filter(Boolean),
         });
       }}
@@ -475,6 +506,15 @@ function EditTemplateForm({ template, saving, onSave }) {
       </Field>
       <Field label="Description">
         <textarea required rows={5} maxLength={5000} value={form.description} onChange={change('description')} className="form-input resize-none" />
+      </Field>
+      <Field label="Collection" hint="Product line on the marketing site.">
+        <select required value={form.collection} onChange={change('collection')} className="form-input">
+          {COLLECTIONS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field label="Category">
         <input required maxLength={100} list="template-categories" value={form.category} onChange={change('category')} className="form-input" />
@@ -532,6 +572,7 @@ export default function Templates() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [collection, setCollection] = useState('all');
   const [panel, setPanel] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -582,11 +623,12 @@ export default function Templates() {
     const needle = search.trim().toLowerCase();
     return templates.filter((template) => {
       const matchesCategory = category === 'all' || template.category === category;
-      const matchesSearch = !needle || [template.title, template.slug, template.description]
+      const matchesCollection = collection === 'all' || template.collection === collection;
+      const matchesSearch = !needle || [template.title, template.slug, template.description, template.collection]
         .some((value) => String(value || '').toLowerCase().includes(needle));
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesCollection && matchesSearch;
     });
-  }, [templates, search, category]);
+  }, [templates, search, category, collection]);
 
   const openJob = (job) => {
     setError('');
@@ -749,6 +791,12 @@ export default function Templates() {
                 className="form-input mt-0 py-2 pl-9 sm:w-60"
               />
             </label>
+            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="form-input mt-0 py-2 sm:w-44">
+              <option value="all">All collections</option>
+              {COLLECTIONS.map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
             <select value={category} onChange={(event) => setCategory(event.target.value)} className="form-input mt-0 py-2 sm:w-44">
               {categories.map((value) => (
                 <option key={value} value={value}>{value === 'all' ? 'All categories' : value}</option>
@@ -776,10 +824,10 @@ export default function Templates() {
                   }}
                 />
               ))}
-          {!loading && filtered.length === 0 && !search && category === 'all' && (
+          {!loading && filtered.length === 0 && !search && category === 'all' && collection === 'all' && (
             <EmptyState onImport={() => setPanel('import')} />
           )}
-          {!loading && filtered.length === 0 && (search || category !== 'all') && (
+          {!loading && filtered.length === 0 && (search || category !== 'all' || collection !== 'all') && (
             <div className="col-span-full rounded-2xl border border-slate-800 bg-slate-900/40 p-10 text-center text-sm text-slate-400">
               No templates match these filters.
             </div>

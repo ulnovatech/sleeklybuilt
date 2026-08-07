@@ -22,11 +22,17 @@ export const siteConfig = {
   },
   links: {
     home: '/',
+    sleekPages: '/sleek-pages',
+    websites: '/websites',
+    mobileApps: '/mobile-apps',
+    businessSystems: '/business-systems',
+    products: '/products',
+    contact: '/contact',
     portfolio: '/portfolio-app/',
     about: '/about',
     prices: '/prices',
     trackOrder: '/track-order',
-    getStarted: '/portfolio-app/',
+    getStarted: '/contact',
     logo: '/assets/img/uln-logo.png',
   },
   siteUrl,
@@ -44,85 +50,36 @@ export const apiEndpoints = {
   graphics: '/php/graphdesrequests.php',
   marketing: '/php/marketingrequests.php',
   orderStatus: `${portfolioApi}/order-status.php`,
+  /** Published layout catalog — accepts ?collection=websites|sleek-pages */
+  layouts: `${portfolioApi}/portfolios.php`,
 }
 
-/** Primary navigation — hash links prefixed for cross-page routing */
+/**
+ * Primary navigation. Deliberately flat — five destinations, no dropdowns.
+ * The old three-level "All Products" menu ended in hash links that all resolved
+ * back to the homepage, which taught visitors that clicking does nothing.
+ */
 export const mainNavigation = [
-  { id: 'home', label: 'Home', href: '/#hero' },
-  {
-    id: 'services',
-    label: 'Services',
-    children: [
-      { label: 'Website development', href: '/#webdesign' },
-      { label: 'Mobile app development', href: '/#appdev' },
-      { label: 'Digital marketing & SEO', href: '/#marketing' },
-      { label: 'IT consulting', href: '/#services' },
-      { label: 'UI/UX design', href: '/#services' },
-    ],
-  },
-  { id: 'portfolio', label: 'Portfolio', href: siteConfig.links.portfolio },
-  { id: 'prices', label: 'Pricing', href: siteConfig.links.prices },
-  {
-    id: 'products',
-    label: 'All Products',
-    children: [
-      { label: 'Websites', href: '/#webdesign' },
-      {
-        label: 'Apps',
-        children: [
-          { label: 'E-Commerce', href: '/#appdev' },
-          { label: 'Delivery Apps', href: '/#appdev' },
-          { label: 'Restaurant Apps', href: '/#appdev' },
-          { label: 'Chat Apps', href: '/#appdev' },
-        ],
-      },
-      {
-        label: 'Management Systems',
-        children: [
-          { label: 'Business Mgt Systems', href: '/#services' },
-          { label: 'Store Management', href: '/#services' },
-          { label: 'Professional Dashboards', href: '/#services' },
-          { label: 'Data Processing', href: '/#services' },
-        ],
-      },
-      {
-        label: 'Graphics Design',
-        children: [
-          { label: 'Animation Videos', href: '/#graphics' },
-          { label: 'Logos', href: '/#graphics' },
-          { label: 'Product Designs', href: '/#graphics' },
-          { label: 'Branding', href: '/#graphics' },
-          { label: 'Banners, Flyers, Posters', href: '/#graphics' },
-        ],
-      },
-      {
-        label: 'Advertisements',
-        children: [
-          { label: 'Video Ads', href: '/#marketing' },
-          { label: 'Social Media Ads', href: '/#marketing' },
-          { label: 'Product Ads', href: '/#marketing' },
-        ],
-      },
-    ],
-  },
-  { id: 'contact', label: 'Contact', href: '/#contact' },
-  { id: 'about', label: 'About', href: siteConfig.links.about },
+  { id: 'sleek-pages', label: 'Sleek Pages', href: siteConfig.links.sleekPages, badge: 'New' },
+  { id: 'websites', label: 'Websites', href: siteConfig.links.websites },
+  { id: 'mobile-apps', label: 'Mobile Apps', href: siteConfig.links.mobileApps },
+  { id: 'products', label: 'All Products', href: siteConfig.links.products },
+  { id: 'projects', label: 'Projects', href: siteConfig.links.portfolio },
 ]
 
 export const footerUsefulLinks = [
-  { label: 'Home', href: '/#hero' },
+  { label: 'Home', href: siteConfig.links.home },
   { label: 'About us', href: siteConfig.links.about },
   { label: 'Pricing', href: siteConfig.links.prices },
   { label: 'Track order', href: siteConfig.links.trackOrder },
-  { label: 'Services', href: '/#services' },
-  { label: 'Portfolio', href: siteConfig.links.portfolio },
-  { label: 'Contact', href: '/#contact' },
+  { label: 'Projects', href: siteConfig.links.portfolio },
+  { label: 'Contact', href: siteConfig.links.contact },
 ]
 
 export const footerServiceLinks = [
-  { label: 'Web Design', href: '/#webdesign' },
-  { label: 'Web Development', href: '/#webdesign' },
-  { label: 'Mobile Apps', href: '/#appdev' },
-  { label: 'Digital Marketing', href: '/#marketing' },
-  { label: 'Graphic Design', href: '/#graphics' },
+  { label: 'Sleek Pages', href: siteConfig.links.sleekPages },
+  { label: 'Websites', href: siteConfig.links.websites },
+  { label: 'Mobile Apps', href: siteConfig.links.mobileApps },
+  { label: 'Business Systems', href: siteConfig.links.businessSystems },
+  { label: 'All Products', href: siteConfig.links.products },
 ]

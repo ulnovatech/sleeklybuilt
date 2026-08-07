@@ -1,72 +1,54 @@
 import HeroSection from '../components/sections/HeroSection'
-import ServicesSection from '../components/sections/ServicesSection'
-import ServicesExtendedSection from '../components/sections/ServicesExtendedSection'
-import BeforeAfterSection from '../components/sections/BeforeAfterSection'
-import ProcessSection from '../components/sections/ProcessSection'
-import TrustProofSection from '../components/sections/TrustProofSection'
-import WhyUsSection from '../components/sections/WhyUsSection'
-import ContactInfoSection from '../components/sections/ContactInfoSection'
-import ContactCtaBand from '../components/site/ContactCtaBand'
-import PortfolioBannerSection from '../components/sections/PortfolioBannerSection'
-import GamifiedContactForm from '../components/forms/GamifiedContactForm'
+import PositioningSection from '../components/sections/PositioningSection'
+import ProblemsWeSolveSection from '../components/sections/ProblemsWeSolveSection'
+import WhatWeBuildSection from '../components/sections/WhatWeBuildSection'
+import SelectedWorkSection from '../components/sections/SelectedWorkSection'
+import HowWeWorkSection from '../components/sections/HowWeWorkSection'
+import PeopleAskSection from '../components/sections/PeopleAskSection'
+import LetsTalkSection from '../components/sections/LetsTalkSection'
 import Reveal from '../components/motion/Reveal'
+import { usePageTitle } from '../lib/usePageTitle'
+import { homePeopleAsk } from '../config/peopleAsk'
 
-export default function HomePage({ onOpenInquiry }) {
+/**
+ * Agency IA (design-os/prompts/agency_website.md + UX-GATE §8.1):
+ * Hero → Positioning → Problems → Services → Portfolio → Process → FAQ → Contact
+ */
+export default function HomePage() {
+  usePageTitle()
+
   return (
     <>
       <HeroSection />
 
       <Reveal>
-        <ServicesSection onOpenInquiry={onOpenInquiry} />
+        <PositioningSection />
       </Reveal>
 
-      {/* Real anchors used by nav dropdowns */}
-      <div id="webdesign" className="scroll-mt-24" />
-      <div id="appdev" className="scroll-mt-24" />
-      <div id="marketing" className="scroll-mt-24" />
-      <div id="graphics" className="scroll-mt-24" />
-
-      <Reveal delay={0.05}>
-        <ServicesExtendedSection onOpenInquiry={onOpenInquiry} />
+      <Reveal>
+        <ProblemsWeSolveSection />
       </Reveal>
 
-      <Reveal delay={0.05}>
-        <BeforeAfterSection />
+      <Reveal>
+        <WhatWeBuildSection />
       </Reveal>
 
-      <Reveal delay={0.05}>
-        <ProcessSection />
+      <Reveal>
+        <SelectedWorkSection />
       </Reveal>
 
-      <Reveal delay={0.05}>
-        <TrustProofSection />
+      <Reveal>
+        <HowWeWorkSection />
       </Reveal>
 
-      <Reveal delay={0.05}>
-        <WhyUsSection />
+      <Reveal>
+        <PeopleAskSection
+          items={homePeopleAsk}
+          intro="The questions buyers ask before they write. Expand any — or skip ahead and start a project."
+        />
       </Reveal>
 
-      <Reveal delay={0.05}>
-        <ContactInfoSection />
-      </Reveal>
-
-      <section className="pb-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="rounded-3xl border border-cream-deep bg-white p-6 shadow-sm sm:p-8">
-              <GamifiedContactForm />
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <Reveal delay={0.05}>
-        <ContactCtaBand />
-      </Reveal>
-
-      <Reveal delay={0.05}>
-        <PortfolioBannerSection />
-      </Reveal>
+      <LetsTalkSection />
     </>
   )
 }

@@ -1,4 +1,5 @@
 import { countryCodes, defaultDialCode } from '../../lib/countryCodes'
+import { cn } from '../../lib/utils'
 
 export default function CountrySelect({ value, onChange, id, className = '' }) {
   return (
@@ -6,8 +7,11 @@ export default function CountrySelect({ value, onChange, id, className = '' }) {
       id={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm ${className}`}
-      aria-label="Country code"
+      className={cn(
+        'min-h-11 rounded-xl border border-cream-deep bg-surface-base px-2 py-2.5 text-body text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-dos',
+        className,
+      )}
+      aria-label={id ? undefined : 'Country code'}
     >
       {countryCodes.map((c) => (
         <option key={`${c.code}-${c.dial}`} value={c.dial}>

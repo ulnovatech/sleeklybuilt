@@ -7,9 +7,23 @@ on:
     branches: [main]
 
 jobs:
+  validate-design-os:
+    name: Validate Design OS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate Design OS corpus and .cursor rules
+        run: npm run validate:design-os
+
   build-ulnovatech:
     name: Build public_html (Linux)
     runs-on: ubuntu-latest
+    needs: [validate-design-os]
     steps:
       - uses: actions/checkout@v4
 
@@ -37,10 +51,7 @@ jobs:
   build-discovery:
     name: Build Discovery Intelligence
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: discovery
-
+    needs: [validate-design-os]
     services:
       postgres:
         image: postgres:16
@@ -63,6 +74,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve Discovery source (C0)
+        id: discovery
+        run: |
+          chmod +x scripts/resolve-discovery-src.sh
+          SRC="$(scripts/resolve-discovery-src.sh)"
+          echo "src=$SRC" >> "$GITHUB_OUTPUT"
+          echo "Resolved Discovery source: $SRC"
+
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -71,9 +90,10 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: discovery/pnpm-lock.yaml
+          cache-dependency-path: ${{ steps.discovery.outputs.src }}/pnpm-lock.yaml
 
       - name: Install, migrate, typecheck, build
+        working-directory: ${{ steps.discovery.outputs.src }}
         run: |
           pnpm install --frozen-lockfile
           pnpm db:migrate
@@ -84,11 +104,15 @@ jobs:
     name: Lint Discovery (optional)
     runs-on: ubuntu-latest
     continue-on-error: true
-    defaults:
-      run:
-        working-directory: discovery
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve Discovery source (C0)
+        id: discovery
+        run: |
+          chmod +x scripts/resolve-discovery-src.sh
+          SRC="$(scripts/resolve-discovery-src.sh)"
+          echo "src=$SRC" >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v4
         with:
@@ -98,8 +122,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: discovery/pnpm-lock.yaml
+          cache-dependency-path: ${{ steps.discovery.outputs.src }}/pnpm-lock.yaml
 
-      - run: |
+      - working-directory: ${{ steps.discovery.outputs.src }}
+        run: |
           pnpm install --frozen-lockfile
           pnpm lint

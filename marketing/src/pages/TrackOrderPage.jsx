@@ -65,7 +65,7 @@ export default function TrackOrderPage() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-orange-50/80 to-gray-50 py-12 md:py-16">
+    <div className="bg-gradient-to-b from-orange-50/80 to-gray-50 pb-12 pt-28 md:pb-16 md:pt-32">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <Reveal>
           <div className="text-center">
@@ -104,7 +104,7 @@ export default function TrackOrderPage() {
                     value={form.reference}
                     onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))}
                     placeholder="ULN-20260101120000-abcd1234"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+                    className="w-full min-h-11 rounded-xl border border-cream-deep bg-surface-base px-4 py-3 font-mono text-sm text-ink focus:border-emerald/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   />
                 </div>
                 <div>
@@ -140,7 +140,7 @@ export default function TrackOrderPage() {
                     <dd className="font-mono font-medium text-gray-900">{order.reference}</dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Template</dt>
+                    <dt className="text-gray-500">Layout</dt>
                     <dd className="font-medium text-gray-900">{order.template}</dd>
                   </div>
                   <div>

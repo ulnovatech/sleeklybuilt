@@ -12,7 +12,7 @@ export default function Home() {
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    fetch(`${API_URL}/portfolios.php`)
+    fetch(`${API_URL}/portfolios.php?collection=websites`)
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
@@ -44,9 +44,21 @@ export default function Home() {
     );
   }
 
+  if (templates.length === 0) {
+    return (
+      <div className="mx-auto max-w-lg p-6 text-center mt-10">
+        <h1 className="text-2xl font-bold mb-3">Website layouts</h1>
+        <p className="text-gray-600">
+          No published website layouts are available right now. Please check back soon,
+          or contact us from the main site.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Available Templates</h1>
+      <h1 className="text-2xl font-bold mb-4">Website layouts</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {templates.map((tpl) => (

@@ -17,5 +17,5 @@ export const apiEndpoints = {
   paymentVerify: `${import.meta.env.VITE_API_URL}/payment-verify.php`,
   packages: `${import.meta.env.VITE_API_URL}/packages.php`,
   portfolioDetail: `${import.meta.env.VITE_API_URL}/portfolio-detail.php`,
-  portfolios: `${import.meta.env.VITE_API_URL}/portfolios.php`,
+  portfolios: `${import.meta.env.VITE_API_URL}/portfolios.php?collection=websites`,
 }

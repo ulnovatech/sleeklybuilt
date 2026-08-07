@@ -1,6 +1,9 @@
 <?php
 /**
  * Template catalog — folder name is the stable ID; titles live in catalog.json.
+ *
+ * Product-line `collection` (websites | sleek-pages) is distinct from industry
+ * `category` (food, business, …).
  */
 
 function uln_portfolio_dir(): string
@@ -13,8 +16,32 @@ function uln_catalog_path(): string
     return uln_portfolio_dir() . '/catalog.json';
 }
 
+/** @return list<string> */
+function uln_known_collections(): array
+{
+    return ['websites', 'sleek-pages'];
+}
+
+function uln_default_collection(): string
+{
+    return 'websites';
+}
+
+function uln_normalize_collection(?string $value): ?string
+{
+    if ($value === null) {
+        return null;
+    }
+    $collection = strtolower(trim($value));
+    if ($collection === '' || !in_array($collection, uln_known_collections(), true)) {
+        return null;
+    }
+
+    return $collection;
+}
+
 /**
- * @return array<string, array{title?:string,description?:string,category?:string,aliases?:string[]}>
+ * @return array<string, array{title?:string,description?:string,category?:string,collection?:string,aliases?:string[]}>
  */
 function uln_load_catalog(): array
 {
@@ -74,7 +101,7 @@ function uln_resolve_template_id(string $slug): ?string
 }
 
 /**
- * @return array{title:string,description:string,category:?string}
+ * @return array{title:string,description:string,category:?string,collection:string}
  */
 function uln_template_meta(string $folderId): array
 {
@@ -84,11 +111,16 @@ function uln_template_meta(string $folderId): array
     $fallbackTitle = ucwords(str_replace(['-', '_', '.webflow.io', '-template'], ' ', $folderId));
     $fallbackTitle = preg_replace('/\s+/', ' ', trim($fallbackTitle)) ?: $folderId;
 
+    $collection = uln_normalize_collection(
+        isset($meta['collection']) ? (string) $meta['collection'] : null
+    ) ?? uln_default_collection();
+
     return [
         'title' => trim((string) ($meta['title'] ?? '')) !== '' ? (string) $meta['title'] : $fallbackTitle,
         'description' => trim((string) ($meta['description'] ?? '')) !== ''
             ? (string) $meta['description']
             : 'A professionally designed template.',
         'category' => isset($meta['category']) ? (string) $meta['category'] : null,
+        'collection' => $collection,
     ];
 }

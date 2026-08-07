@@ -45,6 +45,7 @@ final class TemplateImportController
 
         $title = $this->requiredText($input, 'title', 160);
         $category = $this->requiredText($input, 'category', 100);
+        $collection = TemplateImportPolicy::normalizeCollection($input['collection'] ?? null, true);
         $description = $this->optionalText($input, 'description', 5000);
         $createdBy = TemplateAuditLogger::actor($user);
 
@@ -65,9 +66,9 @@ final class TemplateImportController
 
             $stmt = $this->pdo->prepare(
                 'INSERT INTO template_import_jobs
-                    (status, source_url, slug, title, description, category, report_json, created_by)
+                    (status, source_url, slug, title, description, category, collection, report_json, created_by)
                  VALUES
-                    (:status, :source_url, :slug, :title, :description, :category, :report_json, :created_by)'
+                    (:status, :source_url, :slug, :title, :description, :category, :collection, :report_json, :created_by)'
             );
             try {
                 $stmt->execute([
@@ -77,6 +78,7 @@ final class TemplateImportController
                     'title' => $title,
                     'description' => $description,
                     'category' => $category,
+                    'collection' => $collection,
                     'report_json' => $report,
                     'created_by' => $createdBy,
                 ]);
@@ -128,6 +130,7 @@ final class TemplateImportController
         }
         $this->recordAudit('import_queued', $createdBy, $slug, $jobId, [
             'category' => $category,
+            'collection' => $collection,
         ]);
 
         return $this->findOrFail($jobId);
@@ -479,6 +482,10 @@ final class TemplateImportController
             'title' => (string) $row['title'],
             'description' => $row['description'],
             'category' => (string) $row['category'],
+            'collection' => TemplateImportPolicy::normalizeCollection(
+                $row['collection'] ?? TemplateImportPolicy::DEFAULT_COLLECTION,
+                false
+            ),
             'report' => $report,
             'error_message' => $row['error_message'],
             'created_by' => (string) $row['created_by'],

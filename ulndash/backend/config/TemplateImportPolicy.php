@@ -32,6 +32,48 @@ final class TemplateImportPolicy
 
     public const CTA_PUBLIC_PATH = '/portfolio/portfolio/cta.js';
 
+    /** Product-line collections (distinct from industry `category`). */
+    public const COLLECTIONS = [
+        'websites',
+        'sleek-pages',
+    ];
+
+    public const DEFAULT_COLLECTION = 'websites';
+
+    /**
+     * Normalize and validate a product-line collection id.
+     *
+     * @throws InvalidArgumentException when the value is present but invalid
+     */
+    public static function normalizeCollection(mixed $value, bool $required = true): string
+    {
+        $collection = strtolower(trim((string) ($value ?? '')));
+        if ($collection === '') {
+            if ($required) {
+                throw new InvalidArgumentException(
+                    'Collection is required. Use websites or sleek-pages.',
+                    422
+                );
+            }
+
+            return self::DEFAULT_COLLECTION;
+        }
+
+        if (!in_array($collection, self::COLLECTIONS, true)) {
+            throw new InvalidArgumentException(
+                'Collection must be one of: ' . implode(', ', self::COLLECTIONS) . '.',
+                422
+            );
+        }
+
+        return $collection;
+    }
+
+    public static function isKnownCollection(string $collection): bool
+    {
+        return in_array(strtolower(trim($collection)), self::COLLECTIONS, true);
+    }
+
     public static function projectRoot(): string
     {
         $path = realpath(__DIR__ . '/../../..');

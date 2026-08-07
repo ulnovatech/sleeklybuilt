@@ -92,4 +92,24 @@ assertSameValue(
     'CTA injection must use an absolute path for nested template pages.'
 );
 
+assertSameValue(
+    'websites',
+    TemplateImportPolicy::normalizeCollection(null, false),
+    'Missing collection should default to websites when not required.'
+);
+
+assertSameValue(
+    'sleek-pages',
+    TemplateImportPolicy::normalizeCollection('Sleek-Pages', true),
+    'Collection values should normalize to lowercase known ids.'
+);
+
+try {
+    TemplateImportPolicy::normalizeCollection('invalid', true);
+    fwrite(STDERR, "FAIL: Invalid collection should throw.\n");
+    exit(1);
+} catch (InvalidArgumentException $e) {
+    assertSameValue(422, $e->getCode(), 'Invalid collection should use 422.');
+}
+
 fwrite(STDOUT, "TemplateImportPolicy tests passed.\n");

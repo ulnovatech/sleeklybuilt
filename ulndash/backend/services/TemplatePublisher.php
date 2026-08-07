@@ -95,13 +95,27 @@ final class TemplatePublisher
             }
             $destinationInstalled = true;
 
+            $previousAliases = [];
+            if (is_array($previousCatalogEntry) && isset($previousCatalogEntry['aliases']) && is_array($previousCatalogEntry['aliases'])) {
+                $previousAliases = array_values(array_filter(
+                    array_map(static fn ($alias) => trim((string) $alias), $previousCatalogEntry['aliases']),
+                    static fn (string $alias): bool => $alias !== ''
+                ));
+            }
+
+            $collection = TemplateImportPolicy::normalizeCollection(
+                $lockedJob['collection'] ?? TemplateImportPolicy::DEFAULT_COLLECTION,
+                false
+            );
+
             $catalog[$slug] = [
                 'title' => (string) $lockedJob['title'],
                 'description' => trim((string) ($lockedJob['description'] ?? '')) !== ''
                     ? (string) $lockedJob['description']
                     : '',
                 'category' => (string) $lockedJob['category'],
-                'aliases' => [],
+                'collection' => $collection,
+                'aliases' => $previousAliases,
             ];
             ksort($catalog, SORT_NATURAL | SORT_FLAG_CASE);
             $this->writeCatalog($catalogPath, $catalog);

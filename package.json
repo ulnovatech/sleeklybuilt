@@ -1,7 +1,7 @@
 {
   "name": "ulnovatech-system",
   "version": "1.0.0",
-  "description": "Orchestrator for the UlnoVaTech multi-app system",
+    "description": "Orchestrator for the SleeklyBuilt / UlnoVaTech multi-app system. Discovery source of truth: sibling ../lead discover - ulntech (ulnovatech/discovery is a junction).",
   "scripts": {
     "dev": "concurrently \"npx serve . -p 3000\" \"npm --prefix marketing run dev -- --port 5176\" \"npm --prefix uln-blog run dev -- --port 5173\" \"npm --prefix ulndash/frontend run dev -- --port 5174\" \"npm --prefix portfolio/frontend run dev -- --port 5175\"",
     "dev:all": "concurrently -n marketing,blog,dash,portfolio,discovery,static -c blue,green,yellow,magenta,cyan,gray \"npm --prefix marketing run dev -- --port 5176\" \"npm --prefix uln-blog run dev -- --port 5173\" \"npm --prefix ulndash/frontend run dev -- --port 5174\" \"npm --prefix portfolio/frontend run dev -- --port 5175\" \"pnpm --prefix discovery dev\" \"npx serve . -p 3000\"",
@@ -26,7 +26,8 @@
     "dev:discovery": "pnpm --prefix discovery dev",
     "build:discovery": "pnpm --prefix discovery build",
     "discovery:db:migrate": "pnpm --prefix discovery db:migrate",
-    "discovery:jobs:worker": "pnpm --prefix discovery jobs:worker"
+    "discovery:jobs:worker": "pnpm --prefix discovery jobs:worker",
+    "validate:design-os": "node scripts/validate-design-os.mjs"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

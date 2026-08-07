@@ -46,9 +46,9 @@ export const proofHighlights = [
   {
     id: 'websites',
     sector: 'Websites',
-    headline: 'Template gallery with live previews',
+    headline: 'Layout gallery with live previews',
     description: 'Browse ready-made sites, customize, and launch with deposit checkout through our portfolio.',
-    cta: 'View website templates',
+    cta: 'View website layouts',
     href: '/portfolio-app/',
     image: '/assets/img/laptop-trs.png',
   },
@@ -58,7 +58,7 @@ export const proofHighlights = [
     headline: 'Custom software for real operations',
     description: 'SACCO platforms, school management, dashboards, and automation built around how you actually work.',
     cta: 'Request a quote',
-    href: '/#contact',
+    href: '/contact',
     image: '/assets/img/services-2.jpg',
   },
   {
@@ -67,7 +67,7 @@ export const proofHighlights = [
     headline: 'Maintenance when you need it',
     description: 'Hosting guidance, updates, and technical support so your product keeps running smoothly.',
     cta: 'Talk to us',
-    href: '/#contact',
+    href: '/contact',
     image: '/assets/img/services.jpg',
   },
 ]

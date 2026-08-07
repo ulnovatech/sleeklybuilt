@@ -1,42 +1,58 @@
 import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { FiArrowRight, FiMenu, FiSearch } from 'react-icons/fi'
 import { siteConfig } from '../../site.config'
 import NavMenu from './NavMenu'
 import MobileNav from './MobileNav'
+import SearchTrigger from '../search/SearchTrigger'
+import CommandPalette from '../search/CommandPalette'
+import { cn } from '../../lib/utils'
+
+/**
+ * Routes whose first band is light. Everywhere else opens on an obsidian band, so
+ * the header can sit transparent over it with cream type. Without this the header
+ * would render cream-on-cream and disappear.
+ */
+const LIGHT_TOP_ROUTES = new Set([siteConfig.links.trackOrder])
 
 function BrandMark({ tone }) {
-  const letter = siteConfig.name.charAt(0)
   const onDark = tone === 'hero'
 
   return (
-    <a href={siteConfig.links.home} className="mr-auto flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2">
+    <Link
+      to={siteConfig.links.home}
+      className={cn(
+        'mr-auto flex items-center gap-2.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+        onDark
+          ? 'focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
+          : 'focus-visible:ring-dos focus-visible:ring-offset-surface-base',
+      )}
+      aria-label={`${siteConfig.name} home`}
+    >
       <span
-        className={`grid h-8 w-8 place-items-center rounded-full serif text-base leading-none ${
-          onDark ? 'bg-cream text-emerald-deep' : 'bg-emerald-deep text-cream'
-        }`}
+        className={cn(
+          'grid h-8 w-8 place-items-center rounded-full font-serif text-base leading-none transition',
+          onDark ? 'bg-cream text-obsidian' : 'bg-emerald-deep text-cream',
+        )}
         aria-hidden="true"
       >
-        {letter}
+        {siteConfig.name.charAt(0)}
       </span>
-      <img
-        src={siteConfig.links.logo}
-        alt=""
-        className="hidden h-8 w-auto sm:block"
-        onError={(e) => {
-          e.currentTarget.style.display = 'none'
-        }}
-      />
-      <span
-        className={`serif text-xl tracking-tight ${onDark ? 'text-cream' : 'text-emerald-deep'}`}
-      >
+      <span className={cn('font-serif text-xl tracking-tight transition', onDark ? 'text-cream' : 'text-emerald-deep')}>
         {siteConfig.name}
       </span>
-    </a>
+    </Link>
   )
 }
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const { pathname } = useLocation()
+
+  const overDark = !LIGHT_TOP_ROUTES.has(pathname)
+  const tone = overDark && !scrolled ? 'hero' : 'light'
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16)
@@ -52,57 +68,85 @@ export default function Header() {
     }
   }, [mobileOpen])
 
-  const tone = scrolled ? 'light' : 'hero'
+  /* Cmd/Ctrl+K opens search from anywhere. */
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setMobileOpen(false)
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
+  const iconButtonClass = cn(
+    'inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 transition focus:outline-none focus-visible:ring-2',
+    tone === 'hero'
+      ? 'text-cream hover:bg-cream/10 focus-visible:ring-dos-inverse focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian'
+      : 'text-emerald-deep hover:bg-emerald-deep/5 focus-visible:ring-dos focus-visible:ring-offset-2 focus-visible:ring-offset-cream',
+  )
 
   return (
     <>
       <header
         id="header"
-        className={`fixed inset-x-0 top-0 z-40 transition-all duration-300 ${
-          scrolled
-            ? 'border-b border-cream-deep bg-cream/90 shadow-sm backdrop-blur-md'
-            : 'border-b border-transparent bg-transparent'
-        }`}
+        className={cn(
+          'fixed inset-x-0 top-0 z-40 border-b transition-all duration-300',
+          tone === 'hero'
+            ? 'border-transparent bg-transparent'
+            : 'border-cream-deep bg-cream/90 shadow-sm backdrop-blur-md',
+        )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-6 lg:gap-5 lg:px-10">
           <BrandMark tone={tone} />
 
           <NavMenu tone={tone} />
 
-          <a
-            href={siteConfig.links.getStarted}
-            className={`hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 sm:inline-flex ${
+          <SearchTrigger tone={tone} onOpen={() => setSearchOpen(true)} />
+
+          <Link
+            to={siteConfig.links.contact}
+            className={cn(
+              'hidden items-center gap-2 rounded-full px-5 py-2.5 text-meta font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
               tone === 'hero'
-                ? 'bg-gold text-ink hover:bg-gold-soft focus-visible:ring-offset-emerald-deep'
-                : 'bg-emerald-deep text-cream hover:bg-emerald focus-visible:ring-offset-cream'
-            }`}
+                ? 'bg-gold text-ink hover:bg-gold-soft focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
+                : 'bg-emerald-deep text-cream hover:bg-emerald focus-visible:ring-dos focus-visible:ring-offset-cream',
+            )}
           >
-            Get started
-            <span aria-hidden="true" className={tone === 'hero' ? 'text-emerald-deep' : 'text-gold'}>
-              →
-            </span>
-          </a>
+            Start a project
+            <FiArrowRight aria-hidden="true" />
+          </Link>
 
           <button
             type="button"
-            className={`inline-flex rounded-md p-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-gold xl:hidden ${
-              tone === 'hero'
-                ? 'text-cream hover:bg-cream/10 focus-visible:ring-offset-emerald-deep'
-                : 'text-emerald-deep hover:bg-emerald-deep/5 focus-visible:ring-offset-cream'
-            }`}
+            onClick={() => setSearchOpen(true)}
+            className={cn(iconButtonClass, 'lg:hidden')}
+            aria-label="Search"
+          >
+            <FiSearch className="h-5 w-5" aria-hidden="true" />
+          </button>
+
+          <button
+            type="button"
             onClick={() => setMobileOpen(true)}
+            className={cn(iconButtonClass, 'lg:hidden')}
             aria-label="Open menu"
             aria-expanded={mobileOpen}
           >
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-            </svg>
+            <FiMenu className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       </header>
 
-      <MobileNav open={mobileOpen} onClose={() => setMobileOpen(false)} />
-      <div className="h-16" aria-hidden="true" />
+      <MobileNav
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        onOpenSearch={() => setSearchOpen(true)}
+      />
+
+      <CommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   )
 }
