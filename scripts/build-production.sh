@@ -25,30 +25,30 @@ npm_install_if_needed() {
 
 composer_install_backend() {
   if ! command -v composer >/dev/null 2>&1; then
-    echo "WARN: composer not found — skipping ulndash/backend vendor install (use committed vendor or install composer)"
+    echo "WARN: composer not found — skipping sleekly-dash/backend vendor install (use committed vendor or install composer)"
     return 0
   fi
-  composer install --no-dev --optimize-autoloader --working-dir="$ROOT/ulndash/backend"
+  composer install --no-dev --optimize-autoloader --working-dir="$ROOT/sleekly-dash/backend"
 }
 
 # --- Build frontends (production mode uses each app's .env.production) ---
 npm_install_if_needed marketing
 run_step "Build marketing app" npm --prefix marketing run build
 
-if [[ -f uln-blog/package.json ]]; then
-  npm_install_if_needed uln-blog
-  run_step "Build blog app" npm --prefix uln-blog run build
+if [[ -f sleekly-blog/package.json ]]; then
+  npm_install_if_needed sleekly-blog
+  run_step "Build blog app" npm --prefix sleekly-blog run build
 else
-  echo "WARN: uln-blog/package.json missing — skipping blog build (submodule not checked out?)"
+  echo "WARN: sleekly-blog/package.json missing — skipping blog build (submodule not checked out?)"
 fi
 
-npm_install_if_needed ulndash/frontend
-run_step "Build CRM dashboard" npm --prefix ulndash/frontend run build
+npm_install_if_needed sleekly-dash/frontend
+run_step "Build CRM dashboard" npm --prefix sleekly-dash/frontend run build
 
 npm_install_if_needed portfolio/frontend
 run_step "Build portfolio app" npm --prefix portfolio/frontend run build
 
-run_step "Install PHP dependencies (ulndash backend)" composer_install_backend
+run_step "Install PHP dependencies (sleekly-dash backend)" composer_install_backend
 
 # --- Assemble public_html ---
 PUBLIC_HTML="$ROOT/public_html"
@@ -59,13 +59,13 @@ echo "==> Assemble public_html"
 
 cp -a marketing/dist/. "$PUBLIC_HTML/"
 mkdir -p "$PUBLIC_HTML/blog" "$PUBLIC_HTML/dash" "$PUBLIC_HTML/portfolio-app"
-if [[ -d uln-blog/dist ]]; then
-  cp -a uln-blog/dist/. "$PUBLIC_HTML/blog/"
+if [[ -d sleekly-blog/dist ]]; then
+  cp -a sleekly-blog/dist/. "$PUBLIC_HTML/blog/"
 else
-  echo "WARN: uln-blog/dist missing — leaving empty /blog/"
+  echo "WARN: sleekly-blog/dist missing — leaving empty /blog/"
   printf '%s\n' '<!DOCTYPE html><html><body><p>Blog build skipped.</p></body></html>' > "$PUBLIC_HTML/blog/index.html"
 fi
-cp -a ulndash/frontend/dist/. "$PUBLIC_HTML/dash/"
+cp -a sleekly-dash/frontend/dist/. "$PUBLIC_HTML/dash/"
 cp -a portfolio/frontend/dist/. "$PUBLIC_HTML/portfolio-app/"
 
 cp -f .htaccess "$PUBLIC_HTML/.htaccess"
@@ -85,8 +85,8 @@ if [[ -d portfolio/portfolio ]]; then
   cp -a portfolio/portfolio "$PUBLIC_HTML/portfolio/portfolio"
 fi
 
-mkdir -p "$PUBLIC_HTML/ulndash/backend"
-cp -a ulndash/backend/. "$PUBLIC_HTML/ulndash/backend/"
+mkdir -p "$PUBLIC_HTML/sleekly-dash/backend"
+cp -a sleekly-dash/backend/. "$PUBLIC_HTML/sleekly-dash/backend/"
 
 HTML_EXCLUDE=(marketing.html about.html prices.html)
 shopt -s nullglob

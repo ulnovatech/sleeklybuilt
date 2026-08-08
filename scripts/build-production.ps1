@@ -12,15 +12,15 @@ $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
 Invoke-BuildStep 'Build marketing app' { npm --prefix marketing run build }
-Invoke-BuildStep 'Build blog app' { npm --prefix uln-blog run build }
-Invoke-BuildStep 'Build CRM dashboard' { npm --prefix ulndash/frontend run build }
+Invoke-BuildStep 'Build blog app' { npm --prefix sleekly-blog run build }
+Invoke-BuildStep 'Build CRM dashboard' { npm --prefix sleekly-dash/frontend run build }
 Invoke-BuildStep 'Build portfolio app' { npm --prefix portfolio/frontend run build }
 
-Invoke-BuildStep 'Install PHP dependencies (ulndash backend)' {
+Invoke-BuildStep 'Install PHP dependencies (sleekly-dash backend)' {
   if (Get-Command composer -ErrorAction SilentlyContinue) {
-    composer install --no-dev --optimize-autoloader --working-dir=(Join-Path $root 'ulndash\backend')
+    composer install --no-dev --optimize-autoloader --working-dir=(Join-Path $root 'sleekly-dash\backend')
   } else {
-    Write-Warning 'composer not found — skipping ulndash/backend vendor install'
+    Write-Warning 'composer not found — skipping sleekly-dash/backend vendor install'
   }
 }
 
@@ -32,8 +32,8 @@ New-Item -ItemType Directory -Force -Path $publicHtml | Out-Null
 
 Write-Host '==> Assemble public_html'
 Copy-Item -Recurse -Force (Join-Path $root 'marketing\dist\*') $publicHtml
-Copy-Item -Recurse -Force (Join-Path $root 'uln-blog\dist') (Join-Path $publicHtml 'blog')
-Copy-Item -Recurse -Force (Join-Path $root 'ulndash\frontend\dist') (Join-Path $publicHtml 'dash')
+Copy-Item -Recurse -Force (Join-Path $root 'sleekly-blog\dist') (Join-Path $publicHtml 'blog')
+Copy-Item -Recurse -Force (Join-Path $root 'sleekly-dash\frontend\dist') (Join-Path $publicHtml 'dash')
 Copy-Item -Recurse -Force (Join-Path $root 'portfolio\frontend\dist') (Join-Path $publicHtml 'portfolio-app')
 
 Copy-Item -Force (Join-Path $root '.htaccess') (Join-Path $publicHtml '.htaccess')
@@ -49,8 +49,8 @@ Copy-Item -Recurse -Force (Join-Path $root 'portfolio\api\*') (Join-Path $public
 if (Test-Path (Join-Path $root 'portfolio\portfolio')) {
   Copy-Item -Recurse -Force (Join-Path $root 'portfolio\portfolio') (Join-Path $publicHtml 'portfolio\portfolio')
 }
-New-Item -ItemType Directory -Force -Path (Join-Path $publicHtml 'ulndash\backend') | Out-Null
-Copy-Item -Recurse -Force (Join-Path $root 'ulndash\backend\*') (Join-Path $publicHtml 'ulndash\backend')
+New-Item -ItemType Directory -Force -Path (Join-Path $publicHtml 'sleekly-dash\backend') | Out-Null
+Copy-Item -Recurse -Force (Join-Path $root 'sleekly-dash\backend\*') (Join-Path $publicHtml 'sleekly-dash\backend')
 
 $htmlExclude = @('marketing.html', 'about.html', 'prices.html')
 Get-ChildItem -Path $root -Filter '*.html' -File | Where-Object { $htmlExclude -notcontains $_.Name } | ForEach-Object {

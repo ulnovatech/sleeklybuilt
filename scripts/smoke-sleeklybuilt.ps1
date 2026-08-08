@@ -9,7 +9,7 @@ if (-not $AdminPass) { $AdminPass = 'changeme' }
 
 $ErrorActionPreference = 'Stop'
 
-Write-Host "=== UlnoVaTech smoke tests @ $Base ==="
+Write-Host "=== SleeklyBuilt smoke tests @ $Base ==="
 
 function Get-StatusCode([string]$Url, [string]$Method = 'GET', [string]$Body = $null, [string]$ContentType = $null) {
     try {
@@ -53,4 +53,4 @@ $codeNews = Get-StatusCode -Url "$Base/php/newsletter.php" -Method POST `
 Write-Host "POST /php/newsletter.php -> $codeNews"
 if ($codeNews -notin 200, 400, 409, 422, 500) { throw "FAIL: newsletter status $codeNews" }
 
-Write-Host "=== UlnoVaTech smoke tests complete ==="
+Write-Host "=== SleeklyBuilt smoke tests complete ==="

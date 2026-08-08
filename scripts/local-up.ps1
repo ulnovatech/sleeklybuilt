@@ -54,11 +54,11 @@ function Ensure-DiscoveryEnv {
 
 function Print-DockerUrls {
     Write-Host ""
-    Write-Host "=== UlnoVaTech local (Docker) ===" -ForegroundColor Cyan
+    Write-Host "=== SleeklyBuilt local (Docker) ===" -ForegroundColor Cyan
     Write-Host "  Main site:     http://localhost:8080"
     Write-Host "  CRM dash:      http://localhost:8080/dash/"
     Write-Host "  Discovery:     http://localhost:3000"
-    Write-Host "  Discovery/nginx: http://discovery.ulnovatech.store:8080  (add to hosts: 127.0.0.1 discovery.ulnovatech.store)"
+    Write-Host "  Discovery/nginx: http://discovery.sleeklybuilt.pro:8080  (add to hosts: 127.0.0.1 discovery.sleeklybuilt.pro)"
     Write-Host ""
     Write-Host "  Stop: npm run local:down"
     Write-Host ""
@@ -66,7 +66,7 @@ function Print-DockerUrls {
 
 function Print-DevUrls {
     Write-Host ""
-    Write-Host "=== UlnoVaTech local (dev servers) ===" -ForegroundColor Cyan
+    Write-Host "=== SleeklyBuilt local (dev servers) ===" -ForegroundColor Cyan
     Write-Host "  Marketing:     http://localhost:5176"
     Write-Host "  Blog:          http://localhost:5173"
     Write-Host "  CRM dash:      http://localhost:5174"
@@ -74,7 +74,7 @@ function Print-DevUrls {
     Write-Host "  Discovery:     http://localhost:3000"
     Write-Host "  Legacy static: http://localhost:3000 (root serve)"
     Write-Host ""
-    Write-Host "  PHP/API: use XAMPP Apache at http://localhost/ulnovatech (or run npm run local for Docker PHP)"
+    Write-Host "  PHP/API: use XAMPP Apache at http://localhost/sleeklybuilt (or run npm run local for Docker PHP)"
     Write-Host ""
 }
 
