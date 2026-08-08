@@ -191,26 +191,33 @@ jobs:
           # Keep Compose project aligned with the live GCE stack (infra_*).
           export COMPOSE_PROJECT_NAME=infra
 
-          docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --build
+          # Hub only first (full.yml pulls discovery-web into nginx depends_on).
+          docker compose -f infra/docker-compose.yml -f infra/docker-compose.prod.yml \
+            up -d --build
 
           # Host deploy user owns the library; php-fpm (gid 33) needs publish
           # access. setgid keeps imported files in the shared group.
-          docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
+          docker compose -f infra/docker-compose.yml exec -T php-fpm \
             sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio'
 
-          docker compose -f infra/docker-compose.full.yml run --rm discovery-migrate
-
-          docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
+          docker compose -f infra/docker-compose.yml exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 
-          docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
+          docker compose -f infra/docker-compose.yml exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/apply_dash_users_migration.php
 
-          docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
+          docker compose -f infra/docker-compose.yml exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/apply_template_import_migrations.php
 
-          docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
+          docker compose -f infra/docker-compose.yml exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/merge_template_catalog.php
+
+          # Discovery: migrate then app services.
+          docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
+            up -d --build postgres
+          docker compose -f infra/docker-compose.full.yml run --rm discovery-migrate
+          docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
+            up -d --build discovery-web discovery-worker
 
           # nginx caches upstream IPs at start — refresh after migrations and discovery-web are up
           sleep 3
