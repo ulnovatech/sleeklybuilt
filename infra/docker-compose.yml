@@ -1,7 +1,7 @@
 # SleeklyBuilt — local Docker stack (Chunk 3)
 # nginx + php-fpm + MySQL serving public_html
 
-name: sleeklybuilt
+name: infra
 
 services:
   mysql:
@@ -67,4 +67,7 @@ volumes:
 
 networks:
   sleeklybuilt:
+    # Preserve the live GCE network name so cutover does not try to
+    # delete infra_ulnovatech while hub (and other) containers still use it.
+    name: ${COMPOSE_NETWORK_NAME:-infra_ulnovatech}
     driver: bridge

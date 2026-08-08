@@ -1,9 +1,22 @@
 # Discovery Intelligence — Postgres + Next.js + job worker
-# Use with ulnovatech core:
+# Use with sleeklybuilt core:
 #   docker compose -f infra/docker-compose.yml -f infra/docker-compose.discovery.yml up -d --build
 # Or: npm run docker:discovery
+#
+# Build context (C0):
+#   Source of truth is the sibling Lead Discover tree:
+#     htdocs/lead discover - sleekly
+#   Default below builds that tree from infra/ (../../lead discover - sleekly).
+#   Locally, sleeklybuilt/discovery is a junction to the same tree so
+#   `pnpm --prefix discovery` and GCE-style `DISCOVERY_BUILD_CONTEXT=../discovery` still work.
+#   On the VM after rsync into repo/discovery, set:
+#     DISCOVERY_BUILD_CONTEXT=../discovery
 
-name: ulnovatech
+name: infra
+
+x-discovery-build: &discovery-build
+  context: ${DISCOVERY_BUILD_CONTEXT:-../../lead discover - sleekly}
+  dockerfile: Dockerfile
 
 services:
   postgres:
@@ -20,12 +33,11 @@ services:
       retries: 30
       start_period: 10s
     networks:
-      - ulnovatech
+      - sleeklybuilt
 
   discovery-migrate:
     build:
-      context: ../discovery
-      dockerfile: Dockerfile
+      <<: *discovery-build
       target: worker
     env_file:
       - ${DISCOVERY_ENV_FILE:-./env/docker.discovery.env.example}
@@ -35,12 +47,11 @@ services:
         condition: service_healthy
     restart: 'no'
     networks:
-      - ulnovatech
+      - sleeklybuilt
 
   discovery-web:
     build:
-      context: ../discovery
-      dockerfile: Dockerfile
+      <<: *discovery-build
       target: web
       args:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
@@ -68,12 +79,11 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - ulnovatech
+      - sleeklybuilt
 
   discovery-worker:
     build:
-      context: ../discovery
-      dockerfile: Dockerfile
+      <<: *discovery-build
       target: worker
     restart: unless-stopped
     env_file:
@@ -84,7 +94,7 @@ services:
       discovery-migrate:
         condition: service_completed_successfully
     networks:
-      - ulnovatech
+      - sleeklybuilt
 
   nginx:
     volumes:
@@ -100,4 +110,6 @@ volumes:
   discovery_storage:
 
 networks:
-  ulnovatech: {}
+  sleeklybuilt:
+    name: ${COMPOSE_NETWORK_NAME:-infra_ulnovatech}
+    driver: bridge
