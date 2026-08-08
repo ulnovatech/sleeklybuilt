@@ -190,43 +190,50 @@ jobs:
 
           # Keep Compose project aligned with the live GCE stack (infra_*).
           export COMPOSE_PROJECT_NAME=infra
-          COMPOSE_FULL=(docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml)
+          dc() {
+            docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml "$@"
+          }
 
           # Hub + postgres first. --no-deps on nginx avoids waiting on discovery-web.
-          "${COMPOSE_FULL[@]}" up -d --build mysql php-fpm postgres
-          "${COMPOSE_FULL[@]}" up -d --build --no-deps nginx
+          dc up -d --build mysql php-fpm postgres
+          dc up -d --build --no-deps nginx
 
           # Host deploy user owns the library; php-fpm (gid 33) needs publish
           # access. setgid keeps imported files in the shared group.
-          "${COMPOSE_FULL[@]}" exec -T php-fpm \
-            sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio'
+          dc exec -T php-fpm \
+            sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio' \
+            || echo "WARN: portfolio chgrp skipped"
 
-          "${COMPOSE_FULL[@]}" exec -T php-fpm \
+          echo "==> apply_admin_mobile_migrations"
+          dc exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 
-          "${COMPOSE_FULL[@]}" exec -T php-fpm \
+          echo "==> apply_dash_users_migration"
+          dc exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/apply_dash_users_migration.php
 
-          "${COMPOSE_FULL[@]}" exec -T php-fpm \
+          echo "==> apply_template_import_migrations"
+          dc exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/apply_template_import_migrations.php
 
-          "${COMPOSE_FULL[@]}" exec -T php-fpm \
+          echo "==> merge_template_catalog"
+          dc exec -T php-fpm \
             php /var/www/public_html/sleekly-dash/backend/scripts/merge_template_catalog.php
 
           # Discovery migrate, then app services that require it.
           # Do not block hub/auth cutover if Discovery schema migrate fails.
-          if ! "${COMPOSE_FULL[@]}" run --rm discovery-migrate; then
+          if ! dc run --rm discovery-migrate; then
             echo "::warning::discovery-migrate failed — hub/dash auth already migrated; Discovery apps not started"
             docker compose -f infra/docker-compose.full.yml logs --no-color --tail=120 discovery-migrate || true
           else
-            "${COMPOSE_FULL[@]}" up -d --build discovery-web discovery-worker
+            dc up -d --build discovery-web discovery-worker
             sleep 3
-            "${COMPOSE_FULL[@]}" up -d discovery-web
+            dc up -d discovery-web
           fi
 
-          "${COMPOSE_FULL[@]}" up -d --force-recreate --no-deps nginx
+          dc up -d --force-recreate --no-deps nginx
 
-          "${COMPOSE_FULL[@]}" ps
+          dc ps
           REMOTE
 
       - name: Smoke test (HTTP on VM)
