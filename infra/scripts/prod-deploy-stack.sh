@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# Run on the GCE VM after rsync (from /opt/sleeklybuilt/repo).
+set -euo pipefail
+
+cd /opt/sleeklybuilt/repo
+
+if [[ -f /opt/sleeklybuilt/secrets/service-account.json ]]; then
+  install -m 600 -D /opt/sleeklybuilt/secrets/service-account.json \
+    /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
+fi
+
+export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
+export DISCOVERY_BUILD_CONTEXT=../discovery
+export COMPOSE_PROJECT_NAME=infra
+
+if [[ ! -f "$SLEEKLYBUILT_ENV_FILE" ]]; then
+  echo "Missing $SLEEKLYBUILT_ENV_FILE" >&2
+  exit 1
+fi
+if [[ ! -f "$DISCOVERY_ENV_FILE" ]]; then
+  echo "Missing $DISCOVERY_ENV_FILE" >&2
+  exit 1
+fi
+
+chmod 644 "$SLEEKLYBUILT_ENV_FILE" 2>/dev/null || true
+chmod 644 "$DISCOVERY_ENV_FILE" 2>/dev/null || true
+test -r "$SLEEKLYBUILT_ENV_FILE"
+test -r "$DISCOVERY_ENV_FILE"
+
+mkdir -p /opt/sleeklybuilt/public_html/php /opt/sleeklybuilt/public_html/sleekly-dash/backend
+: > /opt/sleeklybuilt/public_html/php/.env
+: > /opt/sleeklybuilt/public_html/sleekly-dash/backend/.env
+
+if [[ -f /opt/sleeklybuilt/repo/.env && ! -f /opt/sleeklybuilt/repo/infra/.env ]]; then
+  install -m 600 /opt/sleeklybuilt/repo/.env /opt/sleeklybuilt/repo/infra/.env
+fi
+
+set -a
+# shellcheck disable=SC1090
+source "$DISCOVERY_ENV_FILE"
+set +a
+
+mkdir -p /opt/sleeklybuilt/data/template-imports \
+  /opt/sleeklybuilt/data/template-profiles \
+  /opt/sleeklybuilt/logs/template-import
+
+CRON_MARKER='# sleeklybuilt-template-import-maintenance'
+CRON_JOB="17 3 * * * /bin/bash /opt/sleeklybuilt/repo/infra/scripts/run-template-import-maintenance.sh 2>&1 | /usr/bin/logger -t sleeklybuilt-template-import-maintenance ${CRON_MARKER}"
+{
+  crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" || true
+  printf '%s\n' "$CRON_JOB"
+} | crontab -
+
+dc() {
+  docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml "$@"
+}
+
+echo "==> hub up (mysql php-fpm postgres)"
+dc up -d --build mysql php-fpm postgres
+
+echo "==> nginx up (--no-deps)"
+dc up -d --build --no-deps nginx
+
+echo "==> portfolio permissions"
+dc exec -T php-fpm \
+  sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio' \
+  || echo "WARN: portfolio chgrp skipped"
+
+echo "==> apply_admin_mobile_migrations"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
+
+echo "==> apply_dash_users_migration"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_dash_users_migration.php
+
+echo "==> apply_template_import_migrations"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_template_import_migrations.php
+
+echo "==> merge_template_catalog"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/merge_template_catalog.php
+
+echo "==> discovery-migrate"
+if ! dc run --rm discovery-migrate; then
+  echo "WARN: discovery-migrate failed — hub/dash auth already migrated; Discovery apps not started"
+  docker compose -f infra/docker-compose.full.yml logs --no-color --tail=120 discovery-migrate || true
+else
+  echo "==> discovery-web / discovery-worker up"
+  dc up -d --build discovery-web discovery-worker
+  sleep 3
+  dc up -d discovery-web
+fi
+
+echo "==> recreate nginx"
+dc up -d --force-recreate --no-deps nginx
+
+dc ps
+echo "==> prod-deploy-stack complete"
