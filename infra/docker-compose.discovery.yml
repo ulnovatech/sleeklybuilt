@@ -33,7 +33,7 @@ services:
       retries: 30
       start_period: 10s
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
   discovery-migrate:
     build:
@@ -47,7 +47,7 @@ services:
         condition: service_healthy
     restart: 'no'
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
   discovery-web:
     build:
@@ -79,7 +79,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
   discovery-worker:
     build:
@@ -94,7 +94,7 @@ services:
       discovery-migrate:
         condition: service_completed_successfully
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
   nginx:
     volumes:
@@ -110,6 +110,5 @@ volumes:
   discovery_storage:
 
 networks:
-  sleeklybuilt:
-    name: ${COMPOSE_NETWORK_NAME:-infra_ulnovatech}
+  ulnovatech:
     driver: bridge

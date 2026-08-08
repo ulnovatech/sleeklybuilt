@@ -22,7 +22,7 @@ services:
       retries: 30
       start_period: 20s
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
   php-fpm:
     build:
@@ -41,7 +41,7 @@ services:
       mysql:
         condition: service_healthy
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
   nginx:
     image: nginx:1.27-alpine
@@ -57,7 +57,7 @@ services:
     depends_on:
       - php-fpm
     networks:
-      - sleeklybuilt
+      - ulnovatech
 
 volumes:
   mysql_data:
@@ -66,8 +66,5 @@ volumes:
   template_profile_data:
 
 networks:
-  sleeklybuilt:
-    # Preserve the live GCE network name so cutover does not try to
-    # delete infra_ulnovatech while hub (and other) containers still use it.
-    name: ${COMPOSE_NETWORK_NAME:-infra_ulnovatech}
+  ulnovatech:
     driver: bridge

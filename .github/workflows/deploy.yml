@@ -188,11 +188,8 @@ jobs:
             printf '%s\n' "$CRON_JOB"
           } | crontab -
 
-          # Keep Compose project/network aligned with the live GCE stack
-          # (infra_* volumes/network). Avoid tearing down infra_ulnovatech
-          # while nginx/php/mysql (and sibling containers) still use it.
+          # Keep Compose project aligned with the live GCE stack (infra_*).
           export COMPOSE_PROJECT_NAME=infra
-          export COMPOSE_NETWORK_NAME=infra_ulnovatech
 
           docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --build
 
