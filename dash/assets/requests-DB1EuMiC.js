@@ -1,0 +1,1 @@
+import{b as s}from"./index-BmkS30_0.js";async function n(e={}){const t=new URLSearchParams(e).toString();return s(`/requests${t?`?${t}`:""}`)}async function o(e){return s(`/requests/${e}/convert`,{method:"POST"})}export{o as c,n as f};

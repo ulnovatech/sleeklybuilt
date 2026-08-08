@@ -84,33 +84,33 @@ jobs:
           DEPLOY_HOST="${DEPLOY_USER}@${GCE_SSH_HOST}"
           SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
 
-          ssh $SSH_OPTS "$DEPLOY_HOST" 'mkdir -p /opt/ulnovatech/public_html /opt/ulnovatech/repo'
+          ssh $SSH_OPTS "$DEPLOY_HOST" 'mkdir -p /opt/sleeklybuilt/public_html /opt/sleeklybuilt/repo'
 
           rsync -az --delete -e "ssh $SSH_OPTS" \
             --exclude '.env' \
             --exclude 'php/.env' \
-            --exclude 'ulndash/backend/.env' \
+            --exclude 'sleekly-dash/backend/.env' \
             --exclude 'portfolio/portfolio/' \
-            public_html/ "${DEPLOY_HOST}:/opt/ulnovatech/public_html/"
+            public_html/ "${DEPLOY_HOST}:/opt/sleeklybuilt/public_html/"
 
           # Runtime imports live in this directory. Update tracked templates
           # without deleting imported folders or replacing runtime metadata.
           ssh $SSH_OPTS "$DEPLOY_HOST" \
-            'mkdir -p /opt/ulnovatech/public_html/portfolio/portfolio'
+            'mkdir -p /opt/sleeklybuilt/public_html/portfolio/portfolio'
           rsync -az -e "ssh $SSH_OPTS" \
             --exclude 'catalog.json' \
             public_html/portfolio/portfolio/ \
-            "${DEPLOY_HOST}:/opt/ulnovatech/public_html/portfolio/portfolio/"
+            "${DEPLOY_HOST}:/opt/sleeklybuilt/public_html/portfolio/portfolio/"
           rsync -az -e "ssh $SSH_OPTS" \
             public_html/portfolio/portfolio/catalog.json \
-            "${DEPLOY_HOST}:/opt/ulnovatech/public_html/ulndash/backend/.catalog.build.json"
+            "${DEPLOY_HOST}:/opt/sleeklybuilt/public_html/sleekly-dash/backend/.catalog.build.json"
 
           rsync -az -e "ssh $SSH_OPTS" \
             --exclude 'env/*.env' \
-            --exclude 'env/docker.ulnovatech.env' \
+            --exclude 'env/docker.sleeklybuilt.env' \
             --exclude 'env/docker.discovery.env' \
             --exclude '.env' \
-            infra/ "${DEPLOY_HOST}:/opt/ulnovatech/repo/infra/"
+            infra/ "${DEPLOY_HOST}:/opt/sleeklybuilt/repo/infra/"
 
           # C0: rsync resolved Lead Discover source (sibling or ./discovery junction)
           DISCOVERY_SRC="$(./scripts/resolve-discovery-src.sh)"
@@ -119,7 +119,7 @@ jobs:
             --exclude .next \
             --exclude .turbo \
             --exclude .env \
-            "${DISCOVERY_SRC}/" "${DEPLOY_HOST}:/opt/ulnovatech/repo/discovery/"
+            "${DISCOVERY_SRC}/" "${DEPLOY_HOST}:/opt/sleeklybuilt/repo/discovery/"
 
       - name: Deploy Docker stack and run migrations
         env:
@@ -132,21 +132,21 @@ jobs:
 
           ssh $SSH_OPTS "$DEPLOY_HOST" bash -s <<'REMOTE'
           set -euo pipefail
-          cd /opt/ulnovatech/repo
+          cd /opt/sleeklybuilt/repo
 
-          if [[ -f /opt/ulnovatech/secrets/service-account.json ]]; then
-            install -m 600 -D /opt/ulnovatech/secrets/service-account.json \
-              /opt/ulnovatech/public_html/ulndash/backend/service-account.json
+          if [[ -f /opt/sleeklybuilt/secrets/service-account.json ]]; then
+            install -m 600 -D /opt/sleeklybuilt/secrets/service-account.json \
+              /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
           fi
 
-          export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
-          export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
-          export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+          export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+          export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+          export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
           # C0: on the VM, compose builds the rsynced tree (not the local sibling path)
           export DISCOVERY_BUILD_CONTEXT=../discovery
 
-          if [[ ! -f "$ULNOVATECH_ENV_FILE" ]]; then
-            echo "Missing $ULNOVATECH_ENV_FILE — create from infra/env/docker.ulnovatech.env.example on the VM" >&2
+          if [[ ! -f "$SLEEKLYBUILT_ENV_FILE" ]]; then
+            echo "Missing $SLEEKLYBUILT_ENV_FILE — create from infra/env/docker.sleeklybuilt.env.example on the VM" >&2
             exit 1
           fi
           if [[ ! -f "$DISCOVERY_ENV_FILE" ]]; then
@@ -156,19 +156,19 @@ jobs:
 
           # php-fpm runs as www-data (uid 33); mode 600 owned by deploy is unreadable → DB connection failed
           # Some env files may be root-owned after manual key injection — don't abort deploy.
-          chmod 644 "$ULNOVATECH_ENV_FILE" 2>/dev/null || true
+          chmod 644 "$SLEEKLYBUILT_ENV_FILE" 2>/dev/null || true
           chmod 644 "$DISCOVERY_ENV_FILE" 2>/dev/null || true
           # Ensure files remain readable even when chmod is denied.
-          test -r "$ULNOVATECH_ENV_FILE"
+          test -r "$SLEEKLYBUILT_ENV_FILE"
           test -r "$DISCOVERY_ENV_FILE"
           # Bind-mount targets must be files (not directories) before recreate
-          mkdir -p /opt/ulnovatech/public_html/php /opt/ulnovatech/public_html/ulndash/backend
-          : > /opt/ulnovatech/public_html/php/.env
-          : > /opt/ulnovatech/public_html/ulndash/backend/.env
+          mkdir -p /opt/sleeklybuilt/public_html/php /opt/sleeklybuilt/public_html/sleekly-dash/backend
+          : > /opt/sleeklybuilt/public_html/php/.env
+          : > /opt/sleeklybuilt/public_html/sleekly-dash/backend/.env
 
           # Compose reads MYSQL_*/POSTGRES_* from infra/.env (dir of first -f file)
-          if [[ -f /opt/ulnovatech/repo/.env && ! -f /opt/ulnovatech/repo/infra/.env ]]; then
-            install -m 600 /opt/ulnovatech/repo/.env /opt/ulnovatech/repo/infra/.env
+          if [[ -f /opt/sleeklybuilt/repo/.env && ! -f /opt/sleeklybuilt/repo/infra/.env ]]; then
+            install -m 600 /opt/sleeklybuilt/repo/.env /opt/sleeklybuilt/repo/infra/.env
           fi
 
           # Bake NEXT_PUBLIC_* into discovery-web image (compose build args, not only runtime env_file)
@@ -178,11 +178,11 @@ jobs:
           set +a
 
           # Persistent private staging and logs survive container replacement.
-          mkdir -p /opt/ulnovatech/data/template-imports \
-            /opt/ulnovatech/data/template-profiles \
-            /opt/ulnovatech/logs/template-import
-          CRON_MARKER='# ulnovatech-template-import-maintenance'
-          CRON_JOB="17 3 * * * /bin/bash /opt/ulnovatech/repo/infra/scripts/run-template-import-maintenance.sh 2>&1 | /usr/bin/logger -t ulnovatech-template-import-maintenance ${CRON_MARKER}"
+          mkdir -p /opt/sleeklybuilt/data/template-imports \
+            /opt/sleeklybuilt/data/template-profiles \
+            /opt/sleeklybuilt/logs/template-import
+          CRON_MARKER='# sleeklybuilt-template-import-maintenance'
+          CRON_JOB="17 3 * * * /bin/bash /opt/sleeklybuilt/repo/infra/scripts/run-template-import-maintenance.sh 2>&1 | /usr/bin/logger -t sleeklybuilt-template-import-maintenance ${CRON_MARKER}"
           {
             crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" || true
             printf '%s\n' "$CRON_JOB"
@@ -198,13 +198,16 @@ jobs:
           docker compose -f infra/docker-compose.full.yml run --rm discovery-migrate
 
           docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
-            php /var/www/public_html/ulndash/backend/scripts/apply_admin_mobile_migrations.php
+            php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 
           docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
-            php /var/www/public_html/ulndash/backend/scripts/apply_template_import_migrations.php
+            php /var/www/public_html/sleekly-dash/backend/scripts/apply_dash_users_migration.php
 
           docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
-            php /var/www/public_html/ulndash/backend/scripts/merge_template_catalog.php
+            php /var/www/public_html/sleekly-dash/backend/scripts/apply_template_import_migrations.php
+
+          docker compose -f infra/docker-compose.full.yml exec -T php-fpm \
+            php /var/www/public_html/sleekly-dash/backend/scripts/merge_template_catalog.php
 
           # nginx caches upstream IPs at start — refresh after migrations and discovery-web are up
           sleep 3
@@ -224,4 +227,4 @@ jobs:
           SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
           # Hub smoke with temporary nip.io Host (see docs/ACCESS.md).
           ssh $SSH_OPTS "$DEPLOY_HOST" \
-            'curl -sf -H "Host: hub.34.66.94.12.nip.io" http://127.0.0.1/health && SMOKE_HOST=hub.34.66.94.12.nip.io bash /opt/ulnovatech/repo/infra/scripts/smoke-ulnovatech.sh http://127.0.0.1'
+            'curl -sf -H "Host: hub.34.66.94.12.nip.io" http://127.0.0.1/health && SMOKE_HOST=hub.34.66.94.12.nip.io bash /opt/sleeklybuilt/repo/infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1'

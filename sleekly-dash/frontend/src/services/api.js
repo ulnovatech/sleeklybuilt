@@ -1,0 +1,240 @@
+const API_BASE =
+  import.meta.env.VITE_API_BASE ||
+  '/api';
+
+async function request(path, options = {}) {
+  const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+  const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+  const url = `${base}/${normalizedPath}`;
+  const hasBody = options.body !== undefined && options.body !== null;
+  const isFormData =
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const defaultHeaders =
+    hasBody && !isFormData ? { 'Content-Type': 'application/json' } : {};
+  const headers = { ...defaultHeaders, ...(options.headers || {}) };
+
+  const res = await fetch(url, {
+    credentials: 'include',
+    ...options,
+    headers,
+  });
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = text;
+  }
+
+  if (!res.ok) {
+    const message = (data && data.error) ? data.error : (res.statusText || 'API error');
+    const err = new Error(message);
+    err.status = res.status;
+    err.body = data;
+    throw err;
+  }
+  return data;
+}
+
+export { request };
+
+export const AuthAPI = {
+  me: () => request('/auth/me'),
+  capabilities: () => request('/auth/capabilities'),
+  login: (email, password) =>
+    request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+  register: (payload) =>
+    request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  forgotPassword: (email) =>
+    request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token, password) =>
+    request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    }),
+  logout: () => request('/auth/logout', { method: 'POST' }),
+  listUsers: () => request('/auth/users'),
+  createUser: (payload) =>
+    request('/auth/users', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  deactivateUser: (id) =>
+    request(`/auth/users/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+};
+
+export const CompaniesAPI = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/companies${qs ? `?${qs}` : ''}`);
+  },
+  get: (id) => request(`/companies/${encodeURIComponent(id)}`),
+  create: (payload) =>
+    request(`/companies`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  update: (id, payload) =>
+    request(`/companies/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  remove: (id) => request(`/companies/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  listInteractions: (companyId) => {
+    const qs = new URLSearchParams({ company_id: companyId }).toString();
+    return request(`/interactions${qs ? `?${qs}` : ''}`);
+  },
+  createInteraction: (payload) =>
+    request(`/interactions`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  importSpreadsheet: (formData) =>
+    request(`/import/companies`, {
+      method: 'POST',
+      body: formData,
+      headers: {},
+    }),
+  stats: () => request(`/companies/stats`),
+  activity: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/companies/activity${qs ? `?${qs}` : ''}`);
+  },
+  topIndustries: () => request(`/companies/top-industries`),
+};
+
+export const RequestsAPI = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/requests${qs ? `?${qs}` : ''}`);
+  },
+  get: (type, id) => request(`/requests/${encodeURIComponent(type)}/${encodeURIComponent(id)}`),
+  convertToCompany: (id) =>
+    request(`/requests/${encodeURIComponent(id)}/convert`, { method: 'POST' }),
+};
+
+export const CompetitorsAPI = {
+  stats: () => request(`/competitors/stats`),
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/competitors${qs ? `?${qs}` : ''}`);
+  },
+  get: (id) => request(`/competitors/${encodeURIComponent(id)}`),
+  create: (payload) =>
+    request(`/competitors`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  update: (id, payload) =>
+    request(`/competitors/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  remove: (id) => request(`/competitors/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  importSpreadsheet: (formData) =>
+    request(`/import/competitors`, {
+      method: 'POST',
+      body: formData,
+      headers: {},
+    }),
+};
+
+export const ProspectsAPI = {
+  stats: () => request(`/prospects/stats`),
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/prospects${qs ? `?${qs}` : ''}`);
+  },
+  get: (id) => request(`/prospects/${encodeURIComponent(id)}`),
+  create: (payload) =>
+    request(`/prospects`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  update: (id, payload) =>
+    request(`/prospects/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  remove: (id) => request(`/prospects/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  convertToCompany: (id, payload = {}) =>
+    request(`/prospects/${encodeURIComponent(id)}/convert`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  importSpreadsheet: (formData) =>
+    request(`/import/prospects`, {
+      method: 'POST',
+      body: formData,
+      headers: {},
+    }),
+};
+
+export const TemplatesAPI = {
+  list: () => request('/templates'),
+  sections: (slug) =>
+    request(`/templates/${encodeURIComponent(slug)}/sections`),
+  previewSections: (slug, payload) =>
+    request(`/templates/${encodeURIComponent(slug)}/sections/preview`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  applySectionDraft: (slug, token) =>
+    request(
+      `/templates/${encodeURIComponent(slug)}/section-drafts/${encodeURIComponent(token)}/apply`,
+      { method: 'POST' },
+    ),
+  rollbackSections: (slug) =>
+    request(`/templates/${encodeURIComponent(slug)}/sections/rollback`, {
+      method: 'POST',
+    }),
+  update: (slug, payload) =>
+    request(`/templates/${encodeURIComponent(slug)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+};
+
+export const TemplateImportsAPI = {
+  list: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/template-imports${qs ? `?${qs}` : ''}`);
+  },
+  get: (id) => request(`/template-imports/${encodeURIComponent(id)}`),
+  create: (payload) =>
+    request('/template-imports', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  publish: (id, force = false) =>
+    request(`/template-imports/${encodeURIComponent(id)}/publish`, {
+      method: 'POST',
+      body: JSON.stringify({ force }),
+    }),
+  rollback: (id) =>
+    request(`/template-imports/${encodeURIComponent(id)}/rollback`, {
+      method: 'POST',
+    }),
+  discard: (id) =>
+    request(`/template-imports/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+};
+
+export const SettingsAPI = {
+  getSiteContact: () => request('/settings/site-contact'),
+  updateSiteContact: (payload) =>
+    request('/settings/site-contact', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+};

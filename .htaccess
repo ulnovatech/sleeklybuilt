@@ -9,8 +9,9 @@ RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# CRM API → ulndash PHP backend
-RewriteRule ^api/(.*)$ ulndash/backend/$1 [L]
+# CRM API → sleekly-dash PHP frontend controller
+# Route through api.php (do not map onto backend/public/, which is a real directory).
+RewriteRule ^api/(.*)$ sleekly-dash/backend/api.php [L,QSA]
 
 # Marketing SPA fallback (preserve sub-apps and static handlers)
 RewriteCond %{REQUEST_URI} !^/api/
@@ -21,6 +22,7 @@ RewriteCond %{REQUEST_URI} !^/blog/
 RewriteCond %{REQUEST_URI} !^/dash/
 RewriteCond %{REQUEST_URI} !^/portfolio-app/
 RewriteCond %{REQUEST_URI} !^/portfolio/
+RewriteCond %{REQUEST_URI} !^/sleekly-dash/
 RewriteCond %{REQUEST_URI} !^/ulndash/
 RewriteRule ^ index.html [L]
 

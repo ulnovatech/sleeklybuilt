@@ -1,4 +1,4 @@
-# Nginx routing for UlnoVaTech (GCE / Docker)
+# Nginx routing for SleeklyBuilt (GCE / Docker)
 
 Replaces Apache `.htaccess` rules with nginx `server` blocks.
 
@@ -8,14 +8,14 @@ Replaces Apache `.htaccess` rules with nginx `server` blocks.
 |------|---------|
 | [`nginx.conf`](nginx.conf) | Global nginx config |
 | [`snippets/fastcgi-php.conf`](snippets/fastcgi-php.conf) | Shared PHP-FPM params |
-| [`conf.d/ulnovatech.conf`](conf.d/ulnovatech.conf) | Main site (`ulnovatech.store`) |
+| [`conf.d/sleeklybuilt.conf`](conf.d/sleeklybuilt.conf) | Main site (`sleeklybuilt.pro`) |
 | [`conf.d/discovery.conf`](conf.d/discovery.conf) | Discovery subdomain → Next.js |
 
 ## Apache → nginx mapping
 
 | Apache source | nginx location |
 |-------------|----------------|
-| [`.htaccess`](../../.htaccess) `/api/*` → `ulndash/backend/` | `location /api/` → `api.php` via FastCGI |
+| [`.htaccess`](../../.htaccess) `/api/*` → `sleekly-dash/backend/` | `location /api/` → `api.php` via FastCGI |
 | [`.htaccess`](../../.htaccess) marketing SPA fallback | `location /` → `try_files … /index.html` |
 | [`scripts/htaccess/blog.htaccess`](../../scripts/htaccess/blog.htaccess) | `location ^~ /blog/` |
 | [`scripts/htaccess/dash.htaccess`](../../scripts/htaccess/dash.htaccess) | `location ^~ /dash/` |
@@ -33,12 +33,12 @@ Replaces Apache `.htaccess` rules with nginx `server` blocks.
 
 ## Discovery subdomain (Chunk 4)
 
-When using `docker-compose.discovery.yml` or `docker-compose.full.yml`, nginx loads [`conf.d/discovery.conf`](conf.d/discovery.conf) and proxies `discovery.ulnovatech.store` to `discovery-web:3000`.
+When using `docker-compose.discovery.yml` or `docker-compose.full.yml`, nginx loads [`conf.d/discovery.conf`](conf.d/discovery.conf) and proxies `discovery.sleeklybuilt.pro` to `discovery-web:3000`.
 
 Local test with Host header:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}" -H "Host: discovery.ulnovatech.store" http://localhost:8080/
+curl -s -o /dev/null -w "%{http_code}" -H "Host: discovery.sleeklybuilt.pro" http://localhost:8080/
 ```
 
 Or open http://localhost:3000 (discovery-web published directly).
