@@ -4,7 +4,7 @@ set -euo pipefail
 
 BASE="${1:-http://localhost:8080}"
 HOST_HDR="${SMOKE_HOST:-hub.34.66.94.12.nip.io}"
-ADMIN_USER="${DASH_ADMIN_USER:-admin}"
+ADMIN_USER="${DASH_ADMIN_USER:-ulnovatech@gmail.com}"
 ADMIN_PASS="${DASH_ADMIN_PASS:-changeme}"
 CURL=(curl -s -H "Host: ${HOST_HDR}")
 

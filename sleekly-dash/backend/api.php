@@ -27,10 +27,10 @@ $authController = new AuthController($auth, $mobileAuth);
 
 // Ensure env bootstrap admin lands in dash_users on first request after migration.
 try {
-    $auth->users()->bootstrapFromEnvIfEmpty();
+    $auth->users()->ensureMotherAccount();
 } catch (Throwable $e) {
     if (getenv('APP_DEBUG') === 'true') {
-        error_log('dash_users bootstrap: ' . $e->getMessage());
+        error_log('dash_users mother ensure: ' . $e->getMessage());
     }
 }
 

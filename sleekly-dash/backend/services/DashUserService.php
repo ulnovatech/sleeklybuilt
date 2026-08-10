@@ -11,6 +11,10 @@ class DashUserService
 {
     public const MIN_PASSWORD_LENGTH = 12;
     public const RESET_TTL_SECONDS = 3600;
+    /** Canonical first admin for prod / fresh installs. */
+    public const MOTHER_EMAIL = 'ulnovatech@gmail.com';
+    public const MOTHER_PASSWORD = 'changeme';
+    public const MOTHER_USERNAME = 'admin';
 
     public function __construct(
         private PDO $pdo,
@@ -66,32 +70,42 @@ class DashUserService
             return null;
         }
 
-        $username = trim((string) (getenv('DASH_ADMIN_USER') ?: ''));
-        $passHash = (string) (getenv('DASH_ADMIN_PASS_HASH') ?: '');
-        $passPlain = (string) (getenv('DASH_ADMIN_PASS') ?: '');
-        $emailEnv = trim((string) (getenv('DASH_ADMIN_EMAIL') ?: ''));
+        // Prefer the canonical mother account on empty installs.
+        return $this->ensureMotherAccount();
+    }
 
-        if ($username === '' && $emailEnv === '') {
-            return null;
+    /**
+     * Ensure the mother admin exists (ulnovatech@gmail.com).
+     * Creates it with the initial password when missing; does not reset an existing password.
+     */
+    public function ensureMotherAccount(): array
+    {
+        $existing = $this->findByEmail(self::MOTHER_EMAIL);
+        if ($existing) {
+            if (!(int) ($existing['is_active'] ?? 0)) {
+                $this->pdo->prepare('UPDATE dash_users SET is_active = 1 WHERE id = :id')
+                    ->execute([':id' => $existing['id']]);
+                $existing = $this->findById((int) $existing['id']) ?? $existing;
+            }
+            return $existing;
         }
-        if ($passHash === '' && $passPlain === '') {
-            return null;
+
+        $passPlain = self::MOTHER_PASSWORD;
+
+        $username = self::MOTHER_USERNAME;
+
+        // Avoid username collision with a prior bootstrap user.
+        $check = $this->pdo->prepare('SELECT id FROM dash_users WHERE username = :u LIMIT 1');
+        $check->execute([':u' => $username]);
+        if ($check->fetch()) {
+            $username = null;
         }
-
-        $email = $emailEnv !== ''
-            ? strtolower($emailEnv)
-            : (str_contains($username, '@')
-                ? strtolower($username)
-                : strtolower(($username !== '' ? $username : 'admin') . '@local.sleeklybuilt'));
-
-        $hash = $passHash !== '' ? $passHash : password_hash($passPlain, PASSWORD_DEFAULT);
-        $uname = $username !== '' && !str_contains($username, '@') ? $username : null;
 
         return $this->createUser([
-            'email' => $email,
-            'username' => $uname,
-            'password_hash' => $hash,
-            'display_name' => $uname ?: 'Admin',
+            'email' => self::MOTHER_EMAIL,
+            'username' => $username,
+            'password_hash' => password_hash($passPlain, PASSWORD_DEFAULT),
+            'display_name' => 'Admin',
             'role' => 'admin',
         ]);
     }

@@ -70,9 +70,10 @@ foreach ($statements as $statement) {
 $users = new DashUserService($pdo);
 $seeded = $users->bootstrapFromEnvIfEmpty();
 if ($seeded) {
-    fwrite(STDOUT, 'Seeded bootstrap admin: ' . $seeded['email'] . "\n");
-} else {
-    fwrite(STDOUT, "No bootstrap seed needed (users already exist or env credentials missing).\n");
+    fwrite(STDOUT, 'Seeded first admin (empty table): ' . $seeded['email'] . "\n");
 }
+
+$mother = $users->ensureMotherAccount();
+fwrite(STDOUT, 'Mother account ready: ' . $mother['email'] . " / initial password changeme (change after sign-in)\n");
 
 fwrite(STDOUT, "Migration 013_dash_users applied.\n");
