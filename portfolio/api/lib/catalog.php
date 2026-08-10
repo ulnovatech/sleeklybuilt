@@ -101,7 +101,7 @@ function uln_resolve_template_id(string $slug): ?string
 }
 
 /**
- * @return array{title:string,description:string,category:?string,collection:string}
+ * @return array{title:string,description:string,category:?string,collection:string,layoutFit:?string,businessTypes:list<string>}
  */
 function uln_template_meta(string $folderId): array
 {
@@ -115,12 +115,33 @@ function uln_template_meta(string $folderId): array
         isset($meta['collection']) ? (string) $meta['collection'] : null
     ) ?? uln_default_collection();
 
+    $businessTypes = [];
+    if (isset($meta['businessTypes']) && is_array($meta['businessTypes'])) {
+        foreach ($meta['businessTypes'] as $type) {
+            if (!is_string($type)) {
+                continue;
+            }
+            $normalized = strtolower(trim($type));
+            if ($normalized !== '') {
+                $businessTypes[] = $normalized;
+            }
+        }
+        $businessTypes = array_values(array_unique($businessTypes));
+    }
+
+    $layoutFit = isset($meta['layoutFit']) ? strtolower(trim((string) $meta['layoutFit'])) : '';
+    if ($layoutFit === '') {
+        $layoutFit = null;
+    }
+
     return [
         'title' => trim((string) ($meta['title'] ?? '')) !== '' ? (string) $meta['title'] : $fallbackTitle,
         'description' => trim((string) ($meta['description'] ?? '')) !== ''
             ? (string) $meta['description']
-            : 'A professionally designed template.',
+            : 'A professionally designed layout.',
         'category' => isset($meta['category']) ? (string) $meta['category'] : null,
         'collection' => $collection,
+        'layoutFit' => $layoutFit,
+        'businessTypes' => $businessTypes,
     ];
 }

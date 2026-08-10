@@ -3,19 +3,25 @@
     "title": "Bildium",
     "description": "Construction and architecture showcase — polished for contractors and studios.",
     "category": "business",
-    "collection": "websites"
+    "collection": "websites",
+    "layoutFit": "contractor",
+    "businessTypes": ["construction"]
   },
   "crave": {
     "title": "Crave",
-    "description": "Bold food and lifestyle template ready for restaurants and brands.",
+    "description": "Bold food and lifestyle layout ready for restaurants and brands.",
     "category": "food",
-    "collection": "websites"
+    "collection": "websites",
+    "layoutFit": "ordering",
+    "businessTypes": ["restaurants"]
   },
   "mentara.webflow.io": {
     "title": "Mentara",
     "description": "Clean health and wellness site for clinics and care brands.",
     "category": "health",
     "collection": "websites",
+    "layoutFit": "booking",
+    "businessTypes": ["clinics"],
     "aliases": ["Health"]
   },
   "nique-template.webflow.io": {
@@ -23,13 +29,17 @@
     "description": "Restaurant and café experience with menus, booking, and atmosphere.",
     "category": "food",
     "collection": "websites",
+    "layoutFit": "menu",
+    "businessTypes": ["restaurants", "cafes"],
     "aliases": ["Restaurant & Café", "Restaurant & Cafe"]
   },
   "rosoi.webflow.io": {
     "title": "Rosoi",
-    "description": "Ecommerce-ready restaurant and dining template.",
+    "description": "Commerce-ready restaurant and dining layout.",
     "category": "food",
     "collection": "websites",
+    "layoutFit": "ordering",
+    "businessTypes": ["restaurants"],
     "aliases": []
   },
   "willey-fragrance.webflow.io": {
@@ -37,13 +47,17 @@
     "description": "Ecommerce fragrance and fashion storefront with product pages and checkout.",
     "category": "ecommerce",
     "collection": "websites",
+    "layoutFit": "catalog",
+    "businessTypes": ["fashion"],
     "aliases": ["Fragrance and Fashion"]
   },
   "zeki-template.webflow.io": {
     "title": "Zeki",
-    "description": "Spa and beauty ecommerce template with products, blog, and shop.",
+    "description": "Spa and beauty commerce layout with products, blog, and shop.",
     "category": "beauty",
     "collection": "websites",
+    "layoutFit": "booking",
+    "businessTypes": ["salons"],
     "aliases": ["Spa & Beauty", "Spa and Beauty"]
   }
 }

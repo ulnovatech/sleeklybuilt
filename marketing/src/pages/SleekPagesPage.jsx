@@ -18,7 +18,7 @@ export default function SleekPagesPage() {
           collection="sleek-pages"
           eyebrow="Sleek Pages gallery"
           title="Layouts ready to personalise"
-          intro="Each layout is a finished foundation we brand for you. The gallery fills as we publish new Sleek Pages."
+          intro="Each layout is a finished foundation we brand for you. Filter by business type or layout fit, then open a live preview."
           emptyTitle="Sleek Pages gallery is filling up"
           emptyBody="We have not published Sleek Pages here yet. Start a project and we will match you to a layout — or browse our full website layouts meanwhile."
           ctaLabel="Order this layout"

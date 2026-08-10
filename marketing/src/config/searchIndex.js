@@ -1,6 +1,7 @@
 import { siteConfig } from '../site.config'
 import { productLines } from './products'
 import { productCatalogSearchEntries } from './productCatalog'
+import { businessFitSearchEntries } from './businessFit'
 
 /**
  * Static half of the search index. Layout results are fetched live from the
@@ -15,6 +16,7 @@ export const productEntries = [
     keywords: line.keywords,
   })),
   ...productCatalogSearchEntries,
+  ...businessFitSearchEntries,
 ]
 
 export const pageEntries = [

@@ -37,7 +37,7 @@ try {
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
     if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-        $domainBase = $scheme . '://' . $host . '/ulnovatech';
+        $domainBase = $scheme . '://' . $host . '/sleeklybuilt';
     } else {
         $domainBase = $scheme . '://' . $host;
     }
@@ -90,6 +90,8 @@ try {
             "description" => $meta['description'],
             "category" => $meta['category'],
             "collection" => $meta['collection'],
+            "layoutFit" => $meta['layoutFit'],
+            "businessTypes" => $meta['businessTypes'],
             "entry" => $entry,
             "screenshots" => $screenshots,
             "mainImage" => $mainImage,

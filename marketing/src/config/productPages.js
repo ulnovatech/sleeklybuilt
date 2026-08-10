@@ -36,7 +36,7 @@ export const sleekPagesContent = {
       id: 'sp-what-is',
       question: 'What is a Sleek Page?',
       answer:
-        'A premium one-page or compact layout we personalise for your brand and publish quickly. It is a finished foundation — not a DIY builder template.',
+        'A premium one-page or compact layout we personalise for your brand and publish quickly. It is a finished foundation — not a DIY builder kit.',
     },
     {
       id: 'sp-how-fast',
@@ -198,7 +198,7 @@ export const businessSystemsContent = {
       points: ['Roles and permissions', 'Approvals and status history', 'Exports when you still need a sheet'],
     },
     {
-      title: 'Fit the industry, not a template pitch',
+      title: 'Fit the industry, not a generic pitch',
       body: 'SACCO, school, clinic, retail or logistics — we model your real process, then automate the painful parts.',
       points: ['Discovery before build', 'Written scope you can share with stakeholders', 'Phased delivery you can try weekly'],
     },
@@ -247,7 +247,13 @@ export const productsIndexFaq = [
     id: 'all-which',
     question: 'Which product should I start with?',
     answer:
-      'Need something online this week? Start with Sleek Pages. Need many pages or a shop? Websites. Need customers paying on their phones? Mobile Apps. Need to run the back office? Business Systems. Prefer browsing by job — inventory, MoMo invoicing, LMS, POS — use Browse by need on this page.',
+      'Need something online this week? Start with Sleek Pages. Need many pages or a shop? Websites. Need customers paying on their phones? Mobile Apps. Need to run the back office? Business Systems. Prefer browsing by job — inventory, MoMo invoicing, LMS, POS — use Browse by need on this page. Looking for a layout for your industry? Filter by business type on Websites or Sleek Pages.',
+  },
+  {
+    id: 'all-layout-fit',
+    question: 'How do I find a layout for my kind of business?',
+    answer:
+      'Open Websites (or Sleek Pages when published) and filter by business type or layout fit — restaurants, clinics, real estate, catalog, booking, and more. Search works too. If nothing matches yet, start a project and we will point you to the closest fit.',
   },
   {
     id: 'all-systems-depth',

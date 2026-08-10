@@ -886,6 +886,28 @@ Stacked mobile; category chips scroll horizontally; one category panel; accordio
 Gallery nine-state matrix (§9); FAQ omit if &lt;4; media progressive / text-first on fail.  
 Guide: tab selected / item expanded / hash deep-link to `#guide-<category>`.
 
+#### Layout gallery — business type → layout fit (Wave 9+)
+
+**Named docs:** `ecommerce_catalog` (narrowing), `search`, `feature_sections`; Empty / Loading / Error systems.  
+**Vocabulary (hard rule):** never “template” in visitor UI or copy — use **layout**, **layout fit**, **live preview**.
+
+**User journey:** Arrive unsure → filter by business type and/or layout fit (or search) → short matching set → live preview → Start a project / Order layout.
+
+**UX flow:**
+
+```
+PageHeader → features → LayoutsGallery
+  → BusinessFitFilters (search + type + fit)
+  → results | filter-empty | collection-empty | error
+→ PeopleAsk → ContactCtaBand
+```
+
+**Screen layout:** Mobile — search + horizontal fit chips; Desktop — compact filter row above grid. Typical need = one quiet line for the active fit, not a third filter wall. Opportunity Status stays out (Discovery operator only).
+
+**Component structure:** `BusinessFitFilters` → `LayoutsGallery` results. Taxonomy: `config/businessFit.js`.
+
+**States:** Loading skeletons (existing); filter empty — teach + clear + contact; collection empty — existing; error — existing. URL sync: `?type=` + `?fit=` and `#fit-<id>` for Cmd+K.
+
 ---
 
 ### 15.3.5 Pricing `/prices`

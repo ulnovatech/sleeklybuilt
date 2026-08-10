@@ -3,12 +3,18 @@ import { apiEndpoints } from '../site.config'
 
 /** Maps a catalog record onto the shape the UI consumes. */
 function normalizeLayout(item) {
+  const businessTypes = Array.isArray(item.businessTypes)
+    ? item.businessTypes.filter((v) => typeof v === 'string' && v.trim())
+    : []
+
   return {
     slug: item.name,
     title: item.title || item.name,
     description: item.description || '',
     category: item.category || '',
     collection: item.collection || '',
+    layoutFit: typeof item.layoutFit === 'string' ? item.layoutFit : '',
+    businessTypes,
     /** Live static preview of the published site */
     previewUrl: item.entry,
     /** Deep link into the portfolio app for this layout */
