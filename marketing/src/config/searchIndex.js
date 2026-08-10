@@ -1,17 +1,21 @@
 import { siteConfig } from '../site.config'
 import { productLines } from './products'
+import { productCatalogSearchEntries } from './productCatalog'
 
 /**
  * Static half of the search index. Layout results are fetched live from the
  * published catalog — see CommandPalette.
  */
-export const productEntries = productLines.map((line) => ({
-  id: line.id,
-  label: line.label,
-  description: line.tagline,
-  href: line.href,
-  keywords: line.keywords,
-}))
+export const productEntries = [
+  ...productLines.map((line) => ({
+    id: line.id,
+    label: line.label,
+    description: line.tagline,
+    href: line.href,
+    keywords: line.keywords,
+  })),
+  ...productCatalogSearchEntries,
+]
 
 export const pageEntries = [
   {

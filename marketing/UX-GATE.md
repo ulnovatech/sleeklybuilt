@@ -835,7 +835,7 @@ ContactPage / LetsTalkSection
 │   ├── Progress (n/N + bar + dots)
 │   ├── Single question + one control
 │   └── Send only on final prompt
-├── ContactChannelPanel (compact)
+├── ContactChannelPanel (explained: response + best-for)
 └── SubmissionConfirmation
 ```
 
@@ -859,29 +859,32 @@ ContactPage / LetsTalkSection
 
 #### Named docs
 
-`feature_sections`, `faq`, `agency_website`, `content_intelligence`; gallery uses empty/loading/error systems + catalog contract.
+`feature_sections`, `faq`, `agency_website`, `content_intelligence`, `ecommerce_catalog` (narrowing); gallery uses empty/loading/error systems + catalog contract.
 
 #### User journey
 
-Choose line → confirm fit → resolve objections → contact or browse layouts.
+Choose line **or** narrow by need → expand one capability → confirm fit → contact or product-line page.
 
 #### UX flow
 
 ```
-PageHeader (not full hero) → features → optional LayoutsGallery → PeopleAsk → ContactCtaBand
+Product lines: PageHeader → features → optional LayoutsGallery → PeopleAsk → ContactCtaBand
+/products: PageHeader → four lines → ProductGuide (tabs + nested disclosure) → PeopleAsk → ContactCtaBand
 ```
 
 #### Screen layout
 
-Stacked mobile; restrained desktop splits; left-aligned headers; one primary CTA (**Start a project**).
+Stacked mobile; category chips scroll horizontally; one category panel; accordion nesting (one open detail at a time preferred); one primary CTA (**Start a project**).
 
 #### Component structure
 
-`ProductPageLayout` → PageHeader, features, LayoutsGallery*, PeopleAsk, ContactCtaBand.
+`ProductPageLayout` → PageHeader, features, LayoutsGallery*, PeopleAsk, ContactCtaBand.  
+`/products` → PageHeader, product line grid, `ProductGuide`, PeopleAsk, ContactCtaBand.
 
 #### States
 
-Gallery nine-state matrix (§9); FAQ omit if &lt;4; media progressive / text-first on fail.
+Gallery nine-state matrix (§9); FAQ omit if &lt;4; media progressive / text-first on fail.  
+Guide: tab selected / item expanded / hash deep-link to `#guide-<category>`.
 
 ---
 

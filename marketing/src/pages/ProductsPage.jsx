@@ -3,6 +3,7 @@ import PageHeader from '../components/site/PageHeader'
 import ActionLink from '../components/site/ActionLink'
 import ContactCtaBand from '../components/site/ContactCtaBand'
 import PeopleAskSection from '../components/sections/PeopleAskSection'
+import ProductGuide from '../components/products/ProductGuide'
 import { Section, SectionHeading } from '../components/site/Section'
 import NavLink from '../components/layout/NavLink'
 import Reveal from '../components/motion/Reveal'
@@ -12,8 +13,13 @@ import { siteConfig } from '../site.config'
 import { usePageTitle } from '../lib/usePageTitle'
 
 /**
- * All products index — one primary conversion (Start a project).
- * Product cards are informational paths; they must not compete with the CTA.
+ * Products index — guided catalogue.
+ *
+ * Journey: arrive → choose a product line OR narrow by need → expand one capability → contact / line page.
+ * Layout: header → four lines → nested need guide → FAQ → CTA.
+ * States: static content (no empty/load/error); disclosure + tab selection are the interaction states.
+ *
+ * Named docs: ecommerce_catalog (narrowing), feature_sections, faq, content_intelligence.
  */
 export default function ProductsPage() {
   usePageTitle('All Products')
@@ -23,15 +29,15 @@ export default function ProductsPage() {
       <PageHeader
         eyebrow="All products"
         title="Everything you need to launch and grow"
-        intro="Four product lines — pick the one that matches the problem, or tell us and we will point you."
+        intro="Start with a product line, or browse by the job you need done — websites, operations, payments, community, workflow or a specialized build."
         actions={
           <>
             <ActionLink href={siteConfig.links.contact}>
               Start a project
               <FiArrowRight aria-hidden="true" />
             </ActionLink>
-            <ActionLink href={siteConfig.links.portfolio} variant="ghostDark">
-              Browse projects
+            <ActionLink href="#product-guide" variant="ghostDark">
+              Browse by need
             </ActionLink>
           </>
         }
@@ -39,9 +45,9 @@ export default function ProductsPage() {
 
       <Section className="section-light scroll-mt-24" id="catalogue">
         <SectionHeading
-          eyebrow="Catalogue"
+          eyebrow="Step 1"
           title="Choose a product line"
-          intro="Each line is a destination, not a package tier."
+          intro="Four destinations. Each is a path — not a package tier."
         />
 
         <ul className="mt-12 grid gap-6 md:grid-cols-2">
@@ -77,6 +83,10 @@ export default function ProductsPage() {
           ))}
         </ul>
       </Section>
+
+      <Reveal>
+        <ProductGuide />
+      </Reveal>
 
       <Reveal>
         <PeopleAskSection items={productsIndexFaq} />

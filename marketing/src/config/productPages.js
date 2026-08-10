@@ -247,7 +247,13 @@ export const productsIndexFaq = [
     id: 'all-which',
     question: 'Which product should I start with?',
     answer:
-      'Need something online this week? Start with Sleek Pages. Need many pages or a shop? Websites. Need customers paying on their phones? Mobile Apps. Need to run the back office? Business Systems. Unsure — tell us the problem and we will recommend one path.',
+      'Need something online this week? Start with Sleek Pages. Need many pages or a shop? Websites. Need customers paying on their phones? Mobile Apps. Need to run the back office? Business Systems. Prefer browsing by job — inventory, MoMo invoicing, LMS, POS — use Browse by need on this page.',
+  },
+  {
+    id: 'all-systems-depth',
+    question: 'Do you only build websites, or full systems too?',
+    answer:
+      'Both. Beyond websites we build inventory, CRM, HR, POS, invoicing with Mobile Money, subscriptions, marketplaces, LMS, forums, listing boards, dashboards, ticketing, approvals and specialized verticals like restaurants, events and clinics — scoped to the workflow you actually run.',
   },
   {
     id: 'all-bundle',

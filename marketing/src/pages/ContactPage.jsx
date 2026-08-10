@@ -20,9 +20,9 @@ export default function ContactPage() {
       />
 
       <Section className="section-light py-10 md:py-14" id="contact">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,28rem)_1fr] lg:items-start lg:gap-14">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-14">
           <GamifiedContactForm />
-          <ContactChannelPanel />
+          <ContactChannelPanel className="lg:sticky lg:top-24" />
         </div>
       </Section>
     </>
