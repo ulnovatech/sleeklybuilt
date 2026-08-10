@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useId, useState } from 'react'
 import { FiArrowRight, FiCheck, FiSearch } from 'react-icons/fi'
-import Reveal from '../components/motion/Reveal'
+import PageHeader from '../components/site/PageHeader'
 import PhoneInput from '../components/forms/PhoneInput'
 import { defaultDialCode } from '../components/forms/CountrySelect'
-import { apiEndpoints, siteConfig } from '../site.config'
+import { apiEndpoints } from '../site.config'
+import { useSiteConfig } from '../context/SiteContactContext'
+import { usePageTitle } from '../lib/usePageTitle'
+import { cn } from '../lib/utils'
 
 const empty = {
   reference: '',
@@ -12,26 +14,44 @@ const empty = {
   phone: '',
 }
 
+/**
+ * Track order — short task form with inline errors (Wave 9 Phase C).
+ * Not multi-step theatre; proportionate to lookup.
+ */
 export default function TrackOrderPage() {
+  usePageTitle('Track order')
+  const siteConfig = useSiteConfig()
+  const formId = useId()
   const [form, setForm] = useState(empty)
   const [loading, setLoading] = useState(false)
   const [order, setOrder] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [formError, setFormError] = useState('')
 
-  const progress = useMemo(() => (order ? 100 : form.reference && form.phone ? 50 : 25), [order, form])
+  const setField = (key, value) => {
+    setForm((f) => ({ ...f, [key]: value }))
+    setErrors((e) => {
+      const next = { ...e }
+      delete next[key]
+      return next
+    })
+    setFormError('')
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.reference.trim()) {
-      toast.error('Enter your payment reference.')
-      return
-    }
-    if (!form.phone.trim()) {
-      toast.error('Enter the phone number used when ordering.')
+    const next = {}
+    if (!form.reference.trim()) next.reference = 'Enter your payment reference.'
+    if (!form.phone.trim()) next.phone = 'Enter the phone number used when ordering.'
+    setErrors(next)
+    if (Object.keys(next).length) {
+      setFormError('Fix the highlighted fields to look up your order.')
       return
     }
 
     setLoading(true)
     setOrder(null)
+    setFormError('')
     try {
       const response = await fetch(apiEndpoints.orderStatus, {
         method: 'POST',
@@ -46,14 +66,13 @@ export default function TrackOrderPage() {
 
       if (response.ok && result.success) {
         setOrder(result.order)
-        toast.success('Order found!')
         return
       }
 
-      toast.error(result.message || 'Could not find your order.')
+      setFormError(result.message || 'Could not find your order. Check the reference and phone, then try again.')
     } catch (err) {
       console.error(err)
-      toast.error('Something went wrong. Please try again.')
+      setFormError('Something went wrong. Check your connection and try again.')
     } finally {
       setLoading(false)
     }
@@ -62,110 +81,138 @@ export default function TrackOrderPage() {
   const reset = () => {
     setOrder(null)
     setForm(empty)
+    setErrors({})
+    setFormError('')
   }
 
   return (
-    <div className="bg-gradient-to-b from-orange-50/80 to-gray-50 pb-12 pt-28 md:pb-16 md:pt-32">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <Reveal>
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wider text-brand">Client portal</p>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900 md:text-4xl">Track your order</h1>
-            <p className="mx-auto mt-3 max-w-xl text-gray-600">
-              Enter your payment reference and phone number to see deposit status and next steps.
+    <>
+      <PageHeader
+        eyebrow="Client portal"
+        title="Track your order"
+        intro="Enter your payment reference and the phone number used at checkout to see deposit status and next steps."
+      />
+
+      <section className="section-light">
+        <div className="mx-auto max-w-xl px-6 lg:px-10">
+          <div className="rounded-dos-xl border border-subtle bg-surface-raised p-6 shadow-sm sm:p-8">
+            <h2 className="display-card text-emerald-deep">{order ? 'Your order status' : 'Look up your order'}</h2>
+            <p className="mt-2 text-meta text-ink-soft">
+              Reference usually starts with <span className="font-mono text-ink">ULN-</span>
             </p>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.05}>
-          <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-6 shadow-lg md:p-8">
-            <div className="mb-6 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {order ? 'Your order status' : 'Look up your order'}
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Reference starts with <span className="font-mono text-gray-700">ULN-</span>
-                </p>
-              </div>
-              <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-bold text-brand">{progress}%</span>
-            </div>
-
-            <div className="mb-6 h-2 overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${progress}%` }} />
-            </div>
 
             {!order ? (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+                {formError ? (
+                  <div
+                    role="alert"
+                    className="rounded-dos-xl border border-status-danger/25 bg-status-danger-surface px-4 py-3 text-sm text-status-danger"
+                  >
+                    {formError}
+                  </div>
+                ) : null}
+
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Payment reference</label>
+                  <label htmlFor={`${formId}-ref`} className="block text-meta font-semibold text-emerald-deep">
+                    Payment reference
+                  </label>
+                  <p id={`${formId}-ref-hint`} className="mt-1 text-sm text-content-muted">
+                    From your payment confirmation or invoice.
+                  </p>
                   <input
+                    id={`${formId}-ref`}
                     type="text"
                     value={form.reference}
-                    onChange={(e) => setForm((f) => ({ ...f, reference: e.target.value }))}
-                    placeholder="ULN-20260101120000-abcd1234"
-                    className="w-full min-h-11 rounded-xl border border-cream-deep bg-surface-base px-4 py-3 font-mono text-sm text-ink focus:border-emerald/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                    onChange={(e) => setField('reference', e.target.value)}
+                    aria-invalid={errors.reference ? true : undefined}
+                    aria-describedby={[`${formId}-ref-hint`, errors.reference ? `${formId}-ref-error` : null]
+                      .filter(Boolean)
+                      .join(' ')}
+                    placeholder="ULN-…"
+                    className={cn(
+                      'mt-2 w-full min-h-11 rounded-dos-xl border bg-surface-base px-4 py-3 font-mono text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-dos',
+                      errors.reference ? 'border-status-danger/40' : 'border-subtle focus:border-action-primary/40',
+                    )}
                   />
+                  {errors.reference ? (
+                    <p id={`${formId}-ref-error`} className="mt-2 text-sm text-status-danger">
+                      {errors.reference}
+                    </p>
+                  ) : null}
                 </div>
+
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">Phone used at checkout</label>
                   <PhoneInput
                     dialCode={form.dialCode}
                     phone={form.phone}
-                    onDialCodeChange={(dialCode) => setForm((f) => ({ ...f, dialCode }))}
-                    onPhoneChange={(phone) => setForm((f) => ({ ...f, phone }))}
+                    onDialCodeChange={(dialCode) => setField('dialCode', dialCode)}
+                    onPhoneChange={(phone) => setField('phone', phone)}
+                    phoneId={`${formId}-phone`}
+                    dialId={`${formId}-dial`}
+                    describedBy={errors.phone ? `${formId}-phone-error` : undefined}
+                    invalid={Boolean(errors.phone)}
                   />
+                  {errors.phone ? (
+                    <p id={`${formId}-phone-error`} className="mt-2 text-sm text-status-danger">
+                      {errors.phone}
+                    </p>
+                  ) : null}
                 </div>
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-6 py-4 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-action-primary-hover px-6 text-meta font-semibold text-cream transition duration-fast ease-dos hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 disabled:opacity-60"
                 >
-                  <FiSearch />
+                  <FiSearch aria-hidden="true" />
                   {loading ? 'Looking up…' : 'Track my order'}
-                  {!loading && <FiArrowRight />}
+                  {!loading ? <FiArrowRight aria-hidden="true" /> : null}
                 </button>
               </form>
             ) : (
-              <div className="space-y-6">
-                <div className="rounded-xl border border-green-200 bg-green-50 p-5">
-                  <p className="text-sm font-medium text-green-800">{order.status_label}</p>
-                  <h3 className="mt-1 text-xl font-bold text-gray-900">{order.headline}</h3>
-                  <p className="mt-2 text-sm text-gray-600">{order.next_step}</p>
+              <div className="mt-8 space-y-6">
+                <div
+                  className="rounded-dos-xl border border-status-success/25 bg-status-success-surface p-5"
+                  role="status"
+                >
+                  <p className="text-meta font-semibold text-status-success">{order.status_label}</p>
+                  <h3 className="mt-1 display-card text-emerald-deep">{order.headline}</h3>
+                  <p className="mt-2 text-body text-ink-soft">{order.next_step}</p>
                 </div>
 
-                <dl className="grid gap-3 rounded-xl bg-gray-50 p-5 text-sm sm:grid-cols-2">
+                <dl className="grid gap-3 rounded-dos-xl bg-surface-sunken p-5 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-gray-500">Reference</dt>
-                    <dd className="font-mono font-medium text-gray-900">{order.reference}</dd>
+                    <dt className="text-content-muted">Reference</dt>
+                    <dd className="font-mono font-medium text-ink">{order.reference}</dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Layout</dt>
-                    <dd className="font-medium text-gray-900">{order.template}</dd>
+                    <dt className="text-content-muted">Layout</dt>
+                    <dd className="font-medium text-ink">{order.template}</dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Package</dt>
-                    <dd className="font-medium text-gray-900">{order.package_title}</dd>
+                    <dt className="text-content-muted">Package</dt>
+                    <dd className="font-medium text-ink">{order.package_title}</dd>
                   </div>
                   <div>
-                    <dt className="text-gray-500">Deposit</dt>
-                    <dd className="font-bold text-brand">{order.deposit_label}</dd>
+                    <dt className="text-content-muted">Deposit</dt>
+                    <dd className="font-semibold text-emerald-deep">{order.deposit_label}</dd>
                   </div>
                 </dl>
 
                 <div>
-                  <h4 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">Progress</h4>
+                  <h4 className="mb-4 text-meta font-semibold uppercase tracking-wide text-content-muted">Progress</h4>
                   <ol className="space-y-3">
                     {order.timeline?.map((step, index) => (
                       <li key={step.id} className="flex items-start gap-3">
                         <span
-                          className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                            step.done ? 'bg-brand text-white' : 'bg-gray-200 text-gray-500'
-                          }`}
+                          className={cn(
+                            'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold',
+                            step.done ? 'bg-action-primary-hover text-cream' : 'bg-surface-sunken text-content-muted',
+                          )}
                         >
-                          {step.done ? <FiCheck className="h-4 w-4" /> : index + 1}
+                          {step.done ? <FiCheck className="h-4 w-4" aria-hidden="true" /> : index + 1}
                         </span>
-                        <span className={step.done ? 'font-medium text-gray-900' : 'text-gray-500'}>{step.label}</span>
+                        <span className={step.done ? 'font-medium text-ink' : 'text-content-muted'}>{step.label}</span>
                       </li>
                     ))}
                   </ol>
@@ -175,7 +222,7 @@ export default function TrackOrderPage() {
                   <button
                     type="button"
                     onClick={reset}
-                    className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                    className="min-h-11 rounded-full border border-subtle px-5 text-meta font-semibold text-ink-soft transition hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   >
                     Look up another order
                   </button>
@@ -183,7 +230,7 @@ export default function TrackOrderPage() {
                     href={siteConfig.whatsapp}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-lg bg-brand px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-brand-dark"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-action-primary-hover px-5 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   >
                     Chat with support
                   </a>
@@ -191,8 +238,8 @@ export default function TrackOrderPage() {
               </div>
             )}
           </div>
-        </Reveal>
-      </div>
-    </div>
+        </div>
+      </section>
+    </>
   )
 }

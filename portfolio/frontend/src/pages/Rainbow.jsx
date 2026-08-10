@@ -1,377 +1,403 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { apiEndpoints, hubHref, siteConfig } from '../site.config'
 
-const Rainbow = () => {
-  const [activeTab, setActiveTab] = useState('frontend');
+const services = [
+  {
+    id: 'frontend',
+    title: 'Frontend Development',
+    description: 'Modern, responsive web interfaces that engage users',
+    technologies: ['React', 'Next.js', 'TypeScript', 'Vue.js', 'Tailwind CSS'],
+    features: ['Responsive Design', 'Component Libraries', 'Performance Optimization', 'Cross-browser Compatibility'],
+  },
+  {
+    id: 'backend',
+    title: 'Backend Development',
+    description: 'Scalable server-side solutions with robust APIs',
+    technologies: ['Node.js', 'Python', 'PHP', 'Ruby', 'Go'],
+    features: ['RESTful APIs', 'Database Design', 'Authentication Systems', 'Scalable Architecture'],
+  },
+  {
+    id: 'fullstack',
+    title: 'Full-Stack Development',
+    description: 'Complete solutions from database to user interface',
+    technologies: ['MERN Stack', 'MEAN Stack', 'LAMP Stack', 'Django + React'],
+    features: ['End-to-End Development', 'Database Integration', 'API Development', 'Deployment & Hosting'],
+  },
+  {
+    id: 'mobile',
+    title: 'Mobile App Development',
+    description: 'Native and cross-platform mobile applications',
+    technologies: ['React Native', 'Flutter', 'Swift', 'Kotlin'],
+    features: ['iOS & Android Apps', 'Cross-Platform Solutions', 'Push Notifications', 'Offline Functionality'],
+  },
+  {
+    id: 'uiux',
+    title: 'UI/UX Design',
+    description: 'User-centered design that converts visitors to customers',
+    technologies: ['Figma', 'Adobe XD', 'Sketch', 'InVision'],
+    features: ['Wireframing & Prototyping', 'User Research', 'Visual Design', 'Design Systems'],
+  },
+]
+
+const fieldClass =
+  'mt-2 w-full min-h-11 rounded-xl border border-subtle bg-surface-base px-4 py-3 text-body text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-dos'
+
+/**
+ * Custom build / quote page — soft-neutral brand mood (Wave 9 Phase E).
+ * Real contactus POST preserved; no fabricated metrics or purple/blue gradients.
+ */
+export default function Rainbow() {
+  const [activeTab, setActiveTab] = useState('frontend')
+  const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState({})
+  const [attempted, setAttempted] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     company: '',
     service: '',
     budget: '',
     message: '',
-    timeline: '1-3 months'
-  });
+    timeline: '1-3 months',
+  })
 
-  const services = [
-    {
-      id: 'frontend',
-      title: 'Frontend Development',
-      icon: '💻',
-      description: 'Modern, responsive web interfaces that engage users',
-      technologies: ['React', 'Next.js', 'TypeScript', 'Vue.js', 'Tailwind CSS'],
-      features: [
-        'Responsive Design',
-        'Component Libraries',
-        'Performance Optimization',
-        'Cross-browser Compatibility'
-      ]
-    },
-    {
-      id: 'backend',
-      title: 'Backend Development',
-      icon: '⚙️',
-      description: 'Scalable server-side solutions with robust APIs',
-      technologies: ['Node.js', 'Python', 'PHP', 'Ruby', 'Go'],
-      features: [
-        'RESTful APIs',
-        'Database Design',
-        'Authentication Systems',
-        'Scalable Architecture'
-      ]
-    },
-    {
-      id: 'fullstack',
-      title: 'Full-Stack Development',
-      icon: '🔗',
-      description: 'Complete solutions from database to user interface',
-      technologies: ['MERN Stack', 'MEAN Stack', 'LAMP Stack', 'Django + React'],
-      features: [
-        'End-to-End Development',
-        'Database Integration',
-        'API Development',
-        'Deployment & Hosting'
-      ]
-    },
-    {
-      id: 'mobile',
-      title: 'Mobile App Development',
-      icon: '📱',
-      description: 'Native and cross-platform mobile applications',
-      technologies: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'Xamarin'],
-      features: [
-        'iOS & Android Apps',
-        'Cross-Platform Solutions',
-        'Push Notifications',
-        'Offline Functionality'
-      ]
-    },
-    {
-      id: 'uiux',
-      title: 'UI/UX Design',
-      icon: '🎨',
-      description: 'User-centered design that converts visitors to customers',
-      technologies: ['Figma', 'Adobe XD', 'Sketch', 'InVision', 'Principle'],
-      features: [
-        'Wireframing & Prototyping',
-        'User Research',
-        'Visual Design',
-        'Design Systems'
-      ]
-    }
-  ];
+  const active = services.find((s) => s.id === activeTab) || services[0]
+
+  const validate = () => {
+    const next = {}
+    if (!formData.name.trim()) next.name = 'Enter your full name.'
+    if (!formData.email.trim()) next.email = 'Enter your email.'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) next.email = 'Enter a valid email.'
+    if (!formData.phone.trim()) next.phone = 'Enter your phone number.'
+    if (!formData.service) next.service = 'Select a service.'
+    if (!formData.message.trim()) next.message = 'Describe the project briefly.'
+    return next
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    try {
-      const response = await fetch('/api/developer-quote', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+    e.preventDefault()
+    setAttempted(true)
+    const next = validate()
+    setErrors(next)
+    if (Object.keys(next).length) {
+      toast.error('Please complete the required fields before sending.')
+      return
+    }
 
-      if (response.ok) {
-        toast.success('Thank you! We\'ll review your requirements and get back to you within 24 hours.');
+    const submissionKey =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `sk-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+
+    const body = new FormData()
+    body.append('name', formData.name.trim())
+    body.append('email', formData.email.trim())
+    body.append('phone', formData.phone.trim())
+    body.append('subject', `Custom development quote — ${formData.service}`)
+    body.append('intent', 'project')
+    body.append('submission_key', submissionKey)
+    body.append(
+      'message',
+      [
+        formData.message.trim(),
+        '',
+        `Company: ${formData.company.trim() || '—'}`,
+        `Service: ${formData.service}`,
+        `Budget: ${formData.budget || '—'}`,
+        `Timeline: ${formData.timeline}`,
+        'Source: portfolio /rainbow quote form',
+      ].join('\n'),
+    )
+
+    setSubmitting(true)
+    try {
+      const response = await fetch(apiEndpoints.contact, { method: 'POST', body })
+      const result = await response.json().catch(() => ({}))
+
+      if (response.ok && result.status === 'success') {
+        toast.success(
+          result.reference
+            ? `Received — reference ${result.reference}. We reply within one working day.`
+            : 'Thank you! We will review your requirements and reply within one working day.',
+        )
         setFormData({
           name: '',
           email: '',
+          phone: '',
           company: '',
           service: '',
           budget: '',
           message: '',
-          timeline: '1-3 months'
-        });
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to submit request. Please try again.');
+          timeline: '1-3 months',
+        })
+        return
       }
+
+      toast.error(result.message || 'Could not send your request. Please try again or use the main contact form.')
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Something went wrong. Please try again.');
+      console.error(error)
+      toast.error('Something went wrong. Try again, or start a project from the main site.')
+    } finally {
+      setSubmitting(false)
     }
-  };
+  }
+
+  const scrollToQuote = () => {
+    document.getElementById('quote-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) {
+      setErrors((current) => {
+        const next = { ...current }
+        delete next[name]
+        return next
+      })
+    }
+  }
+
+  const fieldClassFor = (id) =>
+    `${fieldClass} ${errors[id] && attempted ? 'border-status-danger/40' : ''}`
+
+  const FieldError = ({ id }) =>
+    errors[id] && attempted ? (
+      <p id={`rainbow-${id}-error`} className="mt-1 text-meta text-status-danger" role="alert">
+        {errors[id]}
+      </p>
+    ) : null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
-        <section className="text-center mb-16">
-          <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full mb-6">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span>Lightning Fast Development • Expert Team • Scalable Solutions</span>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Custom Development
-            <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              That Drives Results
-            </span>
+    <div className="bg-surface-base py-10 md:py-14">
+      <div className="mx-auto max-w-content px-6 lg:px-10">
+        <section className="mx-auto max-w-3xl text-center">
+          <p className="eyebrow">Custom build</p>
+          <h1 className="mt-3 font-display text-display-hero text-emerald-deep">
+            Custom development for teams that need it to work
           </h1>
-          
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
-            Need help with custom development? We have a team of experienced software engineers 
-            specializing in both Backend and Frontend development. From startups to enterprises, 
-            we build solutions that scale.
+          <p className="mt-4 text-body text-ink-soft md:text-lead">
+            Experienced engineers for frontend, backend, full-stack, mobile, and product design — from startups to
+            established teams.
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={scrollToQuote}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-accent px-6 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos sm:w-auto"
+            >
+              Request a quote
+            </button>
             <Link
               to="/order"
-              className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-lg"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-subtle bg-surface-raised px-6 text-meta font-semibold text-emerald-deep transition hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos sm:w-auto"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-              </svg>
-              Start Your Project
+              Start from a layout
             </Link>
-            <button
-              onClick={handleSubmit}
-              className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors duration-200 shadow-lg border-2 border-blue-600"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Free Consultation
-            </button>
           </div>
         </section>
 
-        {/* Services Grid */}
-        <section className="mb-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Our Expertise</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We specialize in modern technologies and proven development practices to deliver exceptional results
-            </p>
+        <section className="mt-16">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="font-display text-display-section text-emerald-deep">Expertise</h2>
+            <p className="mt-3 text-body text-ink-soft">Select an area to see typical stack and scope.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className={`group cursor-pointer rounded-xl p-6 transition-all duration-300 ${
-                  activeTab === service.id
-                    ? 'bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 shadow-lg'
-                    : 'bg-white border border-gray-200 hover:shadow-md hover:border-gray-300'
-                }`}
-                onClick={() => setActiveTab(service.id)}
-              >
-                <div className="flex items-start space-x-4 mb-4">
-                  <div className="text-3xl">{service.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{service.title}</h3>
-                    <p className="text-gray-600">{service.description}</p>
-                  </div>
-                  {activeTab === service.id && (
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                
-                <div className="space-y-3 mb-4">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm mb-2">Technologies</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {service.technologies.map((tech, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm mb-2">Key Features</h4>
-                    <ul className="space-y-1 text-sm text-gray-600">
-                      {service.features.map((feature, index) => (
-                        <li key={index} className="flex items-center space-x-2">
-                          <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {services.map((service) => {
+              const selected = activeTab === service.id
+              return (
+                <button
+                  key={service.id}
+                  type="button"
+                  onClick={() => setActiveTab(service.id)}
+                  className={`rounded-xl border p-5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-dos ${
+                    selected
+                      ? 'border-action-primary/40 bg-action-primary-hover/5 shadow-sm'
+                      : 'border-subtle bg-surface-raised hover:border-action-primary/25'
+                  }`}
+                >
+                  <h3 className="font-display text-display-card text-emerald-deep">{service.title}</h3>
+                  <p className="mt-2 text-meta text-ink-soft">{service.description}</p>
+                </button>
+              )
+            })}
           </div>
 
-          {/* Active Service Details */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="mt-8 rounded-xl border border-subtle bg-surface-raised p-6 shadow-sm md:p-8">
+            <div className="grid gap-10 lg:grid-cols-2">
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  {services.find(s => s.id === activeTab)?.title}
-                </h3>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  {services.find(s => s.id === activeTab)?.description}
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2">Timeline</h4>
-                    <p className="text-sm text-blue-700">2-8 weeks depending on complexity</p>
+                <h3 className="font-display text-display-section text-emerald-deep">{active.title}</h3>
+                <p className="mt-3 text-body text-ink-soft">{active.description}</p>
+
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-xl border border-subtle bg-surface-sunken p-4">
+                    <h4 className="text-meta font-semibold text-emerald-deep">Typical timeline</h4>
+                    <p className="mt-1 text-meta text-ink-soft">2–8 weeks depending on complexity</p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-green-900 mb-2">Starting At</h4>
-                    <p className="text-sm text-green-700">UGX 1,500,000</p>
+                  <div className="rounded-xl border border-subtle bg-surface-sunken p-4">
+                    <h4 className="text-meta font-semibold text-emerald-deep">Starting at</h4>
+                    <p className="mt-1 text-meta text-ink-soft">UGX 1,500,000</p>
                   </div>
                 </div>
-                
-                <ul className="space-y-3 text-gray-700 mb-6">
-                  <li className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span>Free initial consultation and requirements analysis</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span>Agile development with regular progress updates</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span>Comprehensive testing and quality assurance</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span>Deployment and post-launch support</span>
-                  </li>
+
+                <h4 className="mt-6 text-meta font-semibold text-emerald-deep">Technologies</h4>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {active.technologies.map((tech) => (
+                    <span key={tech} className="rounded-full bg-surface-sunken px-2.5 py-1 text-xs text-ink-soft">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+
+                <h4 className="mt-6 text-meta font-semibold text-emerald-deep">Included focus</h4>
+                <ul className="mt-2 space-y-2 text-meta text-ink-soft">
+                  {active.features.map((feature) => (
+                    <li key={feature} className="flex gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald" aria-hidden="true" />
+                      {feature}
+                    </li>
+                  ))}
                 </ul>
               </div>
-              
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
-                  <h4 className="text-lg font-semibold mb-3">Ready to Build?</h4>
-                  <p className="text-blue-100 mb-4">Get your project started today</p>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span>Phone:</span>
-                      <span className="font-semibold">+256 772 169 960</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Email:</span>
-                      <span className="font-semibold">ulnovatech@gmail.com</span>
-                    </div>
-                  </div>
+
+              <div className="rounded-xl border border-subtle bg-surface-sunken p-6">
+                <p className="eyebrow">Ready to build?</p>
+                <p className="mt-3 font-display text-display-card text-emerald-deep">
+                  Tell us what you need — we reply within one working day.
+                </p>
+                <div className="mt-6 space-y-2 text-meta text-ink-soft">
+                  <p>
+                    <a
+                      href={`tel:${siteConfig.primaryPhone}`}
+                      className="font-semibold text-emerald hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                    >
+                      {siteConfig.primaryPhone}
+                    </a>
+                  </p>
+                  <p>
+                    <a
+                      href={`mailto:${siteConfig.email}`}
+                      className="font-semibold text-emerald hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                    >
+                      {siteConfig.email}
+                    </a>
+                  </p>
                 </div>
-                
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-2">Recent Projects</h4>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>E-commerce Platform</span>
-                      <span className="text-green-600">Completed</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SaaS Dashboard</span>
-                      <span className="text-blue-600">In Progress</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Mobile Banking App</span>
-                      <span className="text-purple-600">Planning</span>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={scrollToQuote}
+                  className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-accent px-5 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                >
+                  Jump to quote form
+                </button>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Quote Form */}
-        <section className="mb-16">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Get Your Free Quote</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Tell us about your project and we'll provide a detailed proposal within 24 hours
+        <section id="quote-form" className="mt-16 scroll-mt-24">
+          <div className="rounded-xl border border-subtle bg-surface-raised p-6 shadow-sm md:p-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="font-display text-display-section text-emerald-deep">Request a quote</h2>
+              <p className="mt-3 text-body text-ink-soft">
+                Messages go to our real contact inbox — we reply within one working day.
+              </p>
+              <p className="mt-3 text-meta text-ink-soft">
+                Prefer the main site?{' '}
+                <a
+                  href={hubHref('contact?intent=project')}
+                  className="font-semibold text-emerald underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                >
+                  Start a project on SleeklyBuilt
+                </a>
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form onSubmit={handleSubmit} className="mx-auto mt-10 grid max-w-2xl gap-5 sm:grid-cols-2" noValidate>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                <label htmlFor="rainbow-name" className="block text-meta font-semibold text-emerald-deep">
+                  Full name *
+                </label>
                 <input
+                  id="rainbow-name"
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="John Doe"
+                  className={fieldClassFor('name')}
+                  autoComplete="name"
+                  aria-invalid={Boolean(errors.name && attempted)}
+                  aria-describedby={errors.name && attempted ? 'rainbow-name-error' : undefined}
                   required
                 />
+                <FieldError id="name" />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                <label htmlFor="rainbow-email" className="block text-meta font-semibold text-emerald-deep">
+                  Email *
+                </label>
                 <input
+                  id="rainbow-email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="john@example.com"
+                  className={fieldClassFor('email')}
+                  autoComplete="email"
+                  aria-invalid={Boolean(errors.email && attempted)}
+                  aria-describedby={errors.email && attempted ? 'rainbow-email-error' : undefined}
                   required
                 />
+                <FieldError id="email" />
               </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+              <div>
+                <label htmlFor="rainbow-phone" className="block text-meta font-semibold text-emerald-deep">
+                  Phone *
+                </label>
                 <input
+                  id="rainbow-phone"
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  className={fieldClassFor('phone')}
+                  autoComplete="tel"
+                  aria-invalid={Boolean(errors.phone && attempted)}
+                  aria-describedby={errors.phone && attempted ? 'rainbow-phone-error' : undefined}
+                  required
+                />
+                <FieldError id="phone" />
+              </div>
+              <div>
+                <label htmlFor="rainbow-company" className="block text-meta font-semibold text-emerald-deep">
+                  Company
+                </label>
+                <input
+                  id="rainbow-company"
                   type="text"
                   name="company"
                   value={formData.company}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Your company (optional)"
+                  className={fieldClass}
+                  autoComplete="organization"
                 />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Service Needed *</label>
+                <label htmlFor="rainbow-service" className="block text-meta font-semibold text-emerald-deep">
+                  Service needed *
+                </label>
                 <select
+                  id="rainbow-service"
                   name="service"
                   value={formData.service}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={fieldClassFor('service')}
+                  aria-invalid={Boolean(errors.service && attempted)}
+                  aria-describedby={errors.service && attempted ? 'rainbow-service-error' : undefined}
                   required
                 >
                   <option value="">Select a service</option>
@@ -382,32 +408,37 @@ const Rainbow = () => {
                   <option value="uiux">UI/UX Design</option>
                   <option value="other">Other</option>
                 </select>
+                <FieldError id="service" />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Budget Range</label>
+                <label htmlFor="rainbow-budget" className="block text-meta font-semibold text-emerald-deep">
+                  Budget range
+                </label>
                 <select
+                  id="rainbow-budget"
                   name="budget"
                   value={formData.budget}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={fieldClass}
                 >
                   <option value="">Select budget range</option>
                   <option value="under-1m">Under UGX 1,000,000</option>
                   <option value="1m-3m">UGX 1M - 3M</option>
                   <option value="3m-10m">UGX 3M - 10M</option>
                   <option value="over-10m">Over UGX 10M</option>
-                  <option value="discuss">Let's discuss</option>
+                  <option value="discuss">Let&apos;s discuss</option>
                 </select>
               </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Timeline *</label>
+              <div className="sm:col-span-2">
+                <label htmlFor="rainbow-timeline" className="block text-meta font-semibold text-emerald-deep">
+                  Timeline *
+                </label>
                 <select
+                  id="rainbow-timeline"
                   name="timeline"
                   value={formData.timeline}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={fieldClass}
                   required
                 >
                   <option value="1-3 months">1-3 months</option>
@@ -416,88 +447,64 @@ const Rainbow = () => {
                   <option value="urgent">ASAP (under 1 month)</option>
                 </select>
               </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Project Details *</label>
+              <div className="sm:col-span-2">
+                <label htmlFor="rainbow-message" className="block text-meta font-semibold text-emerald-deep">
+                  Project details *
+                </label>
                 <textarea
+                  id="rainbow-message"
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
-                  rows="4"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Tell us about your project requirements, goals, and any specific features you need..."
+                  rows={4}
+                  className={fieldClassFor('message')}
+                  aria-invalid={Boolean(errors.message && attempted)}
+                  aria-describedby={errors.message && attempted ? 'rainbow-message-error' : undefined}
                   required
                 />
+                <FieldError id="message" />
               </div>
-              
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <button
                   type="submit"
-                  disabled={!formData.name || !formData.email || !formData.service || !formData.message}
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                  disabled={
+                    submitting ||
+                    !formData.name ||
+                    !formData.email ||
+                    !formData.phone ||
+                    !formData.service ||
+                    !formData.message
+                  }
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-action-primary-hover px-6 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <svg className="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  Get Your Free Quote
+                  {submitting ? 'Sending…' : 'Send quote request'}
                 </button>
               </div>
             </form>
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 text-center">
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-blue-600 mb-2">50+</div>
-            <div className="text-gray-600">Projects Delivered</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-purple-600 mb-2">98%</div>
-            <div className="text-gray-600">Client Satisfaction</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-green-600 mb-2">24h</div>
-            <div className="text-gray-600">Response Time</div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <div className="text-3xl font-bold text-indigo-600 mb-2">100%</div>
-            <div className="text-gray-600">On-Time Delivery</div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="text-center">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-12 rounded-2xl">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Transform Your Idea into Reality?</h2>
-            <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-              Our team is ready to partner with you on your next big project. Let's create something amazing together.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a
-                href="mailto:ulnovatech@gmail.com"
-                className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors duration-200 shadow-lg"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Email Us Now
-              </a>
-              <a
-                href="tel:+256772169960"
-                className="inline-flex items-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 transition-colors duration-200"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                Call +256 772 169 960
-              </a>
-            </div>
+        <section className="mt-16 rounded-xl bg-obsidian px-6 py-12 text-center text-cream md:px-10">
+          <h2 className="font-display text-display-section text-cream">Prefer to talk first?</h2>
+          <p className="mx-auto mt-3 max-w-xl text-body text-cream/70">
+            Email or call — no fabricated delivery stats, just a real reply within one working day.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a
+              href={`mailto:${siteConfig.email}`}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-accent px-6 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse sm:w-auto"
+            >
+              Email {siteConfig.email}
+            </a>
+            <a
+              href={`tel:${siteConfig.primaryPhone}`}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-cream/25 px-6 text-meta font-semibold text-cream transition hover:bg-cream/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse sm:w-auto"
+            >
+              Call {siteConfig.primaryPhone}
+            </a>
           </div>
         </section>
       </div>
     </div>
-  );
-};
-
-export default Rainbow;
+  )
+}

@@ -12,31 +12,27 @@ export const orderCountries = [
   { code: 'CA', name: 'Canada', dial: '+1' },
   { code: 'AU', name: 'Australia', dial: '+61' },
   { code: 'AE', name: 'UAE', dial: '+971' },
-];
+]
 
 export const wizardSteps = [
   {
     id: 'package',
-    emoji: '🚀',
     title: 'Pick your launch package',
-    subtitle: 'Choose the plan that matches your growth goals',
+    subtitle: 'Choose the plan that matches your goals',
   },
   {
     id: 'contact',
-    emoji: '👋',
     title: 'Who should we build for?',
     subtitle: 'So we can follow up after you start your order',
   },
   {
     id: 'project',
-    emoji: '🎨',
     title: 'Tell us about your project',
-    subtitle: 'Template and any custom requests',
+    subtitle: 'Layout and any custom requests',
   },
   {
     id: 'pay',
-    emoji: '🔒',
-    title: 'Start your build',
-    subtitle: 'Pay a small deposit via Flutterwave — then we get to work',
+    title: 'Review and start',
+    subtitle: 'Confirm details, then pay a deposit or request a quote',
   },
-];
+]

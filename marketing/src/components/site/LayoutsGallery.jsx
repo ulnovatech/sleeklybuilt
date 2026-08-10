@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { FiAlertCircle, FiArrowRight, FiArrowUpRight, FiRefreshCw } from 'react-icons/fi'
-import { Section, SectionHeading } from './Section'
+import { Section, SectionBody, SectionHeading } from './Section'
 import ActionLink from './ActionLink'
 import { useLayoutCatalog } from '../../lib/useLayoutCatalog'
 import { siteConfig } from '../../site.config'
@@ -14,7 +14,7 @@ import { cn } from '../../lib/utils'
 
 function LayoutCard({ layout, ctaLabel }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-cream-deep bg-surface-raised shadow-sm transition duration-fast ease-dos hover:-translate-y-0.5 hover:border-emerald/30 hover:shadow-md">
+    <article className="group flex h-full flex-col overflow-hidden rounded-dos-xl border border-subtle bg-surface-raised shadow-sm transition duration-fast ease-dos hover:border-action-primary/30 hover:shadow-md">
       <a
         href={layout.previewUrl}
         target="_blank"
@@ -80,7 +80,7 @@ function LayoutCard({ layout, ctaLabel }) {
 
 function CardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-cream-deep bg-surface-raised shadow-sm" aria-hidden="true">
+    <div className="overflow-hidden rounded-dos-xl border border-subtle bg-surface-raised shadow-sm" aria-hidden="true">
       <div className="aspect-[16/10] animate-pulse bg-surface-sunken" />
       <div className="space-y-3 p-6">
         <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-sunken" />
@@ -129,10 +129,11 @@ export default function LayoutsGallery({
     <Section id={id} className="section-light scroll-mt-24">
       <SectionHeading eyebrow={eyebrow} title={title} intro={intro} />
 
+      <SectionBody>
       {stale ? (
         <div
           role="status"
-          className="mt-8 flex flex-col gap-3 rounded-2xl border border-status-warning/30 bg-status-warning-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+          className="mb-8 flex flex-col gap-3 rounded-dos-xl border border-status-warning/30 bg-status-warning-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
         >
           <p className="text-body text-ink">
             Showing the last loaded layouts — a refresh just failed. You can keep browsing or try again.
@@ -149,7 +150,7 @@ export default function LayoutsGallery({
       ) : null}
 
       {showFilters && !isError && !isEmpty ? (
-        <div className="mt-8" role="group" aria-label="Filter by category">
+        <div className="mb-8" role="group" aria-label="Filter by category">
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -188,7 +189,7 @@ export default function LayoutsGallery({
         </div>
       ) : null}
 
-      <div className={cn('mt-10', state === 'loading' && layouts.length > 0 && 'opacity-60 transition-opacity duration-fast')}>
+      <div className={cn(state === 'loading' && layouts.length > 0 && 'opacity-60 transition-opacity duration-fast')}>
         {firstLoad ? (
           <>
             <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -204,7 +205,7 @@ export default function LayoutsGallery({
           </>
         ) : isError ? (
           <div
-            className="flex flex-col gap-4 rounded-2xl border border-cream-deep bg-surface-raised p-8 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-4 rounded-dos-xl border border-subtle bg-surface-raised p-8 shadow-sm sm:flex-row sm:items-center sm:justify-between"
             role="alert"
           >
             <div className="flex items-start gap-3">
@@ -235,7 +236,7 @@ export default function LayoutsGallery({
             </div>
           </div>
         ) : isEmpty ? (
-          <div className="rounded-2xl border border-cream-deep bg-surface-raised p-8 shadow-sm sm:p-10">
+          <div className="rounded-dos-xl border border-subtle bg-surface-raised p-8 shadow-sm sm:p-10">
             <p className="display-card text-emerald-deep">{emptyTitle}</p>
             <p className="mt-3 max-w-measure text-body text-ink-soft">{emptyBody}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -255,7 +256,7 @@ export default function LayoutsGallery({
             </div>
           </div>
         ) : filterEmpty ? (
-          <div className="rounded-2xl border border-cream-deep bg-surface-raised p-8 shadow-sm">
+          <div className="rounded-dos-xl border border-subtle bg-surface-raised p-8 shadow-sm">
             <p className="display-card text-emerald-deep">No layouts in this category</p>
             <p className="mt-2 text-body text-ink-soft">
               Clear the filter to see all {layouts.length} layout{layouts.length === 1 ? '' : 's'}, or tell us what you need.
@@ -284,6 +285,7 @@ export default function LayoutsGallery({
           </ul>
         )}
       </div>
+      </SectionBody>
     </Section>
   )
 }

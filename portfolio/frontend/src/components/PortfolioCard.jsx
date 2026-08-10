@@ -1,57 +1,60 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
+/**
+ * Layout card — surface / border / emerald action tokens (Wave 9 Phase E).
+ */
 export default function PortfolioCard({ templateName, title, description, mainImage, thumbnails, link }) {
-  const [featured, setFeatured] = useState(mainImage);
+  const [featured, setFeatured] = useState(mainImage)
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border bg-white shadow transition hover:shadow-lg">
+    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-subtle bg-surface-raised shadow-sm transition hover:border-action-primary/30 hover:shadow-md">
       <a
         href={link}
         target="_blank"
         rel="noopener noreferrer"
-        className="block"
+        className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-dos"
       >
-        {featured && (
-          <img
-            src={featured}
-            alt={title}
-            className="h-40 w-full object-cover transition-all"
-          />
-        )}
-
-        {thumbnails && thumbnails.length > 1 && (
-          <div className="mt-2 flex justify-center gap-2 px-2">
-            {thumbnails.map((img, idx) => (
-              <img
-                key={img}
-                src={img}
-                alt={title + " thumb " + (idx + 1)}
-                className={`h-12 w-16 cursor-pointer rounded object-cover ${featured === img ? "ring-2 ring-brand" : ""}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setFeatured(img);
-                }}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="p-4">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <p className="text-sm text-gray-600">{description}</p>
-          <p className="mt-2 text-sm text-brand">Click to preview →</p>
-        </div>
+        {featured ? <img src={featured} alt={title} className="h-40 w-full object-cover" /> : null}
       </a>
 
-      <div className="mt-auto border-t bg-gray-50 p-4">
+      {thumbnails && thumbnails.length > 1 ? (
+        <div className="mt-2 flex justify-center gap-2 px-2">
+          {thumbnails.map((img, idx) => (
+            <button
+              key={img}
+              type="button"
+              className={`h-12 w-16 overflow-hidden rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-dos ${
+                featured === img ? 'ring-2 ring-emerald' : 'ring-1 ring-subtle'
+              }`}
+              onClick={() => setFeatured(img)}
+              aria-label={`${title} thumbnail ${idx + 1}`}
+            >
+              <img src={img} alt="" className="h-full w-full object-cover" />
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <a
+        href={link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-dos"
+      >
+        <h2 className="font-display text-display-card text-emerald-deep">{title}</h2>
+        <p className="mt-1 text-meta text-ink-soft">{description}</p>
+        <p className="mt-3 text-meta font-semibold text-emerald">Open live preview →</p>
+      </a>
+
+      <div className="mt-auto border-t border-subtle bg-surface-sunken p-4">
         <Link
           to={`/order?template=${encodeURIComponent(templateName)}`}
-          className="inline-flex w-full items-center justify-center rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-action-primary-hover px-4 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
         >
-          Choose this template
+          Choose this layout
         </Link>
       </div>
     </article>
-  );
+  )
 }

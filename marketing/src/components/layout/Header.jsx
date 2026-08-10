@@ -9,11 +9,11 @@ import CommandPalette from '../search/CommandPalette'
 import { cn } from '../../lib/utils'
 
 /**
- * Routes whose first band is light. Everywhere else opens on an obsidian band, so
- * the header can sit transparent over it with cream type. Without this the header
- * would render cream-on-cream and disappear.
+ * Routes whose first band is light (cream). Everywhere else opens on an obsidian
+ * or deep band, so the header can sit transparent with cream type. Track order
+ * uses PageHeader (obsidian) — do not list it here (Wave 9 Phase D).
  */
-const LIGHT_TOP_ROUTES = new Set([siteConfig.links.trackOrder])
+const LIGHT_TOP_ROUTES = new Set([])
 
 function BrandMark({ tone }) {
   const onDark = tone === 'hero'
@@ -31,14 +31,14 @@ function BrandMark({ tone }) {
     >
       <span
         className={cn(
-          'grid h-8 w-8 place-items-center rounded-full font-serif text-base leading-none transition',
+          'grid h-8 w-8 place-items-center rounded-full font-display text-base leading-none transition',
           onDark ? 'bg-cream text-obsidian' : 'bg-emerald-deep text-cream',
         )}
         aria-hidden="true"
       >
         {siteConfig.name.charAt(0)}
       </span>
-      <span className={cn('font-serif text-xl tracking-tight transition', onDark ? 'text-cream' : 'text-emerald-deep')}>
+      <span className={cn('font-display text-xl tracking-tight transition', onDark ? 'text-cream' : 'text-emerald-deep')}>
         {siteConfig.name}
       </span>
     </Link>
@@ -99,7 +99,7 @@ export default function Header() {
             : 'border-cream-deep bg-cream/90 shadow-sm backdrop-blur-md',
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-6 lg:gap-5 lg:px-10">
+        <div className="mx-auto flex h-16 max-w-content items-center gap-3 px-6 lg:gap-5 lg:px-10">
           <BrandMark tone={tone} />
 
           <NavMenu tone={tone} />
@@ -109,7 +109,7 @@ export default function Header() {
           <Link
             to={siteConfig.links.contact}
             className={cn(
-              'hidden items-center gap-2 rounded-full px-5 py-2.5 text-meta font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
+              'hidden min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-meta font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
               tone === 'hero'
                 ? 'bg-gold text-ink hover:bg-gold-soft focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
                 : 'bg-emerald-deep text-cream hover:bg-emerald focus-visible:ring-dos focus-visible:ring-offset-cream',

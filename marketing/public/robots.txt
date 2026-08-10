@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 Disallow: /dash/
-Disallow: /ulndash/
+Disallow: /sleekly-dash/
 Disallow: /api/
 
 Sitemap: http://hub.34.66.94.12.nip.io/sitemap.xml

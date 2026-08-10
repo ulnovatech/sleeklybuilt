@@ -1,16 +1,18 @@
 import NewsletterForm from '../forms/NewsletterForm'
 import FooterLinks from './FooterLinks'
-import { footerServiceLinks, footerUsefulLinks, siteConfig } from '../../site.config'
+import { footerServiceLinks, footerUsefulLinks } from '../../site.config'
+import { useSiteConfig } from '../../context/SiteContactContext'
 
 export default function Footer() {
+  const siteConfig = useSiteConfig()
   const year = new Date().getFullYear()
 
   return (
     <footer id="footer" className="mt-16 bg-obsidian text-cream">
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-20">
+      <div className="mx-auto max-w-content px-6 py-16 lg:px-10 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-5">
-            <div className="serif max-w-md text-3xl leading-[1.1] md:text-4xl">
+            <div className="font-display max-w-md text-3xl font-semibold leading-[1.2] tracking-tight md:text-4xl">
               Software built sleek, delivered with care.
             </div>
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-cream/70">{siteConfig.description}</p>
@@ -48,7 +50,7 @@ export default function Footer() {
           </div>
 
           <div className="lg:col-span-3">
-            <p className="eyebrow mb-4 text-gold">Newsletter</p>
+            <p className="eyebrow-invert mb-4">Newsletter</p>
             <p className="mb-4 text-sm leading-relaxed text-cream/70">
               Updates on new layouts, services, and product news.
             </p>

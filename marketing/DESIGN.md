@@ -8,43 +8,47 @@ The source of truth for the marketing hub's visual language. Tokens live in
 
 ## 1. Color
 
-The brand keeps its Clarity identity — emerald, cream, gold. One tier was added:
-**obsidian**, a green-warm biased near-black. Pure `#000` next to cream `#f8f4ec`
-reads harsh and cheap; a warm black reads like material.
+The brand keeps its Clarity identity — emerald, gold, obsidian — with a **Wave 9
+soft-neutral canvas**. Pure parchment cream read as lifestyle brochure; the cooler
+stone surface supports a calm systems-studio mood while emerald/gold DNA stay.
 
 ### Tokens
 
 | Token | Hex | Role |
 | --- | --- | --- |
-| `cream` | `#f8f4ec` | Default page canvas |
-| `cream-deep` | `#ede5d6` | Subtle fills, borders on light |
+| `cream` | `#f4f3ef` | Default page canvas (soft neutral) |
+| `cream-deep` | `#e6e4de` | Subtle fills, borders on light |
 | `emerald-deep` | `#2d5346` | Headings on light |
 | `emerald` | `#3f7a62` | Links, emphasis on light |
 | `emerald-soft` | `#5f9a82` | Tints, fills |
 | `gold` | `#d4a84b` | The single accent |
 | `gold-soft` | `#e4c47a` | Accent hover |
-| `ink` | `#38342e` | Body copy on light |
-| `ink-soft` | `#5c5852` | Secondary copy on light |
+| `ink` | `#2f2d2a` | Body copy on light |
+| `ink-soft` | `#5a5752` | Secondary copy on light |
 | `obsidian` | `#0a0b0a` | Dark band canvas |
 | `obsidian-raised` | `#131614` | Cards and surfaces on dark |
 | `obsidian-line` | `#232823` | Hairlines and borders on dark |
 
 ### Rules
 
-Color is structural, never decorative.
+Color is structural, never decorative. **60 / 30 / 10:** ~60% surface, ~30%
+structure (ink + emerald), ~10% gold for primary actions only.
 
 - **Obsidian appears exactly three times per journey** — the hero, one mid-page
-  emphasis band, and the footer. Overuse destroys its impact.
-- **Cream is where reading happens.** It is the default; dark is the exception.
-- **Gold is one element per viewport**, and it always marks either the primary
-  action or the eyebrow rule. If two golds compete, one of them is wrong.
+  emphasis band, and the footer. Overuse destroys its impact. Inner `PageHeader`
+  bands count toward this budget — prefer compact headers and do not add a fourth
+  dark band on the same journey.
+- **Soft neutral is where reading happens.** It is the default; dark is the exception.
+- **Gold is one element per viewport**, and it always marks the primary action.
+  Labels on obsidian use quiet cream (`eyebrow-invert`), not gold eyebrows that
+  compete with CTAs. If two golds compete, one of them is wrong.
 - **`cream/70` is the body-copy equivalent on dark.** Not a lighter emerald.
 
 ### Contrast
 
 Verified against `obsidian` `#0a0b0a`:
 
-- `cream` `#f8f4ec` — approximately 18:1. Passes AA and AAA.
+- `cream` `#f4f3ef` — approximately 17:1. Passes AA and AAA.
 - `gold` `#d4a84b` — approximately 7.9:1. Passes AA and AAA.
 - `emerald` `#3f7a62` — approximately 2.6:1. **Banned as text on dark.** It may
   appear on obsidian only as a glow or a fill, never as type.
@@ -82,35 +86,38 @@ background but below its content, so children need no `z-index` of their own.
 
 ## 3. Typography
 
-Instrument Serif for display, Work Sans for everything else. The pairing was
-already right; what was missing was a scale.
+**Wave 9:** Instrument Serif is retired. Display and headings use **Plus Jakarta Sans**
+(neo-grotesk). Body, UI, and forms keep **Work Sans**. Pairing chosen for calm
+systems-studio authority — not editorial brochure costume.
+(`design-os/intelligence/font_intelligence.md` Agency / Professional route.)
 
-### Display — Instrument Serif
+### Display — Plus Jakarta Sans (`font-display`)
 
-| Class | Size | Leading | Tracking |
-| --- | --- | --- | --- |
-| `display-hero` | `clamp(2.75rem, 6vw, 5.25rem)` | `0.95` | `-0.02em` |
-| `display-section` | `clamp(2rem, 4vw, 3.5rem)` | `1.05` | `-0.015em` |
-| `display-card` | `1.375rem` | `1.2` | `-0.01em` |
+| Class | Size | Leading | Tracking | Weight |
+| --- | --- | --- | --- | --- |
+| `display-hero` | `clamp(2.25rem, 4.5vw, 3.5rem)` | `1.15` | `-0.025em` | 600 |
+| `display-section` | `clamp(1.75rem, 3vw, 2.25rem)` | `1.2` | `-0.02em` | 600 |
+| `display-card` | `1.25rem` | `1.25` | `-0.015em` | 600 |
 
-### Text — Work Sans
+### Text — Work Sans (`font-sans`)
 
 | Class | Size | Leading |
 | --- | --- | --- |
-| `lead` | `1.125rem` → `1.25rem` at `md` | `1.65` |
-| `text-body` | `1rem` | `1.7` |
-| `text-meta` | `0.875rem` | `1.6` |
-| `eyebrow` | `0.75rem`, uppercase, `0.14em` tracking, weight 600 | `1.4` |
+| `lead` | `1.125rem` → `1.25rem` at `md` | `1.55` |
+| `text-body` | `1rem` (≥16px) | `1.6` |
+| `text-meta` | `0.875rem` | `1.55` |
+| `eyebrow` | `0.75rem`, uppercase, `0.12em` tracking, weight 600 | `1.4` |
 
 ### Rules
 
 - **Measure is capped.** `max-w-measure` is 65ch for body, `max-w-measure-lead`
-  is 38ch for leads. The `.lead` class applies the 38ch cap for you.
-- **One display weight.** Instrument Serif carries emphasis through size, never
-  through bold.
+  is 42ch for leads. The `.lead` class applies the lead cap for you.
+- **Hierarchy through size and weight**, not a second ornamental family.
 - **Tabular numerals in pricing** via `tabular-nums` so columns align.
-- Prefer the `font-serif` utility. The legacy `.serif` class is retained only for
-  call sites not yet migrated.
+- Prefer `font-display` for headings and brand wordmark. Do not reintroduce a
+  display serif. Legacy `font-serif` / `.serif` alias to Plus Jakarta Sans only
+  as a temporary safety net.
+- Load fonts from `index.html` (Google). Do not add unused `@fontsource` packages.
 
 ---
 
@@ -118,14 +125,16 @@ already right; what was missing was a scale.
 
 8pt base grid.
 
-- **Container** — `max-w-7xl` with `px-6 lg:px-10`. Provided by `Section`.
-- **Dark bands** — `.section-dark` (`py-28 md:py-36`). Dark sections need more air
-  or they read as a power cut.
-- **Light sections** — `.section-light` (`py-20 md:py-28`).
+- **Container** — `max-w-content` (75rem / 1200px) with `px-6 lg:px-10`. Provided by
+  `Section` and shared chrome.
+- **Section rhythm** — `.section-light` and `.section-dark` use `py-16 md:py-24`
+  (~64px / ~96px). Do not invent one-off vertical padding per section.
 - **Mobile floor** — never below `py-16`.
 - **Heading to content** — `mt-12` desktop, `mt-8` mobile.
 - **Card grid gap** — `gap-6` minimum. `gap-4` is what made the old services grid
   feel crowded.
+- **Body measure** — keep copy inside 45–75ch; do not let paragraphs span the full
+  content rail on ultra-wide viewports.
 
 ---
 
@@ -134,7 +143,7 @@ already right; what was missing was a scale.
 **All section headings align left.** There is deliberately no centre option on
 `SectionHeading` — the prop was removed rather than defaulted, so the decision
 cannot regress through a call site. This matches
-`ulnovatech-clarity-main/src/components/site/Section.tsx`.
+`design-os` Section patterns and marketing section components.
 
 Centred text is what you use when you have nothing to say. Left-aligned type with
 one clear sentence is the confident move.
@@ -163,7 +172,7 @@ the section renders a genuine empty state — never fabricated cards.
 - **"Template" is retired from customer-facing copy.** Use "layout" or "website
   layout." Template implies mass-produced; layout implies a professionally
   designed foundation customized per client. Internal code identifiers and the
-  ulndash admin keep `template` — this is a copy rule, not a refactor.
+  sleekly-dash admin keep `template` — this is a copy rule, not a refactor.
 - **No emoji as iconography.** Emoji render differently on every OS, cannot be
   colored, and signal haste. Use line icons.
 - **No unverifiable metrics.** Claims precise enough to be checked must be true.
@@ -225,6 +234,9 @@ Full contract: `design-os/systems/design_tokens.md`
 
 ## 9. Reference
 
-- UX gate / redesign audit (Phase 0): [UX-GATE.md](UX-GATE.md) — required before UI work
-- Design OS-aligned reform plan: Cursor plan `sleeklybuilt_design_os_replan`
+- UX gate / redesign audit: [UX-GATE.md](UX-GATE.md) — required before UI work
+- Wave 9 decision memo: [REDESIGN-WAVE-9.md](REDESIGN-WAVE-9.md)
+- Wave 9 approval: [WAVE-9-APPROVAL.md](WAVE-9-APPROVAL.md) (96/100 — does not reuse Phase 8)
+- Phase 8 historical approval: [PHASE-8-APPROVAL.md](PHASE-8-APPROVAL.md)
+- Projects SPA mirrors brand primitives + chrome grammar in `portfolio/frontend` (tokens only; no React coupling). Shared: letter mark, sticky bar, `ring-dos`, obsidian drawer/footer, one gold **Start a project** CTA → hub `/contact`.
 - Authority: root `AGENTS.md` + `design-os/INDEX.md`

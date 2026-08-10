@@ -1,93 +1,89 @@
-import React, { useState } from 'react';
+import { useState } from 'react'
+import { FiChevronDown } from 'react-icons/fi'
+import { hubHref } from '../site.config'
 
 const faqData = [
   {
     question: 'What services does SleeklyBuilt offer?',
-    answer: "We provide a range of I.T. services, including: Website development, Web App Development, UI/UX Design, Mobile App Development, Software Applications Development, Pitch Deck Design, Dashboard UI Design, SEO & Performance Optimization"
+    answer:
+      'Website development, web apps, UI/UX design, mobile apps, software systems, pitch decks, dashboard UI, and SEO & performance work.',
   },
   {
-    question: "I Don't Have a Design, Can You Build It for Me?",
-    answer: "Absolutely! Our creative professionals are skilled in crafting visually stunning and user-friendly designs, whether you need a logo, website, or any other digital asset. We'll work collaboratively with you to bring your brand to life."
+    question: "I don't have a design — can you build it?",
+    answer:
+      "Yes. We'll collaborate on structure and visuals, then build a solution that fits your brand and goals.",
   },
   {
-    question: "Do You Offer Custom Solutions?",
-    answer: "Yes, we provide customized software solutions to align with your business goals and requirements. That's how we help your business grow."
+    question: 'Do you offer custom solutions?',
+    answer: 'Yes. Custom software and websites tailored to your workflows — not one-size-fits-all templates sold as finished products.',
   },
   {
-    question: "Do I really need a website for myself or my business?",
-    answer: "Simple answer. Yes you Do."
+    question: 'Do I need a website for my business?',
+    answer: 'If customers need to find you, trust you, or take action online — yes. We can help you decide the right scope.',
   },
   {
-    question: "How long does it take to develop a website?",
-    answer: "The timeline varies based on the project scope, but a typical website can take 1 to 4 weeks. A custom website can take 4 to 12 weeks. Our team however ensures that you receive the best product, in the most suitable time possible to avoid long waiting times and of course, losing your money."
+    question: 'How long does a website take?',
+    answer:
+      'Typical layouts take about 1–4 weeks; custom builds often 4–12 weeks, depending on scope. We agree a timeline before work starts.',
   },
   {
-    question: "How much does it cost to design a website?",
-    answer: "The cost really depends on what you need your website to do. On average, website prices can range from a UGX 300,000 to millions of shillings based on custom features, integrations, or special designs. The best way to know your cost is to request a free estimate based on your exact needs."
-  }
-];
+    question: 'How much does a website cost?',
+    answer:
+      'It depends on features and integrations. Many projects start in the hundreds of thousands of UGX and scale from there. Request a quote for an exact estimate.',
+  },
+]
 
-const FAQ = () => {
-  const [openIndex, setOpenIndex] = useState(null);
-
-  const toggleFAQ = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+/**
+ * FAQ accordion — soft-neutral tokens; one primary CTA (Wave 9 Phase E).
+ */
+export default function FAQ() {
+  const [openIndex, setOpenIndex] = useState(null)
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">FAQ</h2>
-          <p className="text-xl text-gray-600">Some Questions For Our Clients</p>
-          <p className="text-gray-500 mt-2">Quick answers about our design & SEO services. Click a question to reveal the details.</p>
+    <section className="mt-16 border-t border-subtle bg-surface-sunken py-16">
+      <div className="mx-auto max-w-3xl px-0">
+        <div className="text-center">
+          <p className="eyebrow">FAQ</p>
+          <h2 className="mt-3 font-display text-display-section text-emerald-deep">Questions clients ask</h2>
+          <p className="mt-3 text-body text-ink-soft">Quick answers about layouts, timelines, and custom work.</p>
         </div>
 
-        <div className="space-y-4">
-          {faqData.map((faq, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <button
-                onClick={() => toggleFAQ(index)}
-                className="w-full text-left p-6 hover:bg-gray-50 transition-colors duration-200"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">{faq.question}</h3>
-                  <svg
-                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                      openIndex === index ? 'rotate-180' : ''
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </button>
-              
-              {openIndex === index && (
-                <div className="px-6 pb-6">
-                  <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="mt-10 space-y-3">
+          {faqData.map((faq, index) => {
+            const open = openIndex === index
+            return (
+              <div key={faq.question} className="overflow-hidden rounded-xl border border-subtle bg-surface-raised">
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(open ? null : index)}
+                  aria-expanded={open}
+                  className="flex min-h-14 w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-surface-sunken/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-dos"
+                >
+                  <span className="font-display text-display-card text-emerald-deep">{faq.question}</span>
+                  <FiChevronDown
+                    className={`h-5 w-5 shrink-0 text-ink-soft transition ${open ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
+                  />
+                </button>
+                {open ? (
+                  <div className="border-t border-subtle px-5 py-4">
+                    <p className="text-body text-ink-soft">{faq.answer}</p>
+                  </div>
+                ) : null}
+              </div>
+            )
+          })}
         </div>
 
-        <div className="text-center mt-12 space-x-4 space-y-4 sm:space-y-0">
-          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-            Start a Project
-          </button>
-          <button className="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200">
-            See Case Studies
-          </button>
-          <button className="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200">
-            Free Site Check
-          </button>
+        <div className="mt-10 text-center">
+          <a
+            href={hubHref('contact')}
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
+          >
+            Start a project
+          </a>
         </div>
       </div>
     </section>
-  );
-};
-
-export default FAQ;
+  )
+}

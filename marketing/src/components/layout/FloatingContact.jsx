@@ -1,13 +1,23 @@
-import { siteConfig } from '../../site.config'
+import { FiPhone } from 'react-icons/fi'
+import { useSiteConfig } from '../../context/SiteContactContext'
 
+/**
+ * Floating channel affordances — brand tokens only (Wave 9 Phase E).
+ * No raw WhatsApp green / utility blue; one quiet cream chip + emerald icons.
+ */
 export default function FloatingContact() {
+  const siteConfig = useSiteConfig()
+
+  const chipClass =
+    'flex h-12 w-12 items-center justify-center rounded-full border border-subtle bg-surface-raised text-emerald-deep shadow-md transition duration-fast ease-dos hover:border-action-primary/30 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base'
+
   return (
     <div className="fixed bottom-24 right-5 z-40 flex flex-col gap-3">
       <a
         href={siteConfig.whatsapp}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#25D366] shadow-lg ring-1 ring-black/5 transition hover:scale-105 hover:shadow-xl"
+        className={chipClass}
         aria-label="Chat on WhatsApp"
       >
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
@@ -15,14 +25,8 @@ export default function FloatingContact() {
           <path d="M12 0C5.373 0 0 5.373 0 12c0 2.11.548 4.09 1.507 5.81L0 24l6.438-1.688A11.93 11.93 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.82a9.77 9.77 0 01-4.988-1.364l-.357-.212-3.82 1 1.018-3.72-.233-.375A9.77 9.77 0 012.18 12C2.18 6.57 6.57 2.18 12 2.18S21.82 6.57 21.82 12 17.43 21.82 12 21.82z" />
         </svg>
       </a>
-      <a
-        href={`tel:${siteConfig.primaryPhone}`}
-        className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-blue-600 shadow-lg ring-1 ring-black/5 transition hover:scale-105 hover:shadow-xl"
-        aria-label="Call us"
-      >
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+      <a href={`tel:${siteConfig.primaryPhone}`} className={chipClass} aria-label="Call us">
+        <FiPhone className="h-5 w-5" aria-hidden="true" />
       </a>
     </div>
   )

@@ -12,8 +12,8 @@ export default {
         },
         /** Brand primitives — prefer semantic roles in new UI */
         cream: {
-          DEFAULT: '#f8f4ec',
-          deep: '#ede5d6',
+          DEFAULT: '#f4f3ef',
+          deep: '#e6e4de',
         },
         emerald: {
           deep: '#2d5346',
@@ -25,8 +25,8 @@ export default {
           soft: '#e4c47a',
         },
         ink: {
-          DEFAULT: '#38342e',
-          soft: '#5c5852',
+          DEFAULT: '#2f2d2a',
+          soft: '#5a5752',
         },
         /**
          * Dark tier. Green-warm biased near-black so it sits with cream and gold
@@ -160,24 +160,38 @@ export default {
       },
       fontFamily: {
         sans: ['"Work Sans"', 'system-ui', 'sans-serif'],
-        serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+        /** Wave 9 display — Plus Jakarta Sans (neo-grotesk). Replaces Instrument Serif. */
+        display: ['"Plus Jakarta Sans"', '"Work Sans"', 'system-ui', 'sans-serif'],
+        /** @deprecated Alias — use font-display. Kept so stray font-serif classes do not regress. */
+        serif: ['"Plus Jakarta Sans"', '"Work Sans"', 'system-ui', 'sans-serif'],
       },
       fontSize: {
-        /** Display scale — Instrument Serif. Tracking tightens as size grows. */
-        'display-hero': ['clamp(2.75rem, 6vw, 5.25rem)', { lineHeight: '0.95', letterSpacing: '-0.02em' }],
-        'display-section': ['clamp(2rem, 4vw, 3.5rem)', { lineHeight: '1.05', letterSpacing: '-0.015em' }],
-        'display-card': ['1.375rem', { lineHeight: '1.2', letterSpacing: '-0.01em' }],
+        /**
+         * Display scale — Plus Jakarta Sans, weight 600 via .display-* roles.
+         * Restrained: calm systems-studio hierarchy, not theatrical brochure type.
+         */
+        'display-hero': [
+          'clamp(2.25rem, 4.5vw, 3.5rem)',
+          { lineHeight: '1.15', letterSpacing: '-0.025em', fontWeight: '600' },
+        ],
+        'display-section': [
+          'clamp(1.75rem, 3vw, 2.25rem)',
+          { lineHeight: '1.2', letterSpacing: '-0.02em', fontWeight: '600' },
+        ],
+        'display-card': ['1.25rem', { lineHeight: '1.25', letterSpacing: '-0.015em', fontWeight: '600' }],
         /** Text scale — Work Sans */
-        lead: ['1.125rem', { lineHeight: '1.65' }],
-        'lead-lg': ['1.25rem', { lineHeight: '1.65' }],
-        body: ['1rem', { lineHeight: '1.7' }],
-        meta: ['0.875rem', { lineHeight: '1.6' }],
-        eyebrow: ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.14em' }],
+        lead: ['1.125rem', { lineHeight: '1.55' }],
+        'lead-lg': ['1.25rem', { lineHeight: '1.55' }],
+        body: ['1rem', { lineHeight: '1.6' }],
+        meta: ['0.875rem', { lineHeight: '1.55' }],
+        eyebrow: ['0.75rem', { lineHeight: '1.4', letterSpacing: '0.12em' }],
       },
       maxWidth: {
-        /** Reading measures — body caps at 65ch, leads at 38ch */
+        /** Reading measures — body 45–75ch; leads shorter for scan */
         measure: '65ch',
-        'measure-lead': '38ch',
+        'measure-lead': '42ch',
+        /** Page content rail — ~1152–1280px band */
+        content: '75rem',
       },
     },
   },

@@ -3,7 +3,7 @@ import NavLink from './NavLink'
 export default function FooterLinks({ title, links }) {
   return (
     <div>
-      <p className="eyebrow mb-4 text-gold">{title}</p>
+      <p className="eyebrow-invert mb-4">{title}</p>
       <ul className="space-y-3">
         {links.map((link) => (
           <li key={link.label}>

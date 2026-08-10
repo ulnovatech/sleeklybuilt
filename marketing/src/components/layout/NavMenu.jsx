@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import NavLink from './NavLink'
 import { mainNavigation } from '../../site.config'
-import { cn } from '../../lib/utils'
+import { cn, isNavItemActive } from '../../lib/utils'
 
 const toneClass = {
   hero: {
@@ -24,7 +24,7 @@ export default function NavMenu({ tone = 'light' }) {
     <nav id="navmenu" className="hidden lg:block" aria-label="Primary">
       <ul className="flex items-center gap-0.5">
         {mainNavigation.map((item) => {
-          const active = item.href === pathname
+          const active = isNavItemActive(item, pathname)
 
           return (
             <li key={item.id}>
@@ -32,8 +32,12 @@ export default function NavMenu({ tone = 'light' }) {
                 item={item}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-meta font-medium transition',
+                  'relative inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 py-2 text-meta font-medium transition',
                   'after:absolute after:inset-x-3 after:-bottom-0.5 after:h-px after:origin-left after:bg-gold after:transition-transform',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+                  tone === 'hero'
+                    ? 'focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
+                    : 'focus-visible:ring-dos focus-visible:ring-offset-surface-base',
                   active ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100',
                   active ? styles.active : styles.idle,
                 )}

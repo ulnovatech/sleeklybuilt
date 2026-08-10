@@ -8,7 +8,7 @@ export default function PositioningSection() {
   return (
     <Section id="positioning" className="section-light scroll-mt-24">
       <SectionHeading
-        eyebrow="Positioning"
+        eyebrow="Who we help"
         title="Built for operators who outgrew spreadsheets"
         intro="We help Ugandan businesses and teams that need software they can run day to day — not a brochure site that looks finished and stops there."
       />

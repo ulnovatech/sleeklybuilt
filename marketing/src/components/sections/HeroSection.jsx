@@ -5,25 +5,26 @@ import { siteConfig } from '../../site.config'
 import { trustCommitments } from '../../config/proof'
 
 /**
- * Hero Variant C — text-only with proof (design-os/patterns/hero_sections.md).
- * Mobile: action above the fold on ~667px, total under ~620px, never 100vh,
- * next section peeks. Proof is verifiable commitments — never fabricated logos.
+ * Hero Variant C — text + real proof (design-os/patterns/hero_sections.md + UX-GATE §15.3.2).
+ * First viewport: brand, one headline, one support, one CTA group, quiet proof.
+ * Never 100vh; compact padding so primary action clears ~667px fold.
+ * One gold accent: Start a project.
  */
 export default function HeroSection() {
   return (
-    <section id="hero" className="surface-obsidian pb-16 pt-28 md:pb-24 md:pt-36">
-      <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
+    <section id="hero" className="surface-obsidian pb-14 pt-28 md:pb-20 md:pt-32">
+      <div className="mx-auto w-full max-w-content px-6 lg:px-10">
         <div className="max-w-3xl">
           <Eyebrow tone="invert">{siteConfig.name}</Eyebrow>
 
-          <h1 className="display-hero mt-6 text-cream md:mt-7">Software your business can run on.</h1>
+          <h1 className="display-hero mt-5 text-cream md:mt-6">Software your business can run on.</h1>
 
-          <p className="lead mt-5 text-cream/70 md:mt-7">
+          <p className="lead mt-4 text-cream/70 md:mt-5">
             Websites, mobile apps and business systems for teams that need them to work — built in Uganda, ready to
             scale.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <ActionLink href={siteConfig.links.contact} className="w-full justify-center sm:w-auto">
               Start a project
               <FiArrowRight aria-hidden="true" />
@@ -33,14 +34,13 @@ export default function HeroSection() {
             </ActionLink>
           </div>
 
-          <p className="mt-3 text-meta text-cream/60">Reply within one working day</p>
+          <p className="mt-3 text-meta text-cream/55">Reply within one working day</p>
         </div>
 
-        {/* Variant C proof strip — honest guarantees, not invented client logos */}
-        <ul className="mt-12 grid gap-3 border-t border-obsidian-line pt-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+        <ul className="mt-10 grid gap-4 border-t border-obsidian-line pt-8 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4 lg:gap-8">
           {trustCommitments.map((item) => (
             <li key={item.title} className="min-w-0">
-              <p className="text-meta font-semibold text-cream">{item.title}</p>
+              <p className="text-meta font-medium text-cream/85">{item.title}</p>
             </li>
           ))}
         </ul>

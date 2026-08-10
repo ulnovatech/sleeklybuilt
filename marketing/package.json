@@ -10,15 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
-    "@fontsource/roboto": "^5.2.10",
     "framer-motion": "^12.42.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hot-toast": "^2.6.0",
     "react-icons": "^5.7.0",
     "react-router-dom": "^7.18.1",
-    "ulnovatech-system": "file:.."
+    "sleeklybuilt-system": "file:.."
   },
   "devDependencies": {
     "@types/react": "^19.2.17",

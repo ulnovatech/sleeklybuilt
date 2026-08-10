@@ -2,15 +2,15 @@ import NavLink from '../layout/NavLink'
 import { cn } from '../../lib/utils'
 
 const base =
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-7 py-3.5 text-meta font-semibold transition duration-fast ease-dos focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
+  'inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full px-7 py-3 text-meta font-semibold transition duration-fast ease-dos focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2'
 
 const actionVariants = {
-  /** Primary on obsidian */
+  /** Primary on obsidian — the gold accent for that viewport */
   gold: 'bg-accent text-content-primary hover:bg-accent-hover focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian',
   /** Secondary on obsidian */
   ghostDark:
     'border border-cream/25 text-content-inverse hover:bg-cream/10 focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian',
-  /** Primary on cream */
+  /** Primary on cream / soft-neutral */
   emerald:
     'bg-action-primary-hover text-content-inverse hover:bg-action-primary active:bg-action-primary-active focus-visible:ring-dos focus-visible:ring-offset-surface-base',
   /** Secondary on cream */

@@ -1,44 +1,45 @@
 import { FiMail, FiPhone, FiMessageCircle } from 'react-icons/fi'
-import { siteConfig } from '../../site.config'
+import { useSiteConfig } from '../../context/SiteContactContext'
 
 /**
  * Contact channels — ordered by speed (contact pattern).
  * Shown before the form on mobile; in the rail on desktop.
  */
-const channels = [
-  {
-    id: 'whatsapp',
-    label: 'WhatsApp',
-    detail: siteConfig.whatsapp.replace('https://wa.me/', '+'),
-    href: siteConfig.whatsapp,
-    external: true,
-    icon: FiMessageCircle,
-    response: 'Usually same day during business hours',
-    bestFor: 'Quick questions and sending files',
-  },
-  {
-    id: 'phone',
-    label: 'Call',
-    detail: siteConfig.phones[0],
-    href: `tel:${siteConfig.primaryPhone}`,
-    external: false,
-    icon: FiPhone,
-    response: 'Mon–Fri 09:00–17:00 EAT',
-    bestFor: 'Urgent conversations',
-  },
-  {
-    id: 'email',
-    label: 'Email',
-    detail: siteConfig.email,
-    href: `mailto:${siteConfig.email}`,
-    external: false,
-    icon: FiMail,
-    response: 'Reply within one working day',
-    bestFor: 'Detailed briefs and documents',
-  },
-]
-
 export default function ContactChannelPanel({ className = '' }) {
+  const siteConfig = useSiteConfig()
+  const channels = [
+    {
+      id: 'whatsapp',
+      label: 'WhatsApp',
+      detail: siteConfig.whatsapp.replace('https://wa.me/', '+'),
+      href: siteConfig.whatsapp,
+      external: true,
+      icon: FiMessageCircle,
+      response: 'Usually same day during business hours',
+      bestFor: 'Quick questions and sending files',
+    },
+    {
+      id: 'phone',
+      label: 'Call',
+      detail: siteConfig.phones[0],
+      href: `tel:${siteConfig.primaryPhone}`,
+      external: false,
+      icon: FiPhone,
+      response: 'Mon–Fri 09:00–17:00 EAT',
+      bestFor: 'Urgent conversations',
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      detail: siteConfig.email,
+      href: `mailto:${siteConfig.email}`,
+      external: false,
+      icon: FiMail,
+      response: 'Reply within one working day',
+      bestFor: 'Detailed briefs and documents',
+    },
+  ]
+
   return (
     <div className={className}>
       <p className="eyebrow">Faster options</p>

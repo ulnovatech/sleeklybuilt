@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { FiArrowRight } from 'react-icons/fi'
 import ActionLink from './ActionLink'
-import { siteConfig } from '../../site.config'
+import { useSiteConfig } from '../../context/SiteContactContext'
 
 /**
  * Contact success — page state, not a new route (patterns/contact.md).
@@ -13,6 +13,7 @@ export default function SubmissionConfirmation({
   onSendAnother,
   reducedMotion = false,
 }) {
+  const siteConfig = useSiteConfig()
   const headingRef = useRef(null)
 
   useEffect(() => {

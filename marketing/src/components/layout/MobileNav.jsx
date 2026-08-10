@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { FiArrowRight, FiSearch, FiX } from 'react-icons/fi'
 import NavLink from './NavLink'
 import { mainNavigation, siteConfig } from '../../site.config'
-import { cn } from '../../lib/utils'
+import { bindFocusTrap, cn, isNavItemActive } from '../../lib/utils'
 
 const secondaryLinks = [
   { id: 'prices', label: 'Pricing', href: siteConfig.links.prices },
@@ -18,13 +18,14 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
   useEffect(() => {
     if (!open) return
 
-    const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
+    const previous = document.activeElement
     panelRef.current?.focus()
+    const release = bindFocusTrap(panelRef.current, { onEscape: () => onClose() })
 
-    return () => document.removeEventListener('keydown', onKeyDown)
+    return () => {
+      release()
+      if (previous instanceof HTMLElement) previous.focus()
+    }
   }, [open, onClose])
 
   if (!open) return null
@@ -45,11 +46,11 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
         className="surface-obsidian absolute right-0 top-0 flex h-full w-[min(100%,22rem)] flex-col shadow-2xl focus:outline-none"
       >
         <div className="flex items-center justify-between border-b border-obsidian-line px-6 py-4">
-          <span className="font-serif text-xl text-cream">{siteConfig.name}</span>
+          <span className="font-display text-xl text-cream">{siteConfig.name}</span>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-2 text-cream/70 transition hover:bg-cream/10 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 text-cream/70 transition hover:bg-cream/10 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
             aria-label="Close menu"
           >
             <FiX aria-hidden="true" />
@@ -63,9 +64,9 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
               onClose()
               onOpenSearch?.()
             }}
-            className="flex w-full items-center gap-3 rounded-full border border-cream/20 bg-cream/5 px-4 py-2.5 text-meta text-cream/70 transition hover:border-cream/35 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
+            className="flex min-h-11 w-full items-center gap-3 rounded-full border border-cream/20 bg-cream/5 px-4 py-2.5 text-meta text-cream/70 transition hover:border-cream/35 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
           >
-            <FiSearch aria-hidden="true" className="text-gold" />
+            <FiSearch aria-hidden="true" className="text-cream/70" />
             Search
           </button>
         </div>
@@ -73,7 +74,7 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
         <nav className="flex-1 overflow-y-auto px-6 py-6" aria-label="Primary">
           <ul className="space-y-1">
             {mainNavigation.map((item) => {
-              const active = item.href === pathname
+              const active = isNavItemActive(item, pathname)
 
               return (
                 <li key={item.id}>
@@ -82,7 +83,7 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
                     onNavigate={onClose}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'flex items-center justify-between rounded-lg px-3 py-3 font-serif text-display-card transition',
+                      'flex min-h-11 items-center justify-between rounded-lg px-3 py-3 font-display text-display-card transition',
                       active ? 'bg-cream/10 text-cream' : 'text-cream/85 hover:bg-cream/5 hover:text-cream',
                     )}
                   >
@@ -94,7 +95,7 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
                         </span>
                       ) : null}
                     </span>
-                    <FiArrowRight aria-hidden="true" className="text-base text-gold" />
+                    <FiArrowRight aria-hidden="true" className="text-base text-cream/45" />
                   </NavLink>
                 </li>
               )
@@ -109,7 +110,7 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
                     item={item}
                     onNavigate={onClose}
                     aria-current={item.href === pathname ? 'page' : undefined}
-                    className="block rounded-lg px-3 py-2.5 text-meta text-cream/65 transition hover:bg-cream/5 hover:text-cream"
+                    className="flex min-h-11 items-center rounded-lg px-3 py-2.5 text-meta text-cream/65 transition hover:bg-cream/5 hover:text-cream"
                   />
                 </li>
               ))}
@@ -121,14 +122,14 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
           <NavLink
             item={{ href: siteConfig.links.contact, label: 'Start a project' }}
             onNavigate={onClose}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-meta font-semibold text-ink transition hover:bg-gold-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-cream focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-meta font-semibold text-ink transition hover:bg-gold-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian"
           >
             Start a project
             <FiArrowRight aria-hidden="true" />
           </NavLink>
           <a
             href={`tel:${siteConfig.primaryPhone}`}
-            className="mt-3 block text-center text-meta text-cream/60 transition hover:text-gold"
+            className="mt-3 block min-h-11 text-center text-meta leading-[2.75rem] text-cream/60 transition hover:text-gold focus:outline-none focus-visible:underline"
           >
             {siteConfig.primaryPhone}
           </a>

@@ -11,8 +11,9 @@ import { usePageTitle } from '../lib/usePageTitle'
 import { homePeopleAsk } from '../config/peopleAsk'
 
 /**
- * Agency IA (design-os/prompts/agency_website.md + UX-GATE §8.1):
+ * Agency IA (design-os/prompts/agency_website.md + UX-GATE §15.3.2):
  * Hero → Positioning → Problems → Services → Portfolio → Process → FAQ → Contact
+ * Wave 9 Phase B: calm spatial rhythm; one primary focus per section.
  */
 export default function HomePage() {
   usePageTitle()

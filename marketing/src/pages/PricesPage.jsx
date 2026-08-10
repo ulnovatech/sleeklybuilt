@@ -62,7 +62,7 @@ function PlanCard({ pkg }) {
 
       <div className="min-w-0">
         <h3 className="display-card text-emerald-deep">{pkg.title}</h3>
-        <p className="mt-3 font-serif text-2xl font-semibold text-ink">{price}</p>
+        <p className="mt-3 font-display text-2xl font-semibold text-ink">{price}</p>
         <p className="mt-1 text-sm text-content-muted">One-time project price · UGX</p>
         <p className="mt-3 text-body text-ink-soft">{pkg.idealFor}</p>
         {pkg.recommendedWhy ? (
@@ -103,7 +103,7 @@ function EnterpriseBand({ band }) {
         <p className="eyebrow">Custom scope</p>
         <h3 className="mt-3 display-card text-emerald-deep">{band.title}</h3>
         <p className="mt-2 text-body text-ink-soft">{band.idealFor}</p>
-        <p className="mt-4 font-serif text-xl font-semibold text-ink">{band.priceLabel}</p>
+        <p className="mt-4 font-display text-xl font-semibold text-ink">{band.priceLabel}</p>
         <ul className="mt-4 space-y-2">
           {band.differentiators.map((item) => (
             <li key={item} className="flex gap-2 text-body text-ink-soft">

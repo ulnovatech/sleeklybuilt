@@ -1,4 +1,4 @@
-import { Section, SectionHeading } from '../site/Section'
+import { Section, SectionBody, SectionHeading } from '../site/Section'
 
 const steps = [
   {
@@ -18,34 +18,29 @@ const steps = [
   },
 ]
 
+/**
+ * Process — quiet step markers; no giant competing numerals (Wave 9 spatial).
+ */
 export default function HowWeWorkSection() {
   return (
     <Section id="process" className="section-light scroll-mt-24">
       <SectionHeading
         eyebrow="How we work"
-        title={
-          <>
-            A simple process. <em className="italic text-emerald">No surprises.</em>
-          </>
-        }
+        title="A simple process. No surprises."
+        intro="Clear scope, visible build, support after launch — so you always know where things stand."
       />
 
-      <ol className="mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
-        {steps.map((step) => (
-          <li key={step.n} className="relative border-t border-cream-deep pt-8">
-            <span className="absolute -top-px left-0 h-px w-12 bg-gold" aria-hidden="true" />
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute right-0 top-6 select-none font-serif text-[4.5rem] leading-none text-cream-deep"
-            >
-              {step.n}
-            </span>
-
-            <h3 className="display-card relative text-emerald-deep">{step.title}</h3>
-            <p className="relative mt-3 text-body text-ink-soft">{step.body}</p>
-          </li>
-        ))}
-      </ol>
+      <SectionBody>
+        <ol className="grid gap-10 md:grid-cols-3 md:gap-8">
+          {steps.map((step) => (
+            <li key={step.n} className="border-t border-subtle pt-6">
+              <span className="text-meta font-semibold tabular-nums text-content-muted">{step.n}</span>
+              <h3 className="display-card mt-3 text-emerald-deep">{step.title}</h3>
+              <p className="mt-3 max-w-measure text-body text-ink-soft">{step.body}</p>
+            </li>
+          ))}
+        </ol>
+      </SectionBody>
     </Section>
   )
 }

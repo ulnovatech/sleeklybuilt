@@ -6,9 +6,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
   // For local dev, the PHP handlers are served by Apache at:
-  //   http://localhost/ulnovatech/php/...
+  //   http://localhost/sleeklybuilt/php/...
   // We proxy /php/* from Vite to Apache so fetch('/php/..') works.
-  const apacheBase = env.VITE_APACHE_BASE || 'http://localhost/ulnovatech'
+  const apacheBase = env.VITE_APACHE_BASE || 'http://localhost/sleeklybuilt'
 
   return {
     plugins: [react()],

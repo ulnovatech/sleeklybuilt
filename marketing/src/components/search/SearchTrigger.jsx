@@ -27,12 +27,12 @@ export default function SearchTrigger({ tone = 'light', onOpen, className = '' }
         'group hidden min-h-11 items-center gap-2.5 rounded-full border px-4 py-2 text-meta transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 lg:inline-flex',
         onDark
           ? 'border-cream/20 bg-cream/5 text-cream/70 hover:border-cream/35 hover:text-cream focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
-          : 'border-cream-deep bg-white/70 text-ink-soft hover:border-emerald/30 hover:text-emerald-deep focus-visible:ring-dos focus-visible:ring-offset-cream',
+          : 'border-subtle bg-surface-raised/70 text-ink-soft hover:border-emerald/30 hover:text-emerald-deep focus-visible:ring-dos focus-visible:ring-offset-surface-base',
         className,
       )}
       aria-label="Search products, pages and layouts"
     >
-      <FiSearch aria-hidden="true" className={onDark ? 'text-gold' : 'text-emerald'} />
+      <FiSearch aria-hidden="true" className={onDark ? 'text-cream/70' : 'text-emerald'} />
       <span className="w-20 text-left xl:w-28">Search</span>
       <kbd
         className={cn(

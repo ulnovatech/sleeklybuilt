@@ -4,16 +4,16 @@
 
 /* SleeklyBuilt design tokens — see DESIGN.md for the full system */
 :root {
-  /* Brand primitives — single source of hex values */
-  --cream: #f8f4ec;
-  --cream-deep: #ede5d6;
+  /* Brand primitives — single source of hex values (Wave 9 soft-neutral canvas) */
+  --cream: #f4f3ef;
+  --cream-deep: #e6e4de;
   --emerald-deep: #2d5346;
   --emerald: #3f7a62;
   --emerald-soft: #5f9a82;
   --gold: #d4a84b;
   --gold-soft: #e4c47a;
-  --ink: #38342e;
-  --ink-soft: #5c5852;
+  --ink: #2f2d2a;
+  --ink-soft: #5a5752;
   --obsidian: #0a0b0a;
   --obsidian-raised: #131614;
   --obsidian-line: #232823;
@@ -93,8 +93,8 @@
   --radius-2xl: 2rem; /* 32 */
   --radius-full: 9999px;
 
-  /* Elevation / shadow */
-  --shadow-color: 56 52 46;
+  /* Elevation / shadow — cooler soft-neutral bias */
+  --shadow-color: 47 45 42;
   --shadow-none: none;
   --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / 0.06);
   --shadow-sm: 0 1px 3px rgb(var(--shadow-color) / 0.08), 0 1px 2px rgb(var(--shadow-color) / 0.04);
@@ -163,21 +163,21 @@ body {
     @apply text-eyebrow font-semibold uppercase text-emerald;
   }
 
-  /* Eyebrow on obsidian — emerald fails contrast on dark, so gold carries it */
+  /* Eyebrow on obsidian — quiet cream label; gold reserved for CTA or hairline */
   .eyebrow-invert {
-    @apply text-eyebrow font-semibold uppercase text-gold;
+    @apply text-eyebrow font-semibold uppercase text-cream/70;
   }
 
   .display-hero {
-    @apply font-serif text-display-hero;
+    @apply font-display text-display-hero;
   }
 
   .display-section {
-    @apply font-serif text-display-section;
+    @apply font-display text-display-section;
   }
 
   .display-card {
-    @apply font-serif text-display-card;
+    @apply font-display text-display-card;
   }
 
   .lead {
@@ -188,19 +188,24 @@ body {
     @apply max-w-measure text-body;
   }
 
-  /** @deprecated Prefer the font-serif utility */
+  /**
+   * @deprecated Prefer font-display / .display-* roles.
+   * Kept as an alias so legacy className="serif" does not pull Instrument Serif.
+   */
   .serif {
-    font-family: 'Instrument Serif', Georgia, serif;
+    font-family: 'Plus Jakarta Sans', 'Work Sans', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
-  /* ── Section rhythm ─────────────────────────────────────────── */
+  /* ── Section rhythm (8pt — ~64px mobile / ~96px desktop) ───── */
 
   .section-dark {
-    @apply py-28 md:py-36;
+    @apply py-16 md:py-24;
   }
 
   .section-light {
-    @apply py-20 md:py-28;
+    @apply py-16 md:py-24;
   }
 
   .hairline {

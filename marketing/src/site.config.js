@@ -8,17 +8,17 @@ export const siteConfig = {
   tagline: 'Websites, apps & systems — built sleek, built right',
   description:
     'SleeklyBuilt crafts custom websites, mobile apps, graphics, and business systems for clients in Uganda and beyond.',
-  email: 'ulnovatech@gmail.com',
+  email: 'sales@sleeklybuilt.pro',
   location: 'Kampala, Uganda',
   addressNote: 'Office under development',
   phones: ['+256 791779448', '+256 749594464', '+256 772169960'],
   primaryPhone: '+256791779448',
   whatsapp: 'https://wa.me/256749594464',
   social: {
-    x: 'https://x.com/ulnova26716',
-    instagram: 'https://www.instagram.com/ulnovatech/?hl=en',
-    linkedin: 'https://www.linkedin.com/in/ulnova-tech-394547376/',
-    youtube: 'https://www.youtube.com/@UlnovaTech',
+    x: 'https://x.com/sleeklybuilt',
+    instagram: 'https://www.instagram.com/sleeklybuilt/?hl=en',
+    linkedin: 'https://www.linkedin.com/company/sleeklybuilt/',
+    youtube: 'https://www.youtube.com/@SleeklyBuilt',
   },
   links: {
     home: '/',
@@ -33,14 +33,14 @@ export const siteConfig = {
     prices: '/prices',
     trackOrder: '/track-order',
     getStarted: '/contact',
-    logo: '/assets/img/uln-logo.png',
+    logo: '/assets/img/sleeklybuilt-logo.png',
   },
   siteUrl,
 }
 
 const portfolioApi =
   import.meta.env.VITE_PORTFOLIO_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost/ulnovatech/portfolio/api' : '/portfolio/api')
+  (import.meta.env.DEV ? 'http://localhost/sleeklybuilt/portfolio/api' : '/portfolio/api')
 
 export const apiEndpoints = {
   contact: '/php/contactus.php',

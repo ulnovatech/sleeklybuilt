@@ -1,26 +1,38 @@
 # SleeklyBuilt Marketing Hub — UX Gate Artifacts
 
-**Version:** 1.0  
-**Status:** Phases 0–8 complete — see `marketing/PHASE-8-APPROVAL.md` (96/100).  
-**Date:** 2026-08-07  
-**Governing plan:** Design OS-aligned replan (Phases 0–8)  
-**Product classification:** Marketing / Agency (+ Portfolio for gallery surfaces)
+**Version:** 2.0  
+**Status:** Wave 9 gate open — see `marketing/REDESIGN-WAVE-9.md`. Phases 0–8 remain historical (`PHASE-8-APPROVAL.md`, 96/100).  
+**Date:** 2026-08-08 (Wave 9); 2026-08-07 (Phases 0–8 archive)  
+**Governing plan:** System redesign Wave 9 (typography → spatial → forms → nav → color)  
+**Product classification:** Marketing / Agency (+ Portfolio / Projects for gallery + order)
 
-This file satisfies `.cursor/rules/ui-ux-gate.mdc` and `design-os/prompts/redesign.md` Phase 1 (Audit).  
-**No user-facing UI may be implemented until the artifacts for that screen are recorded here.**
+This file satisfies `.cursor/rules/ui-ux-gate.mdc` and `design-os/prompts/redesign.md`.  
+**No user-facing UI for Wave 9 may be implemented until that surface’s §15 artifact is recorded and the governing pattern is opened in the implementation turn.**
+
+Active decision memo: [`REDESIGN-WAVE-9.md`](./REDESIGN-WAVE-9.md).
 
 ---
 
 # 0. Change motivation
 
-Legitimate reasons for continuing the reform:
+## 0A. Wave 9 motivation (active — 2026-08-08)
+
+Legitimate reasons for this redesign wave:
+
+1. **Display typography costs trust.** Instrument Serif + theatrical hero sizing reads as a lifestyle brochure, not a calm systems studio; body type is acceptable and must be preserved.
+2. **Spatial hierarchy is uneven.** Loud heroes, giant decorative numerals, and uneven section air produce eye fatigue and “theme-y” scrolling rather than a restful F/Z scan.
+3. **Forms are competent but not appetizing.** Flattened contact (Phase 7) improved a11y; it did not deliver a guided reward loop. Prospects need progress, chunking, and review-before-send.
+4. **Marketing vs Projects feel like two products.** Header/footer grammar, focus, CTA, and base-path behavior diverge; brand family is broken.
+5. **Color mood risks parchment boutique** over operational confidence; emerald/gold DNA stays, canvas and accent discipline need recalibration.
+
+Not a motivation: redesign for novelty alone. Phase 8 remains valid for prior scope; Wave 9 re-audits and supersedes only the decisions listed in §15.2 and `REDESIGN-WAVE-9.md`.
+
+## 0B. Phases 0–8 motivation (historical — 2026-08-07)
 
 1. The site cannot yet express the product line split (Sleek Pages vs Websites vs Apps vs Systems) — product pages are shells.
 2. Accessibility and honesty defects in shipped code (reduced motion, unverifiable stats, mixed icon libraries) block Design OS final approval.
 3. Inconsistency between Design OS patterns and current screens makes extension expensive.
 4. Appearance costing trust: generic agency clichés and incomplete conversion paths weaken conversion.
-
-Not a motivation: redesign for novelty alone.
 
 ---
 
@@ -67,7 +79,7 @@ Not a motivation: redesign for novelty alone.
 
 **Governing docs (site-wide):**
 
-- `design-os/INDEX.md` → agency route
+- `design-os/INDEX.md` → agency + redesign + visual foundation routes
 - `design-os/prompts/agency_website.md`
 - `design-os/prompts/redesign.md`
 - `design-os/intelligence/landing_page_intelligence.md`
@@ -75,10 +87,33 @@ Not a motivation: redesign for novelty alone.
 - Patterns: `hero_sections`, `feature_sections`, `faq`, `contact`, `pricing`, `multi_step_form`, `search`
 - Systems: design tokens, color, typography, motion, empty/loading/error
 - Reviews: visual, UX, accessibility, mobile, final_approval
+- **Wave 9 active:** `marketing/REDESIGN-WAVE-9.md` + UX-GATE §15
 
 ---
 
 # 4. Scope decision
+
+## 4A. Wave 9 scope (active)
+
+**Incremental redesign with systemic visual/interaction foundation** — not a wholesale product rewrite.
+
+**In scope**
+
+- Marketing hub UI/UX end-to-end (home, product pages, contact, pricing, about, track-order, 404, shared chrome).
+- Shared navigation language between marketing and Projects/portfolio SPA.
+- All customer-facing data-entry forms: contact, newsletter, track-order, Projects order wizard, Rainbow quote (fix or remove).
+- Typography system, color mood, spacing rhythm, section composition, motion, states.
+
+**Out of scope**
+
+- Discovery dashboard / Sleekly Dash admin product UI.
+- Fabricating testimonials, metrics, or sample business data.
+- New product features unrelated to redesign quality.
+- Changing primary CTA label or core API field contracts without a transition plan.
+
+**Rollout:** foundation tokens → chrome → pages → forms → reviews. Prefer continuous deployable increments over a hard cutover.
+
+## 4B. Phases 0–8 scope (historical)
 
 **Incremental redesign** (default per redesign prompt).
 
@@ -101,8 +136,29 @@ Do not change without a written finding and transition plan:
 | Cmd/Ctrl+K search | Discovered keyboard path |
 | Contact path ≤ 3 taps from any page | Agency decision criterion |
 | Form field semantics (name, phone, email, subject, message) | Backend + support process |
+| Contact `submission_key` + reference response | Idempotency + support |
 | Order lookup (reference + phone) | Returning buyers |
-| Flat main nav (5 items) | Fixed hash-link dead-end problem |
+| Portfolio order/pay API JSON contracts | Checkout continuity |
+| Layout catalog `collection=websites\|sleek-pages` | Gallery scope |
+| Flat main nav (5 items) on marketing | Fixed hash-link dead-end problem |
+| Hero Variant C (no fabricated UI) | Honesty |
+| Honesty / layout-not-template / no emoji icons | Content contract |
+
+## 5.1 Wave 9 change register
+
+| Change | Class | Transition |
+| --- | --- | --- |
+| Replace Instrument Serif with neo-grotesk display | Surface → structural (type system) | Update `DESIGN.md`, `index.html`, CSS roles; remove serif brand mark |
+| Recalibrate cream → soft-neutral if needed | Surface | Token swap; document hex |
+| Contact: flat → guided multi-step + review | Behavioural | Keep field semantics + draft key; add progress/steps; preserve a11y summary |
+| Newsletter / Track Order: elevate labels + inline errors | Behavioural (light) | No API change |
+| Projects order wizard: SR progress + field errors + review | Behavioural | Keep order/pay endpoints |
+| Rainbow quote: fix real API or remove submit | Behavioural / structural | No fake `/api/developer-quote` |
+| Shared header/footer grammar marketing ↔ Projects | Structural (chrome) | Visual parity; fix dead links / base path |
+| Remove giant decorative numerals; normalize section rhythm | Surface | Spatial pass |
+| Obsidian budget: reconcile PageHeader vs “3 dark bands” | Surface / system | Prefer light page headers or count carefully |
+
+Items **not** changing: routes, Start a project, Cmd+K, contact POST shape, order-status shape, catalog API.
 
 ---
 
@@ -574,12 +630,391 @@ Apply to every data-backed surface (home work, Sleek Pages gallery, Cmd+K layout
 
 1. About stats are **not** sourceable → replace with verifiable commitments (Phase 1b).
 2. Hero uses **Variant C** (text + real proof strip), not fabricated product UI (Phase 2).
+3. Wave 9: Instrument Serif is **fully replaced** (decision D1 in `REDESIGN-WAVE-9.md`).
+4. Wave 9: guided multi-step contact + Projects forms (decision D2) supersedes Phase 8 flat-preferred for those flows.
+5. Wave 9: marketing + Projects share one nav visual grammar (decision D3).
 
 ---
 
 # 14. Final rule
 
 This document is the audit record and UX approval artifact.  
-Implementation that skips a screen's section in §8 is a process defect under Design OS enforcement.
+Implementation that skips a screen's section in §8 (Phases 0–8) or §15 (Wave 9) is a process defect under Design OS enforcement.
 
-When Phase N starts, open the named pattern files again in that turn before writing UI code.
+When Phase N / Wave 9 Phase A–E starts, open the named pattern files again in that turn before writing UI code.
+
+---
+
+# 15. Wave 9 — System redesign gate (active)
+
+**Opened:** 2026-08-08  
+**Memo:** `marketing/REDESIGN-WAVE-9.md`  
+**Priority:** Typography → Spatial rhythm → Gamified contact → Nav unification → Color mood polish
+
+## 15.0 INDEX routing confirmation
+
+```
+Classify (Agency + Marketing + Portfolio/Projects)
+  → design-os/INDEX.md (redesign + agency + landing + visual foundation + forms + navigation)
+  → Intelligence (typography, font, color, layout, UX, content, navigation, forms, a11y, motion, responsive, mobile)
+  → Patterns (hero_sections Variant C, feature_sections, faq, contact, pricing, multi_step_form, search, error_recovery)
+  → Systems (tokens, color, typography, spacing, grid, layout, motion, forms, navigation, empty/loading/error/feedback)
+  → Components (navigation, forms, buttons, inputs, search, landing_pages)
+  → UX gate artifacts (this §15)
+  → Implement
+  → Reviews + .cursor/checklists → new ≥95 approval (not Phase 8 reuse)
+```
+
+## 15.1 Wave 9 findings (re-audit)
+
+| Finding | Evidence | Who | Impact | Class |
+| --- | --- | --- | --- | --- |
+| Display type off-putting | Instrument Serif on hero/section/brand; theatrical clamp sizes | Prospects | Trust / “theme site” | **Defect** (taste costing conversion) |
+| Dead font imports | `main.jsx` Inter/Roboto vs Work Sans/Instrument in CSS | Maintainers | Bundle / inconsistency | **Inconsistency** |
+| Spatial fatigue | Giant decorative numerals; uneven section air; hero loudness | Scrollers | Cognitive load | **Friction** |
+| Contact not appetizing | Flat card; no progress/reward/review | Inquirers | Abandonment risk | **Friction** |
+| Newsletter placeholder-as-label | `NewsletterForm.jsx` | A11y | Forms system ban | **Defect** |
+| Track Order legacy + toast-only | gray/brand utilities; weak field errors | Returning buyers | Recoverability / visual debt | **Friction** |
+| Marketing ≠ Projects chrome | Separate Header/Footer grammar; Projects dead routes; base path drift | All cross-app users | Unpredictable product family | **Inconsistency** |
+| Projects order a11y weaker | Toast-only step validation; weak SR progress | Buyers | Completion / a11y | **Friction** |
+| Rainbow quote broken | `fetch('/api/developer-quote')` nonexistent; hero can empty-submit | Quote seekers | Broken workflow | **Defect** |
+| Unused portfolio ContactForm | Dead duplicate of hub contact | Maintainers | Drift risk | **Limitation** |
+| Cream/parchment mood | Soft lifestyle vs systems studio | Prospects | Brand mismatch | **Preference** → calibrate if needed |
+| Obsidian budget pressure | PageHeader + hero + mid + footer | Visual system | Rule conflict | **Inconsistency** |
+| FloatingContact raw hex | WhatsApp green / blue utilities | Visual system | Token binding | **Resolved** Phase E — cream chip + emerald icons |
+
+Resolved Phase 0–8 items remain closed unless regression is found.
+
+## 15.2 Locked decisions (do not re-litigate in implementation)
+
+See `REDESIGN-WAVE-9.md` §3. Summary: D1 replace serif; D2 guided forms; D3 shared nav; D4 soft-neutral if needed; D5 Variant C; D6 Start a project; D7 honesty.
+
+## 15.3 Gate artifacts by surface (Wave 9)
+
+For each: User Journey → UX Flow → Screen Layout → Component Structure → Empty / Loading / Error / Success → Named Design OS docs.
+
+---
+
+### 15.3.1 Shared chrome — Header / Nav / Footer / Mobile
+
+#### Named docs
+
+`navigation_intelligence`, `navigation_system`, `components/navigation`, `components/search`, `patterns/search`, `motion_system`, `accessibility_intelligence`, `mobile_intelligence`.
+
+#### User journey
+
+Orient (“where am I?”) → reach primary conversion or Projects → return home without relearning chrome when crossing hub ↔ `/portfolio-app/`.
+
+#### UX flow
+
+```
+Land any route
+  → Brand (left) + primary links + optional search + one primary CTA
+  → Mobile: open drawer (≥44px) → same IA + CTA
+  → Scroll: sticky header; tone adapts over dark/light without losing contrast
+  → Cross-app: Projects link full-navigates to /portfolio-app/; hub link returns home
+```
+
+#### Screen layout
+
+**Mobile:** brand + menu + CTA (or CTA inside drawer); drawer full-height; focus trap; Esc/close.  
+**Desktop:** brand left; links center/right; search affordance; **Start a project** as sole primary gold/action.
+
+Projects SPA: same mark, link style, focus rings, sticky behavior, drawer pattern; Projects-specific IA allowed; no dead `/portfolio` or unrouted `/services` etc.
+
+#### Component structure
+
+```
+Marketing: Layout → Header → BrandMark, NavMenu, SearchTrigger, MobileNav, primary ActionLink
+Projects:  Header / Footer matching grammar (tokens + structure), real routes only
+Footer: useful links + newsletter (labels required) + legal/contact
+```
+
+#### States
+
+| State | Design |
+| --- | --- |
+| Default / hover / focus / active | Semantic tokens; `ring-dos` / `ring-dos-inverse` |
+| Scrolled | Solid surface; readable type |
+| Mobile open | Drawer; body scroll lock; focus return on close |
+| Cmd+K | Existing search states preserved |
+| Cross-app | External full load; never false “active” on hub for Projects |
+
+---
+
+### 15.3.2 Home `/`
+
+#### Named docs
+
+`agency_website`, `landing_page_intelligence`, `content_intelligence`, `hero_sections` (Variant C), `feature_sections`, `faq`, `contact` (Let’s talk), typography + spacing + color systems.
+
+#### User journey
+
+Arrive → understand what SleeklyBuilt builds → trust approach → see real work → understand process → start a project or browse work.
+
+#### UX flow
+
+```
+Hero (brand + one headline + one support + one CTA group + real proof)
+  → Positioning
+  → Problems → outcomes
+  → What we build
+  → Selected work (live)
+  → How we work (no giant competing numerals)
+  → FAQ
+  → Let’s talk (guided form + channels)
+```
+
+#### Screen layout
+
+**Mobile:** compact Variant C hero (no min-h / never 100vh); primary CTA above fold on ~667px; section rhythm ~64px; single column.  
+**Desktop:** content ≤~1280px; section rhythm ~96px; left-aligned headings; one gold accent per viewport.
+
+First viewport budget: brand, one headline, one short support, one CTA group, real proof — no stats strips, no dashboard clutter.
+
+#### Component structure
+
+```
+HomePage
+├── HeroSection
+├── PositioningSection
+├── ProblemsWeSolveSection
+├── WhatWeBuildSection
+├── SelectedWorkSection (shared layout-card pattern with gallery)
+├── HowWeWorkSection
+├── PeopleAskSection
+└── LetsTalkSection → GamifiedContactForm + channels
+```
+
+#### States
+
+| Region | Loading | Empty | Error | Success |
+| --- | --- | --- | --- | --- |
+| Selected work | Skeletons matching cards | Honest empty + contact | Isolated retry | Cards |
+| Contact band | Form ready | — | Linked errors + summary | Confirmation / reference |
+| FAQ | Static | Omit if zero | — | Expand/collapse |
+| Hero | Text-first | — | Media optional | — |
+
+---
+
+### 15.3.3 Contact `/contact` + guided enquiry form
+
+#### Named docs
+
+`patterns/contact.md`, `patterns/multi_step_form.md`, `systems/forms_system.md`, `error_states_system`, `feedback_system`, `content_intelligence`, `accessibility_intelligence`.
+
+#### User journey
+
+Decide to inquire → choose channel or form → complete guided steps with clear progress → review → send → receive reference + next-step expectation.
+
+#### UX flow
+
+```
+PageHeader (reply promise)
+  → Mobile: channels first
+  → Guided form:
+       Step 1 Intent (+ conditional order ref)
+       Step 2 You (name, phone, email)
+       Step 3 Brief (message)
+       Step 4 Review → Submit
+  → Success: reference, reply-from, send another
+```
+
+Micro-success: brief affirmative on step advance (not confetti). Draft persists across steps. Intent-aware microcopy.
+
+#### Screen layout
+
+**Mobile:** channels → progress → one step cluster → primary Continue/Send.  
+**Desktop:** form column + expectations/channels rail; progress always visible.
+
+#### Component structure
+
+```
+ContactPage
+├── PageHeader
+├── ContactChannelPanel
+├── ExpectationList
+├── GamifiedContactForm
+│   ├── Progress (semantic, SR-announced)
+│   ├── Step panels
+│   ├── Error summary (assertive, linked)
+│   └── Review summary
+└── SubmissionConfirmation
+```
+
+#### States
+
+| State | Design |
+| --- | --- |
+| Idle / draft restored | Announce restore; fields filled |
+| Step validation fail | Inline + optional step-level summary; stay on step |
+| Submit validation fail | Focus summary; jump to field |
+| Submitting | Disable controls; process label |
+| Network / rate limit | Recoverable; draft kept |
+| Success | Reference; focus status; no route change |
+| Reduced motion | No decorative transitions |
+
+**A11y contract (non-negotiable):** persistent labels, ≥44px targets, blur validation, `aria-invalid` / `describedby`, keyboard complete, focus management.
+
+---
+
+### 15.3.4 Product pages + `/products`
+
+#### Named docs
+
+`feature_sections`, `faq`, `agency_website`, `content_intelligence`; gallery uses empty/loading/error systems + catalog contract.
+
+#### User journey
+
+Choose line → confirm fit → resolve objections → contact or browse layouts.
+
+#### UX flow
+
+```
+PageHeader (not full hero) → features → optional LayoutsGallery → PeopleAsk → ContactCtaBand
+```
+
+#### Screen layout
+
+Stacked mobile; restrained desktop splits; left-aligned headers; one primary CTA (**Start a project**).
+
+#### Component structure
+
+`ProductPageLayout` → PageHeader, features, LayoutsGallery*, PeopleAsk, ContactCtaBand.
+
+#### States
+
+Gallery nine-state matrix (§9); FAQ omit if &lt;4; media progressive / text-first on fail.
+
+---
+
+### 15.3.5 Pricing `/prices`
+
+#### Named docs
+
+`patterns/pricing.md`, `faq`, `content_intelligence`.
+
+#### User journey
+
+Compare UGX packages → choose tier or contact → optional track order.
+
+#### UX flow
+
+Header → category controls → plan grid → matrix → FAQ → contact.
+
+#### Screen layout
+
+Mobile one card/row, recommended first; desktop ≤4 columns; tabular nums; tax/currency honesty; no emoji.
+
+#### States
+
+Empty plans → contact; unavailable price → disable that CTA; success → contact/portfolio with context.
+
+---
+
+### 15.3.6 Track order `/track-order`
+
+#### Named docs
+
+`forms_system`, `feedback_system`, `error_recovery`, semantic tokens (retire legacy gray/brand).
+
+#### User journey
+
+Has reference → enter reference + phone → see status → WhatsApp if stuck.
+
+#### UX flow
+
+Short form (proportionate — not fake multi-step) → loading → success panel OR inline field/network errors → escape channel.
+
+#### States
+
+Loading, empty, not found, network error, success. Labels required; inline errors preferred over toast-only. Copy: layout not template; align reference examples with real prefixes.
+
+---
+
+### 15.3.7 Newsletter (footer)
+
+#### Named docs
+
+`forms_system`, `feedback_system`.
+
+#### User journey
+
+Opt in with email → clear success near control.
+
+#### UX flow
+
+Labeled email + submit → loading → success / error with retry.
+
+#### States
+
+Default, submitting, success, error. **Visible label required** (placeholder is not a label).
+
+---
+
+### 15.3.8 Projects SPA — chrome + order + quote
+
+#### Named docs
+
+`multi_step_form`, `forms_system`, `navigation_system`, `error_states_system`, `feedback_system`. Backend contracts: `portfolio/api/order.php`, `payment-init.php`, `order-status.php`.
+
+#### User journey (order)
+
+Choose layout → configure package/options → contact details → review → quote/pay → success.
+
+#### UX flow
+
+```
+Order page loads template (loading/error)
+  → GamifiedOrderWizard steps with announced progress
+  → Field-level validation per step
+  → Review before submit/pay
+  → Success / recoverable failure (data retained)
+```
+
+#### Rainbow quote
+
+Either wire to an existing real endpoint with the same a11y/validation bar, or remove the submit affordance and document the missing dependency. **Forbidden:** mock success or invent `/api/developer-quote`.
+
+#### Nav
+
+Only real routes under production base `/portfolio-app/`. Shared visual grammar with marketing. Remove or redirect dead Header/Footer links.
+
+#### States
+
+Template loading/error; step errors; paying; quote success; payment init failure with retry. Remove unused `ContactForm.jsx` or fold into hub pattern — no second lead contract.
+
+---
+
+### 15.3.9 About / 404 / Cmd+K
+
+- **About:** page header (not theatrical hero); trust commitments; no fabricated stats; Wave 9 type/spacing only.  
+- **404:** recovery to home/products; Wave 9 chrome/type.  
+- **Cmd+K:** preserve behaviour and layout-fetch states; restyle to new type/tokens only.
+
+---
+
+## 15.4 Wave 9 phase map (implementation after this gate)
+
+| Phase | Gate dependency | Work | Status |
+| --- | --- | --- | --- |
+| Gate | §15 + memo | Routing, findings, preservation, artifacts | **Done** (2026-08-08) |
+| A | §15.3 + typography systems | Replace display font; type scale; token foundation | **Done** (2026-08-08) — Plus Jakarta Sans + Work Sans; soft-neutral cream; restrained scale; Projects token mirror |
+| B | §15.3.1–15.3.2 | Spatial rhythm; primitives; home recomposition | **Done** (2026-08-08) — SectionBody rhythm; quiet process/problem marks; shared LayoutCard; compact hero/PageHeader; ContactCtaBand semantic |
+| C | §15.3.3–15.3.8 | Guided forms marketing + Projects | **Done** (2026-08-08) — multi-step contact; newsletter labels; track-order inline errors; order wizard field errors + review; Rainbow → real contactus; removed dead ContactForm |
+| D | §15.3.1 / 15.3.8 | Nav unification + dead-link / base-path fix | **Done** (2026-08-08) — shared brand mark / sticky / `ring-dos` / drawer / one CTA; Projects IA real routes only; hub links via `hubHref`; marketing external never false-active; track-order removed from light-top set |
+| E | Color systems + memo D4 | Soft-neutral mood polish; gold/obsidian discipline | **Done** (2026-08-08) — FloatingContact tokens; About PageHeader; footer quiet eyebrows; Projects retokened (no blue/purple/gray rainbow); Rainbow honesty (no fabricated stats) |
+| F | Reviews | Checklists + new ≥95 approval doc | **Done** (2026-08-08) — drawer focus trap; Rainbow field errors; dead PricingCard removed; `WAVE-9-APPROVAL.md` **96/100** |
+
+---
+
+## 15.5 Measurement (redesign.md Phase 7)
+
+In-repo analytics baseline is still unknown. Before claiming conversion wins:
+
+- Instrument contact submit success / step abandonment if tooling exists.
+- Smoke: hub home, contact, prices, portfolios API, portfolio-app order path.
+- Qualitatively: first-viewport brand test; heading calmness; form appetite.
+
+Do not invent traffic or conversion figures.
+

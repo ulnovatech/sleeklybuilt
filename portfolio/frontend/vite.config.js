@@ -3,12 +3,12 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const apacheBase = env.VITE_APACHE_BASE || "http://localhost/ulnovatech";
+  const apacheBase = env.VITE_APACHE_BASE || "http://localhost/sleeklybuilt";
   const isProd = mode === "production";
 
   return {
     plugins: [react()],
-    base: isProd ? "/portfolio-app/" : "/ulnovatech/portfolio/",
+    base: isProd ? "/portfolio-app/" : "/sleeklybuilt/portfolio/",
     server: {
       port: Number(env.VITE_PORT) || 5175,
       host: true,

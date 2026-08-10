@@ -1,130 +1,139 @@
-import React from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { useFetch } from '../hooks/useFetch';
-import GamifiedOrderWizard from '../components/order/GamifiedOrderWizard';
-import { formatUgx, getPlanById } from '../config/packages';
-import { apiEndpoints, siteConfig } from '../site.config';
+import { useSearchParams, Link } from 'react-router-dom'
+import { useFetch } from '../hooks/useFetch'
+import GamifiedOrderWizard from '../components/order/GamifiedOrderWizard'
+import { formatUgx, getPlanById } from '../config/packages'
+import { apiEndpoints, hubHref, siteConfig } from '../site.config'
 
-const Order = () => {
-  const [searchParams] = useSearchParams();
-  const templateName = searchParams.get('template') || '';
+/**
+ * Order page shell — soft-neutral surfaces (Wave 9 Phase E).
+ * Wizard handles guided steps; sidebar stays supportive, not rainbow.
+ */
+export default function Order() {
+  const [searchParams] = useSearchParams()
+  const templateName = searchParams.get('template') || ''
 
   const templateUrl = templateName
     ? `${apiEndpoints.portfolioDetail}?template=${encodeURIComponent(templateName)}`
-    : null;
+    : null
 
-  const { data: templateData, loading: templateLoading, error: templateError } = useFetch(templateUrl);
-  const defaultPlan = getPlanById('smart');
+  const { data: templateData, loading: templateLoading, error: templateError } = useFetch(templateUrl)
+  const defaultPlan = getPlanById('smart')
 
   if (templateLoading && templateName) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-[50vh] items-center justify-center bg-surface-base px-6">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-brand" />
-          <p className="text-gray-600">Loading template details…</p>
+          <div
+            className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-subtle border-t-emerald"
+            aria-hidden="true"
+          />
+          <p className="text-body text-ink-soft">Loading layout details…</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (templateError && templateName) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="flex min-h-[50vh] items-center justify-center bg-surface-base px-6">
         <div className="max-w-md text-center">
-          <p className="font-medium text-red-600">Could not load template details.</p>
-          <Link to="/order" className="mt-4 inline-block font-semibold text-brand hover:underline">
+          <p className="font-medium text-status-danger">Could not load layout details.</p>
+          <Link
+            to="/order"
+            className="mt-4 inline-block text-meta font-semibold text-emerald underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+          >
             Continue with a custom order →
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-6xl space-y-12 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-brand">Choose your template</p>
-          <h1 className="mt-2 text-3xl font-bold text-gray-900 md:text-4xl">
+    <div className="bg-surface-base py-10 md:py-14">
+      <div className="mx-auto max-w-content space-y-12 px-6 lg:px-10">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="eyebrow">Order</p>
+          <h1 className="mt-3 font-display text-display-section text-emerald-deep">
             Tell us about your project — then start with a deposit
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600">
-            Complete a short guided form first. When you&apos;re ready, pay a deposit with Flutterwave
-            (MoMo, card, or bank) and we begin building.
+          <p className="mt-4 text-body text-ink-soft">
+            Complete a short guided form. When you&apos;re ready, pay a deposit with Flutterwave (MoMo, card, or bank)
+            and we begin building.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
           <GamifiedOrderWizard templateName={templateName} templateData={templateData} />
 
           <div className="space-y-6">
-            {templateData && (
-              <section className="overflow-hidden rounded-xl bg-white p-6 shadow-lg">
-                <h3 className="mb-4 text-xl font-bold text-gray-900">Template preview</h3>
+            {templateData ? (
+              <section className="overflow-hidden rounded-xl border border-subtle bg-surface-raised p-6 shadow-sm">
+                <h2 className="font-display text-display-card text-emerald-deep">Layout preview</h2>
                 <img
                   src={templateData.mainImage}
                   alt={templateData.title}
-                  className="mb-4 h-64 w-full rounded-lg object-cover"
+                  className="mt-4 h-64 w-full rounded-lg object-cover"
                 />
-                <h4 className="font-semibold text-gray-900">{templateData.title}</h4>
-                <p className="mt-2 text-sm text-gray-600">{templateData.description}</p>
+                <h3 className="mt-4 font-semibold text-ink">{templateData.title}</h3>
+                <p className="mt-2 text-meta text-ink-soft">{templateData.description}</p>
               </section>
-            )}
+            ) : null}
 
-            <section className="rounded-xl bg-white p-6 shadow-lg">
-              <h3 className="mb-4 text-xl font-bold text-gray-900">How it works</h3>
-              <ol className="space-y-5 text-sm text-gray-700">
-                <li className="flex gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">1</span>
-                  <div>
-                    <p className="font-semibold text-gray-900">Choose your design</p>
-                    <p className="mt-1 text-gray-600">
-                      Full ownership of the website is yours once your order is complete.
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">2</span>
-                  <div>
-                    <p className="font-semibold text-gray-900">We build it</p>
-                    <p className="mt-1 text-gray-600">
-                      After payment, we&apos;ll contact you for your business details and get to work.
-                      Customizations are included at no extra cost.
-                    </p>
-                  </div>
-                </li>
-                <li className="flex gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">3</span>
-                  <div>
-                    <p className="font-semibold text-gray-900">Go live</p>
-                    <p className="mt-1 text-gray-600">
-                      We&apos;ll set everything up and walk you through going live — including domain
-                      name (your business&apos;s website address) options if you need one. No hosting
-                      fees, ever.
-                    </p>
-                  </div>
-                </li>
+            <section className="rounded-xl border border-subtle bg-surface-raised p-6 shadow-sm">
+              <h2 className="font-display text-display-card text-emerald-deep">How it works</h2>
+              <ol className="mt-5 space-y-5 text-meta text-ink-soft">
+                {[
+                  {
+                    title: 'Choose your design',
+                    body: 'Full ownership of the website is yours once your order is complete.',
+                  },
+                  {
+                    title: 'We build it',
+                    body: 'After payment, we contact you for business details and start. Customizations are included.',
+                  },
+                  {
+                    title: 'Go live',
+                    body: 'We set everything up and walk you through launch — including domain options if you need one.',
+                  },
+                ].map((step, i) => (
+                  <li key={step.title} className="flex gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-action-primary-hover text-xs font-bold text-cream">
+                      {i + 1}
+                    </span>
+                    <div>
+                      <p className="font-semibold text-ink">{step.title}</p>
+                      <p className="mt-1">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
               </ol>
-              <p className="mt-4 text-xs text-gray-500">
+              <p className="mt-4 text-xs text-content-secondary">
                 Deposits from {formatUgx(defaultPlan.depositUgx)} depending on package. Balance due before launch.
               </p>
             </section>
 
-            <section className="rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 p-6">
-              <h3 className="text-xl font-bold text-gray-900">Need help choosing?</h3>
-              <p className="mt-2 text-sm text-gray-600">Talk to our team before you pay — no pressure.</p>
-              <a
-                href={siteConfig.scheduleCall}
-                className="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-brand px-6 py-3 font-semibold text-white hover:bg-brand-dark"
-              >
-                Schedule a free call
-              </a>
+            <section className="rounded-xl border border-subtle bg-surface-sunken p-6">
+              <h2 className="font-display text-display-card text-emerald-deep">Need help choosing?</h2>
+              <p className="mt-2 text-meta text-ink-soft">Talk to our team before you pay — no pressure.</p>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href={siteConfig.scheduleCall}
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-accent px-5 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                >
+                  Schedule a free call
+                </a>
+                <a
+                  href={hubHref('contact')}
+                  className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep transition hover:bg-surface-base focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                >
+                  Message us
+                </a>
+              </div>
             </section>
           </div>
         </div>
       </div>
     </div>
-  );
-};
-
-export default Order;
+  )
+}
