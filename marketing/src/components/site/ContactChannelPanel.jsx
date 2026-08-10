@@ -2,8 +2,7 @@ import { FiMail, FiPhone, FiMessageCircle } from 'react-icons/fi'
 import { useSiteConfig } from '../../context/SiteContactContext'
 
 /**
- * Contact channels — ordered by speed (contact pattern).
- * Shown before the form on mobile; in the rail on desktop.
+ * Compact channel escape hatch — speed over essays.
  */
 export default function ContactChannelPanel({ className = '' }) {
   const siteConfig = useSiteConfig()
@@ -15,8 +14,6 @@ export default function ContactChannelPanel({ className = '' }) {
       href: siteConfig.whatsapp,
       external: true,
       icon: FiMessageCircle,
-      response: 'Usually same day during business hours',
-      bestFor: 'Quick questions and sending files',
     },
     {
       id: 'phone',
@@ -25,8 +22,6 @@ export default function ContactChannelPanel({ className = '' }) {
       href: `tel:${siteConfig.primaryPhone}`,
       external: false,
       icon: FiPhone,
-      response: 'Mon–Fri 09:00–17:00 EAT',
-      bestFor: 'Urgent conversations',
     },
     {
       id: 'email',
@@ -35,48 +30,31 @@ export default function ContactChannelPanel({ className = '' }) {
       href: `mailto:${siteConfig.email}`,
       external: false,
       icon: FiMail,
-      response: 'Reply within one working day',
-      bestFor: 'Detailed briefs and documents',
     },
   ]
 
   return (
-    <div className={className}>
-      <p className="eyebrow">Faster options</p>
-      <h2 className="mt-3 display-card text-emerald-deep">Reach us directly</h2>
-      <p className="mt-2 text-body text-ink-soft">
-        Pick the channel that matches how soon you need a reply. Form submissions get a reference code.
-      </p>
-
-      <ul className="mt-8 space-y-3">
-        {channels.map(({ id, label, detail, href, external, icon: Icon, response, bestFor }) => (
+    <aside className={className}>
+      <p className="eyebrow">Or reach us directly</p>
+      <ul className="mt-4 space-y-2">
+        {channels.map(({ id, label, detail, href, external, icon: Icon }) => (
           <li key={id}>
             <a
               href={href}
               {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
-              className="flex min-h-14 items-start gap-4 rounded-2xl border border-cream-deep bg-surface-raised p-4 transition duration-fast ease-dos hover:border-emerald/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
+              className="flex min-h-11 items-center gap-3 rounded-lg border border-subtle bg-surface-raised px-3.5 py-2.5 transition hover:border-action-primary/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
             >
-              <span
-                className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-deep/10 text-emerald-deep"
-                aria-hidden="true"
-              >
-                <Icon className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-meta font-semibold text-emerald-deep">{label}</span>
-                <span className="mt-0.5 block truncate text-body font-medium text-ink">{detail}</span>
-                <span className="mt-1 block text-sm text-ink-soft">{response}</span>
-                <span className="mt-0.5 block text-sm text-content-muted">Best for: {bestFor}</span>
-              </span>
+              <Icon className="h-4 w-4 shrink-0 text-emerald" aria-hidden="true" />
+              <span className="text-meta text-content-muted">{label}</span>
+              <span className="ml-auto truncate text-meta font-medium text-ink">{detail}</span>
             </a>
           </li>
         ))}
       </ul>
-
-      <p className="mt-6 text-sm text-content-muted">
-        Based in {siteConfig.location}
-        {siteConfig.addressNote ? ` · ${siteConfig.addressNote}` : ''}.
+      <p className="mt-4 text-xs text-content-muted">
+        {siteConfig.location}
+        {siteConfig.addressNote ? ` · ${siteConfig.addressNote}` : ''}
       </p>
-    </div>
+    </aside>
   )
 }

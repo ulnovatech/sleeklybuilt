@@ -10,12 +10,12 @@ import { Eyebrow } from './Section'
  */
 export default function PageHeader({ eyebrow, title, intro, actions }) {
   return (
-    <section className="surface-obsidian pb-12 pt-28 md:pb-16 md:pt-32">
+    <section className="surface-obsidian pb-10 pt-24 md:pb-12 md:pt-28">
       <div className="mx-auto max-w-content px-6 lg:px-10">
         <div className="max-w-3xl">
           {eyebrow ? <Eyebrow tone="invert">{eyebrow}</Eyebrow> : null}
-          <h1 className="mt-5 font-display text-display-section text-cream">{title}</h1>
-          {intro ? <p className="lead mt-4 text-cream/70 md:mt-5">{intro}</p> : null}
+          <h1 className="mt-3 font-display text-display-section text-cream">{title}</h1>
+          {intro ? <p className="mt-3 max-w-xl text-meta text-cream/70 md:text-body">{intro}</p> : null}
           {actions ? (
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">{actions}</div>
           ) : null}

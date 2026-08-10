@@ -237,8 +237,8 @@ export default function GamifiedOrderWizard({ templateName = '', templateData = 
   const errorList = Object.keys(errors).map((id) => ({ id, message: errors[id] }))
   const inputClass = (id) =>
     cn(
-      'mt-2 w-full min-h-11 rounded-xl border bg-surface-base px-4 py-3 text-body text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-dos',
-      errors[id] && attempted ? 'border-status-danger/40' : 'border-subtle focus:border-emerald/40',
+      'field-input mt-2',
+      errors[id] && attempted ? 'field-input-error' : '',
     )
 
   return (

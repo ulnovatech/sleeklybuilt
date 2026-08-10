@@ -805,40 +805,37 @@ HomePage
 
 #### User journey
 
-Decide to inquire → choose channel or form → complete guided steps with clear progress → review → send → receive reference + next-step expectation.
+Decide to inquire → answer one prompt at a time → auto-advance when valid → confirm & send → receive reference.
 
 #### UX flow
 
 ```
-PageHeader (reply promise)
-  → Mobile: channels first
-  → Guided form:
-       Step 1 Intent (+ conditional order ref)
-       Step 2 You (name, phone, email)
-       Step 3 Brief (message)
-       Step 4 Review → Submit
+Compact PageHeader (reply promise)
+  → Conversational form (one prompt visible):
+       Intent (tap → advance)
+       Order ref if needed (Enter / Next)
+       Name → Phone → Email → Message (Enter / Next)
+       Ready? compact summary → Send only
   → Success: reference, reply-from, send another
 ```
 
-Micro-success: brief affirmative on step advance (not confetti). Draft persists across steps. Intent-aware microcopy.
+No stacked “Let’s talk / Project enquiry / How can we reach you?” theatre. Progress = count + thin bar + segment dots. Draft persists. Intent-aware deflect links stay.
 
 #### Screen layout
 
-**Mobile:** channels → progress → one step cluster → primary Continue/Send.  
-**Desktop:** form column + expectations/channels rail; progress always visible.
+**Mobile:** compact form first on `/contact`; channels as escape hatch.  
+**Desktop:** form + slim channel list; no heavy dual-column essay.
 
 #### Component structure
 
 ```
-ContactPage
-├── PageHeader
-├── ContactChannelPanel
-├── ExpectationList
-├── GamifiedContactForm
-│   ├── Progress (semantic, SR-announced)
-│   ├── Step panels
-│   ├── Error summary (assertive, linked)
-│   └── Review summary
+ContactPage / LetsTalkSection
+├── Compact header or short band copy
+├── GamifiedContactForm (one-prompt auto-advance)
+│   ├── Progress (n/N + bar + dots)
+│   ├── Single question + one control
+│   └── Send only on final prompt
+├── ContactChannelPanel (compact)
 └── SubmissionConfirmation
 ```
 

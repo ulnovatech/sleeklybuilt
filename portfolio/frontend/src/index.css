@@ -79,4 +79,14 @@ body {
   .eyebrow-invert {
     @apply text-eyebrow font-semibold uppercase tracking-[0.12em] text-cream/70;
   }
+
+  .field-input {
+    @apply w-full min-h-[2.75rem] rounded-lg border border-cream-deep bg-surface-base px-3.5 py-2.5 text-body text-ink
+      placeholder:text-ink-soft
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-dos;
+  }
+
+  .field-input-error {
+    @apply border-status-danger;
+  }
 }

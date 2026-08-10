@@ -2,7 +2,7 @@ import CountrySelect, { defaultDialCode } from './CountrySelect'
 import { cn } from '../../lib/utils'
 
 /**
- * Phone field with persistent labels (forms system — placeholders are not labels).
+ * Compact phone control — dial + national number as one answer unit.
  */
 export default function PhoneInput({
   dialCode,
@@ -10,6 +10,7 @@ export default function PhoneInput({
   phone,
   onPhoneChange,
   onBlur,
+  onKeyDown,
   required = true,
   phoneId = 'contact-phone',
   dialId = 'contact-dial',
@@ -17,34 +18,46 @@ export default function PhoneInput({
   invalid = false,
   inputRef,
   className = '',
+  compact = false,
 }) {
-  const inputClass =
-    'min-h-11 rounded-xl border bg-surface-base px-3 py-2.5 text-body text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-dos'
-
   return (
-    <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-end', className)}>
-      <div className="sm:w-40 sm:shrink-0">
-        <label htmlFor={dialId} className="block text-meta font-semibold text-emerald-deep">
-          Country code
-        </label>
+    <div className={cn('flex gap-2', className)}>
+      <div className={compact ? 'w-[7.5rem] shrink-0' : 'w-36 shrink-0'}>
+        {!compact ? (
+          <label htmlFor={dialId} className="block text-meta font-semibold text-emerald-deep">
+            Code
+          </label>
+        ) : (
+          <label htmlFor={dialId} className="sr-only">
+            Country code
+          </label>
+        )}
         <CountrySelect
           id={dialId}
           value={dialCode || defaultDialCode}
           onChange={onDialCodeChange}
           className={cn(
-            inputClass,
-            'mt-2 w-full',
-            invalid ? 'border-status-danger/40' : 'border-cream-deep',
+            'field-input',
+            !compact && 'mt-2',
+            invalid && 'field-input-error',
           )}
         />
       </div>
       <div className="min-w-0 flex-1">
-        <label htmlFor={phoneId} className="block text-meta font-semibold text-emerald-deep">
-          Phone number{required ? '' : ' (optional)'}
-        </label>
-        <p id={`${phoneId}-hint`} className="mt-1 text-sm text-content-muted">
-          Include the number without the country code.
-        </p>
+        {!compact ? (
+          <>
+            <label htmlFor={phoneId} className="block text-meta font-semibold text-emerald-deep">
+              Phone{required ? '' : ' (optional)'}
+            </label>
+            <p id={`${phoneId}-hint`} className="field-hint">
+              Without the country code.
+            </p>
+          </>
+        ) : (
+          <label htmlFor={phoneId} className="sr-only">
+            Phone number
+          </label>
+        )}
         <input
           id={phoneId}
           ref={inputRef}
@@ -54,15 +67,16 @@ export default function PhoneInput({
           value={phone}
           onChange={(e) => onPhoneChange(e.target.value)}
           onBlur={onBlur}
+          onKeyDown={onKeyDown}
           required={required}
           aria-invalid={invalid || undefined}
-          aria-describedby={[`${phoneId}-hint`, describedBy].filter(Boolean).join(' ') || undefined}
-          placeholder="772169960"
-          className={cn(
-            inputClass,
-            'mt-2 w-full',
-            invalid ? 'border-status-danger/40' : 'border-cream-deep focus:border-emerald/40',
-          )}
+          aria-describedby={
+            compact
+              ? describedBy
+              : [`${phoneId}-hint`, describedBy].filter(Boolean).join(' ') || undefined
+          }
+          placeholder="772 169 960"
+          className={cn('field-input', !compact && 'mt-2', invalid && 'field-input-error')}
         />
       </div>
     </div>

@@ -31,14 +31,14 @@ function BrandMark({ tone }) {
     >
       <span
         className={cn(
-          'grid h-8 w-8 place-items-center rounded-full font-display text-base leading-none transition',
+          'grid h-7 w-7 place-items-center rounded-full font-display text-sm leading-none transition',
           onDark ? 'bg-cream text-obsidian' : 'bg-emerald-deep text-cream',
         )}
         aria-hidden="true"
       >
         {siteConfig.name.charAt(0)}
       </span>
-      <span className={cn('font-display text-xl tracking-tight transition', onDark ? 'text-cream' : 'text-emerald-deep')}>
+      <span className={cn('font-display text-lg font-semibold tracking-tight transition', onDark ? 'text-cream' : 'text-emerald-deep')}>
         {siteConfig.name}
       </span>
     </Link>
@@ -82,7 +82,7 @@ export default function Header() {
   }, [])
 
   const iconButtonClass = cn(
-    'inline-flex min-h-11 min-w-11 items-center justify-center rounded-md p-2 transition focus:outline-none focus-visible:ring-2',
+    'inline-flex h-9 w-9 items-center justify-center rounded-md transition focus:outline-none focus-visible:ring-2',
     tone === 'hero'
       ? 'text-cream hover:bg-cream/10 focus-visible:ring-dos-inverse focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian'
       : 'text-emerald-deep hover:bg-emerald-deep/5 focus-visible:ring-dos focus-visible:ring-offset-2 focus-visible:ring-offset-cream',
@@ -99,7 +99,7 @@ export default function Header() {
             : 'border-cream-deep bg-cream/90 shadow-sm backdrop-blur-md',
         )}
       >
-        <div className="mx-auto flex h-16 max-w-content items-center gap-3 px-6 lg:gap-5 lg:px-10">
+        <div className="mx-auto flex h-14 max-w-content items-center gap-2 px-5 lg:gap-3 lg:px-8">
           <BrandMark tone={tone} />
 
           <NavMenu tone={tone} />
@@ -109,14 +109,14 @@ export default function Header() {
           <Link
             to={siteConfig.links.contact}
             className={cn(
-              'hidden min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-meta font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
+              'hidden h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
               tone === 'hero'
                 ? 'bg-gold text-ink hover:bg-gold-soft focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
                 : 'bg-emerald-deep text-cream hover:bg-emerald focus-visible:ring-dos focus-visible:ring-offset-cream',
             )}
           >
             Start a project
-            <FiArrowRight aria-hidden="true" />
+            <FiArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
           </Link>
 
           <button

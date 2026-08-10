@@ -16,24 +16,27 @@ const toneClass = {
   },
 }
 
+/**
+ * Desktop primary nav — single-line labels, tight chrome (no wrap, no tall min-h).
+ */
 export default function NavMenu({ tone = 'light' }) {
   const { pathname } = useLocation()
   const styles = toneClass[tone] ?? toneClass.light
 
   return (
     <nav id="navmenu" className="hidden lg:block" aria-label="Primary">
-      <ul className="flex items-center gap-0.5">
+      <ul className="flex flex-nowrap items-center gap-0">
         {mainNavigation.map((item) => {
           const active = isNavItemActive(item, pathname)
 
           return (
-            <li key={item.id}>
+            <li key={item.id} className="shrink-0">
               <NavLink
                 item={item}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 py-2 text-meta font-medium transition',
-                  'after:absolute after:inset-x-3 after:-bottom-0.5 after:h-px after:origin-left after:bg-gold after:transition-transform',
+                  'relative inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-md px-2 text-sm font-medium transition',
+                  'after:absolute after:inset-x-2 after:-bottom-px after:h-px after:origin-left after:bg-gold after:transition-transform',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                   tone === 'hero'
                     ? 'focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'

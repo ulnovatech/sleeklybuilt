@@ -133,7 +133,7 @@ export default function Header() {
             : 'border-subtle bg-surface-base',
         )}
       >
-        <div className="mx-auto flex h-16 max-w-content items-center gap-3 px-6 lg:gap-5 lg:px-10">
+        <div className="mx-auto flex h-14 max-w-content items-center gap-2 px-5 lg:gap-3 lg:px-8">
           <BrandMark />
 
           <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Projects">

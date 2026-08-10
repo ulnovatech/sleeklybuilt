@@ -63,7 +63,7 @@ export const mainNavigation = [
   { id: 'sleek-pages', label: 'Sleek Pages', href: siteConfig.links.sleekPages, badge: 'New' },
   { id: 'websites', label: 'Websites', href: siteConfig.links.websites },
   { id: 'mobile-apps', label: 'Mobile Apps', href: siteConfig.links.mobileApps },
-  { id: 'products', label: 'All Products', href: siteConfig.links.products },
+  { id: 'products', label: 'Products', href: siteConfig.links.products },
   { id: 'projects', label: 'Projects', href: siteConfig.links.portfolio },
 ]
 

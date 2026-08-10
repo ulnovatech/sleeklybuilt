@@ -188,6 +188,29 @@ body {
     @apply max-w-measure text-body;
   }
 
+  /* Compact conversational field — shared across enquiry / order / track */
+  .field-input {
+    @apply w-full min-h-[2.75rem] rounded-lg border border-cream-deep bg-surface-base px-3.5 py-2.5 text-body text-ink
+      placeholder:text-content-muted
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-dos;
+  }
+
+  .field-input-error {
+    @apply border-status-danger;
+  }
+
+  .field-label {
+    @apply block font-display text-lg font-semibold tracking-tight text-emerald-deep sm:text-xl;
+  }
+
+  .field-hint {
+    @apply mt-1 text-sm text-content-muted;
+  }
+
+  .field-error {
+    @apply mt-2 text-sm text-status-danger;
+  }
+
   /**
    * @deprecated Prefer font-display / .display-* roles.
    * Kept as an alias so legacy className="serif" does not pull Instrument Serif.

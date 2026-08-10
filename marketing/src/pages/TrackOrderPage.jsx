@@ -95,14 +95,14 @@ export default function TrackOrderPage() {
 
       <section className="section-light">
         <div className="mx-auto max-w-xl px-6 lg:px-10">
-          <div className="rounded-dos-xl border border-subtle bg-surface-raised p-6 shadow-sm sm:p-8">
-            <h2 className="display-card text-emerald-deep">{order ? 'Your order status' : 'Look up your order'}</h2>
-            <p className="mt-2 text-meta text-ink-soft">
+          <div className="rounded-xl border border-subtle bg-surface-raised p-5 shadow-sm sm:p-6">
+            <h2 className="font-display text-lg font-semibold text-emerald-deep">{order ? 'Your order status' : 'Look up your order'}</h2>
+            <p className="mt-1 text-meta text-ink-soft">
               Reference usually starts with <span className="font-mono text-ink">ULN-</span>
             </p>
 
             {!order ? (
-              <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+              <form className="mt-6 space-y-4" onSubmit={handleSubmit} noValidate>
                 {formError ? (
                   <div
                     role="alert"
@@ -129,10 +129,7 @@ export default function TrackOrderPage() {
                       .filter(Boolean)
                       .join(' ')}
                     placeholder="ULN-…"
-                    className={cn(
-                      'mt-2 w-full min-h-11 rounded-dos-xl border bg-surface-base px-4 py-3 font-mono text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-dos',
-                      errors.reference ? 'border-status-danger/40' : 'border-subtle focus:border-action-primary/40',
-                    )}
+                    className={cn('field-input mt-2 font-mono text-sm', errors.reference && 'field-input-error')}
                   />
                   {errors.reference ? (
                     <p id={`${formId}-ref-error`} className="mt-2 text-sm text-status-danger">
