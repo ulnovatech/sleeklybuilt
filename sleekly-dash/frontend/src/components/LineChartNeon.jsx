@@ -16,7 +16,7 @@ export default function LineChartNeon({
   stroke = '#8b5cf6',
   yLabel = '', // <-- new prop for Y-axis label/unit
 }) {
-  if (!data || data.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     return (
       <div className="card chart-wrap flex items-center justify-center text-gray-500 h-[280px]">
         No data available

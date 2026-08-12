@@ -29,9 +29,11 @@ export default function Dashboard() {
         // Request last 30 days (backend will return array of {time, value})
         const act = await CompaniesAPI.activity({ range: '30d' });
         // allow both {data: [...]} and direct array responses
-        setActivity(act.data || act);
+        const rows = Array.isArray(act?.data) ? act.data : act;
+        setActivity(Array.isArray(rows) ? rows : []);
       } catch (e) {
         console.error('Failed to load activity', e);
+        setActivity([]);
       } finally {
         setLoading(prev => ({ ...prev, activity: false }));
       }
@@ -40,9 +42,11 @@ export default function Dashboard() {
     async function loadIndustries() {
       try {
         const top = await CompaniesAPI.topIndustries();
-        setIndustries(top.data || top);
+        const rows = Array.isArray(top?.data) ? top.data : top;
+        setIndustries(Array.isArray(rows) ? rows : []);
       } catch (e) {
         console.error('Failed to load industries', e);
+        setIndustries([]);
       } finally {
         setLoading(prev => ({ ...prev, industries: false }));
       }
@@ -152,10 +156,11 @@ function RecentActivity() {
     (async () => {
       try {
         const res = await CompaniesAPI.list({ sort: 'last_contact_date', dir: 'desc', per_page: 5 });
-        const data = res.data || res;
-        if (mounted) setRows(data);
+        const data = Array.isArray(res?.data) ? res.data : res;
+        if (mounted) setRows(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error('RecentActivity load failed', e);
+        if (mounted) setRows([]);
       }
     })();
     return () => { mounted = false; };

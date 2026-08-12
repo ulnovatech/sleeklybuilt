@@ -327,16 +327,16 @@ try {
             if (preg_match('#^/api/companies/(\d+)$#', $path, $matches)) {
                 $companyController->show($matches[1]);
             } elseif ($path === '/api/companies/stats') {
-                $companyController->stats();
+                echo json_encode($companyController->stats());
             } elseif ($path === '/api/companies/activity') {
-                $companyController->activity();
+                echo json_encode($companyController->activity());
             } elseif ($path === '/api/companies/top-industries') {
-                $companyController->topIndustries();
+                echo json_encode($companyController->topIndustries());
             } else {
-                $companyController->index($_GET);
+                echo json_encode($companyController->index($_GET));
             }
         } elseif ($method === 'POST' && $path === '/api/companies') {
-            $companyController->store();
+            echo json_encode($companyController->store());
         } elseif ($method === 'PUT' && preg_match('#^/api/companies/(\d+)$#', $path, $matches)) {
             $companyController->update($matches[1]);
         } elseif ($method === 'DELETE' && preg_match('#^/api/companies/(\d+)$#', $path, $matches)) {

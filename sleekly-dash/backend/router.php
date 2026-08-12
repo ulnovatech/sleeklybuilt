@@ -46,7 +46,7 @@ switch (true) {
         break;
 
     case preg_match('#^/api/companies/stats$#', $request_uri):
-        if ($method === 'GET') $companyController->stats();
+        if ($method === 'GET') echo json_encode($companyController->stats());
         break;
 
     case preg_match('#^/api/interactions$#', $request_uri):
