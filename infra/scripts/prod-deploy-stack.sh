@@ -68,6 +68,10 @@ dc exec -T php-fpm \
   sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio' \
   || echo "WARN: portfolio chgrp skipped"
 
+echo "==> apply_crm_foundation_migration"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_crm_foundation_migration.php
+
 echo "==> apply_admin_mobile_migrations"
 dc exec -T php-fpm \
   php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php

@@ -2,6 +2,12 @@
 
 Run SQL files against the same database as `sleekly-dash/backend/.env` (`DB_NAME`, default `sleeklybuilt`).
 
+**CRM foundation (required for `/dash` Companies + Interactions):**
+
+```bash
+php sleekly-dash/backend/scripts/apply_crm_foundation_migration.php
+```
+
 **Competitors (required for Competition page):**
 
 ```bash
