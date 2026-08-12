@@ -153,7 +153,7 @@ function TemplateCard({ template, onEditMetadata, onEditContent }) {
   );
 }
 
-function Drawer({ title, eyebrow, onClose, children, wide = false, error = '' }) {
+function Drawer({ title, eyebrow, onClose, children, wide = false, error = '', centered = false }) {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') onClose();
@@ -163,23 +163,46 @@ function Drawer({ title, eyebrow, onClose, children, wide = false, error = '' })
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={title}>
+    <div
+      className={cx(
+        'fixed inset-0 z-50 flex p-4 sm:p-6',
+        centered ? 'items-center justify-center' : 'items-stretch justify-end p-0 sm:p-0',
+      )}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
       <button
         type="button"
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
         aria-label="Close panel"
       />
-      <section className={cx(
-        'relative flex h-full w-full flex-col border-l border-slate-800 bg-[#0d0f13] shadow-2xl',
-        wide ? 'sm:max-w-3xl' : 'sm:max-w-xl',
-      )}>
-        <header className="flex items-start justify-between border-b border-slate-800 px-5 py-5 sm:px-7">
-          <div>
+      <section
+        className={cx(
+          'relative flex w-full flex-col bg-[#0d0f13] shadow-2xl',
+          centered
+            ? 'max-h-[min(90vh,52rem)] rounded-2xl border border-slate-800'
+            : 'h-full border-l border-slate-800',
+          wide ? 'sm:max-w-3xl' : 'sm:max-w-xl',
+        )}
+      >
+        <header
+          className={cx(
+            'relative border-b border-slate-800 px-5 py-5 sm:px-7',
+            centered ? 'pr-14 text-center' : 'flex items-start justify-between',
+          )}
+        >
+          <div className={centered ? 'mx-auto max-w-md' : undefined}>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-300">{eyebrow}</p>
             <h2 className="mt-1 text-xl font-semibold text-white">{title}</h2>
           </div>
-          <button type="button" onClick={onClose} className="btn-icon" aria-label="Close">
+          <button
+            type="button"
+            onClick={onClose}
+            className={cx('btn-icon', centered && 'absolute right-4 top-4 sm:right-5 sm:top-5')}
+            aria-label="Close"
+          >
             <XMarkIcon className="h-5 w-5" />
           </button>
         </header>
@@ -842,6 +865,7 @@ export default function Templates() {
           onClose={() => setPanel(null)}
           wide={Boolean(selectedJob?.preview_url)}
           error={error}
+          centered
         >
           {selectedJob ? (
             <ImportReview
