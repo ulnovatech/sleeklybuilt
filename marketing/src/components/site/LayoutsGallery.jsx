@@ -3,13 +3,22 @@ import { FiAlertCircle, FiArrowRight, FiArrowUpRight, FiRefreshCw } from 'react-
 import { Section, SectionBody, SectionHeading } from './Section'
 import ActionLink from './ActionLink'
 import BusinessFitFilters, { readFiltersFromUrl } from './BusinessFitFilters'
-import { layoutMatchesFilters, getLayoutFit, getBusinessType } from '../../config/businessFit'
+import CategoryStoryStrip from './CategoryStoryStrip'
+import CustomBuildCta from './CustomBuildCta'
+import LayoutPersuasionBand from './LayoutPersuasionBand'
+import { customBuildCopy } from '../../config/galleryPersuasion'
+import {
+  layoutMatchesFilters,
+  getLayoutFit,
+  getBusinessType,
+  sortLayouts,
+} from '../../config/businessFit'
 import { useLayoutCatalog } from '../../lib/useLayoutCatalog'
 import { siteConfig } from '../../site.config'
 import { cn } from '../../lib/utils'
 
 /**
- * Product-line layouts gallery — ecommerce_catalog narrowing + UX-GATE §9 / §15.3.4 fit filters.
+ * Product-line layouts gallery — ecommerce_catalog narrowing + UX-GATE §15.3.4.
  * Wired for websites | sleek-pages via `collection`.
  * Vocabulary: layout / layout fit / live preview — never “template”.
  */
@@ -110,14 +119,20 @@ export default function LayoutsGallery({
   const [filters, setFilters] = useState(() => readFiltersFromUrl())
 
   const filtered = useMemo(() => {
-    if (!enableFitFilters) return layouts
-    return layouts.filter((item) =>
-      layoutMatchesFilters(item, {
-        businessTypeId: filters.businessTypeId,
-        layoutFitId: filters.layoutFitId,
-        query: filters.query,
-      }),
-    )
+    const matched = !enableFitFilters
+      ? layouts
+      : layouts.filter((item) =>
+          layoutMatchesFilters(item, {
+            businessTypeId: filters.businessTypeId,
+            layoutFitId: filters.layoutFitId,
+            query: filters.query,
+          }),
+        )
+    return sortLayouts(matched, filters.sort || 'match', {
+      businessTypeId: filters.businessTypeId,
+      layoutFitId: filters.layoutFitId,
+      query: filters.query || '',
+    })
   }, [layouts, filters, enableFitFilters])
 
   const firstLoad = state === 'idle' || (state === 'loading' && layouts.length === 0)
@@ -126,8 +141,11 @@ export default function LayoutsGallery({
   const filterEmpty = state === 'ready' && layouts.length > 0 && filtered.length === 0
   const forbidden = httpStatus === 403
   const showFitChrome = enableFitFilters && !isError && !isEmpty && !firstLoad
+  const showPersuasion = !isError
+  const showCustomBuild = !firstLoad && !isError
 
-  const clearFilters = () => setFilters({ businessTypeId: null, layoutFitId: null, query: '' })
+  const clearFilters = () =>
+    setFilters({ businessTypeId: null, layoutFitId: null, query: '', sort: 'match' })
 
   const filterEmptyTitle = (() => {
     if (filters.layoutFitId) {
@@ -146,6 +164,11 @@ export default function LayoutsGallery({
       <SectionHeading eyebrow={eyebrow} title={title} intro={intro} />
 
       <SectionBody>
+        {showPersuasion ? <LayoutPersuasionBand /> : null}
+
+        {/* Persuasion CTA target — present before filters hydrate */}
+        <div id="browse-layouts" className="scroll-mt-28" aria-hidden="true" />
+
         {stale ? (
           <div
             role="status"
@@ -167,13 +190,20 @@ export default function LayoutsGallery({
         ) : null}
 
         {showFitChrome ? (
-          <BusinessFitFilters
-            businessTypeId={filters.businessTypeId}
-            layoutFitId={filters.layoutFitId}
-            query={filters.query}
-            resultCount={filtered.length}
-            onChange={setFilters}
-          />
+          <>
+            <BusinessFitFilters
+              businessTypeId={filters.businessTypeId}
+              layoutFitId={filters.layoutFitId}
+              query={filters.query}
+              sort={filters.sort || 'match'}
+              resultCount={filtered.length}
+              onChange={setFilters}
+            />
+            <CategoryStoryStrip
+              businessTypeId={filters.businessTypeId}
+              layoutFitId={filters.layoutFitId}
+            />
+          </>
         ) : null}
 
         <div
@@ -231,8 +261,8 @@ export default function LayoutsGallery({
               <p className="display-card text-emerald-deep">{emptyTitle}</p>
               <p className="mt-3 max-w-measure text-body text-ink-soft">{emptyBody}</p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <ActionLink href={siteConfig.links.contact} variant="emerald">
-                  Start a project
+                <ActionLink href={customBuildCopy.ctaHref} variant="emerald">
+                  {customBuildCopy.ctaLabel}
                   <FiArrowRight aria-hidden="true" />
                 </ActionLink>
                 {collection === 'sleek-pages' ? (
@@ -250,8 +280,8 @@ export default function LayoutsGallery({
             <div className="rounded-dos-xl border border-subtle bg-surface-raised p-8 shadow-sm">
               <p className="display-card text-emerald-deep">{filterEmptyTitle}</p>
               <p className="mt-2 text-body text-ink-soft">
-                Tell us your business and we will match a layout — or clear filters to see all{' '}
-                {layouts.length} layout{layouts.length === 1 ? '' : 's'}.
+                Clear filters to see all {layouts.length} layout{layouts.length === 1 ? '' : 's'}, or
+                tell us what you like and we will build it.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <button
@@ -261,8 +291,8 @@ export default function LayoutsGallery({
                 >
                   Clear filters
                 </button>
-                <ActionLink href={siteConfig.links.contact} variant="ghostLight">
-                  Start a project
+                <ActionLink href={customBuildCopy.ctaHref} variant="ghostLight">
+                  {customBuildCopy.ctaLabel}
                   <FiArrowRight aria-hidden="true" />
                 </ActionLink>
               </div>
@@ -277,6 +307,8 @@ export default function LayoutsGallery({
             </ul>
           )}
         </div>
+
+        {showCustomBuild ? <CustomBuildCta /> : null}
       </SectionBody>
     </Section>
   )

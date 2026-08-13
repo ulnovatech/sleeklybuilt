@@ -891,22 +891,27 @@ Guide: tab selected / item expanded / hash deep-link to `#guide-<category>`.
 **Named docs:** `ecommerce_catalog` (narrowing), `search`, `feature_sections`; Empty / Loading / Error systems.  
 **Vocabulary (hard rule):** never “template” in visitor UI or copy — use **layout**, **layout fit**, **live preview**.
 
-**User journey:** Arrive unsure → filter by business type and/or layout fit (or search) → short matching set → live preview → Start a project / Order layout.
+**User journey:** Arrive unsure → hear why a layout beats blank/scratch → pick a business category → read one category truth (pain → win) → narrow by layout fit / sort → short matching set → live preview → order layout **or** custom-build escape (“tell us what you like”).
 
 **UX flow:**
 
 ```
 PageHeader → features → LayoutsGallery
-  → BusinessFitFilters (search + type + fit)
+  → LayoutPersuasionBand (layout-first, not blank-build)
+  → BusinessFitFilters (category chips primary + fit + search + sort)
+  → CategoryStoryStrip (only when type or fit selected)
   → results | filter-empty | collection-empty | error
+  → CustomBuildCta (after browse; also echoed in empty/filter-empty)
 → PeopleAsk → ContactCtaBand
 ```
 
-**Screen layout:** Mobile — search + horizontal fit chips; Desktop — compact filter row above grid. Typical need = one quiet line for the active fit, not a third filter wall. Opportunity Status stays out (Discovery operator only).
+**Screen layout:** Mobile — persuasion (one job) → horizontal business-type chips → fit chips → category story → grid → custom-build band. Desktop — same stack, wider chip wrap. Sort: Best match | A–Z. Opportunity Status stays out (Discovery operator only).
 
-**Component structure:** `BusinessFitFilters` → `LayoutsGallery` results. Taxonomy: `config/businessFit.js`.
+**Component structure:** `LayoutPersuasionBand` → `BusinessFitFilters` → `CategoryStoryStrip` → results → `CustomBuildCta`. Taxonomy + stories: `config/businessFit.js`. Shared gallery copy: `config/galleryPersuasion.js`.
 
-**States:** Loading skeletons (existing); filter empty — teach + clear + contact; collection empty — existing; error — existing. URL sync: `?type=` + `?fit=` and `#fit-<id>` for Cmd+K.
+**States:** Loading skeletons (existing); filter empty — teach + clear + custom-build CTA; collection empty — existing + custom-build; error — existing. URL sync: `?type=` + `?fit=` + `?sort=` and `#fit-<id>` for Cmd+K.
+
+**Empty / loading / error (persuasion path):** Persuasion + custom-build bands hide on hard error/empty-first-load chrome failure? No — persuasion may show once gallery section mounts; story strip only with an active category; custom-build always after results column (including filter-empty).
 
 ---
 

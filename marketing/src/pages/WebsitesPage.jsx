@@ -18,7 +18,7 @@ export default function WebsitesPage() {
           collection="websites"
           eyebrow="Website layouts"
           title="Published sites you can order"
-          intro="Every layout below is live. Filter by business type or layout fit, open a preview, then order a personalised version."
+          intro="Every layout below is live. Pick a business type, read what that layout is built to win, then open a preview and order a personalised version."
           emptyTitle="No website layouts published yet"
           emptyBody="Our website gallery is being restocked. Start a project and we will show you options, or check back shortly."
           ctaLabel="Order this layout"
