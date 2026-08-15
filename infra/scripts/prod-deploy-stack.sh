@@ -91,8 +91,12 @@ dc exec -T php-fpm \
 
 echo "==> template screenshot deps (puppeteer)"
 dc exec -T php-fpm \
-  sh -lc 'cd /var/www/public_html/sleekly-dash/backend/scripts/template-screenshots \
-    && if [ -f package.json ]; then npm install --omit=dev --no-fund --no-audit; else echo "WARN: screenshot package missing"; fi'
+  sh -lc 'dir=/var/www/public_html/sleekly-dash/backend/scripts/template-screenshots
+    if [ -f "$dir/package.json" ]; then
+      cd "$dir" && npm install --omit=dev --no-fund --no-audit
+    else
+      echo "WARN: screenshot package missing — skipped"
+    fi'
 
 echo "==> merge_template_catalog"
 dc exec -T php-fpm \
