@@ -61,25 +61,36 @@ $telemetry = new Attendant\Telemetry($pdo);
 $llm = new Attendant\GeminiProvider();
 $router = new Attendant\ToolRouter($gate, $pdo);
 
-$engine = new Attendant\TurnEngine(
-    $store,
-    $gate,
-    new Attendant\SchemaValidator(),
-    new Attendant\ContextEngine(),
-    new Attendant\SkillActivator(),
-    new Attendant\PromptComposer(),
-    $llm,
-    $telemetry,
-    $router
-);
+try {
+    $engine = new Attendant\TurnEngine(
+        $store,
+        $gate,
+        new Attendant\SchemaValidator(),
+        new Attendant\ContextEngine(),
+        new Attendant\SkillActivator(),
+        new Attendant\PromptComposer(),
+        $llm,
+        $telemetry,
+        $router
+    );
 
-$engine->runChat(
-    $session['session_id'],
-    $session['conversation_id'],
-    $message,
-    $page,
-    $session['draft'],
-    $emit
-);
+    $engine->runChat(
+        $session['session_id'],
+        $session['conversation_id'],
+        $message,
+        $page,
+        $session['draft'],
+        $emit
+    );
+} catch (Throwable $e) {
+    error_log('attendant chat fatal: ' . $e->getMessage());
+    $emit('error', [
+        'code' => 'backend_error',
+        'message' => "I can't reply just now.",
+    ]);
+    $emit('done', [
+        'conversation_id' => $session['conversation_id'] ?? null,
+    ]);
+}
 
 exit;

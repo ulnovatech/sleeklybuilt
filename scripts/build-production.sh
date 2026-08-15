@@ -77,6 +77,15 @@ cp -a assets/. "$PUBLIC_HTML/assets/"
 cp -a forms "$PUBLIC_HTML/forms"
 cp -a php "$PUBLIC_HTML/php"
 
+# Attendant contract (schemas, prompts, rules, skills) — required by php/attendant at runtime
+if [[ -d attendant ]]; then
+  mkdir -p "$PUBLIC_HTML/attendant"
+  cp -a attendant/schemas attendant/prompts attendant/rules attendant/skills "$PUBLIC_HTML/attendant/"
+else
+  echo "ERROR: attendant/ contract missing — chat will 500 without schemas/prompts" >&2
+  exit 1
+fi
+
 mkdir -p "$PUBLIC_HTML/portfolio/api"
 cp -a portfolio/api/. "$PUBLIC_HTML/portfolio/api/"
 
@@ -87,6 +96,8 @@ fi
 
 mkdir -p "$PUBLIC_HTML/sleekly-dash/backend"
 cp -a sleekly-dash/backend/. "$PUBLIC_HTML/sleekly-dash/backend/"
+# Puppeteer deps are installed on the runtime host/image during deploy — do not ship local node_modules.
+rm -rf "$PUBLIC_HTML/sleekly-dash/backend/scripts/template-screenshots/node_modules"
 
 HTML_EXCLUDE=(marketing.html about.html prices.html)
 shopt -s nullglob

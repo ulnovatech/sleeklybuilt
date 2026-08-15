@@ -44,6 +44,15 @@ Copy-Item -Force (Join-Path $root 'scripts\htaccess\portfolio-app.htaccess') (Jo
 Copy-Item -Recurse -Force (Join-Path $root 'assets\*') (Join-Path $publicHtml 'assets')
 Copy-Item -Recurse -Force (Join-Path $root 'forms') (Join-Path $publicHtml 'forms')
 Copy-Item -Recurse -Force (Join-Path $root 'php') (Join-Path $publicHtml 'php')
+$attendantSrc = Join-Path $root 'attendant'
+if (-not (Test-Path $attendantSrc)) {
+  throw 'attendant/ contract missing — chat will 500 without schemas/prompts'
+}
+$attendantDest = Join-Path $publicHtml 'attendant'
+New-Item -ItemType Directory -Force -Path $attendantDest | Out-Null
+foreach ($part in @('schemas', 'prompts', 'rules', 'skills')) {
+  Copy-Item -Recurse -Force (Join-Path $attendantSrc $part) (Join-Path $attendantDest $part)
+}
 New-Item -ItemType Directory -Force -Path (Join-Path $publicHtml 'portfolio\api') | Out-Null
 Copy-Item -Recurse -Force (Join-Path $root 'portfolio\api\*') (Join-Path $publicHtml 'portfolio\api')
 if (Test-Path (Join-Path $root 'portfolio\portfolio')) {
@@ -51,6 +60,10 @@ if (Test-Path (Join-Path $root 'portfolio\portfolio')) {
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $publicHtml 'sleekly-dash\backend') | Out-Null
 Copy-Item -Recurse -Force (Join-Path $root 'sleekly-dash\backend\*') (Join-Path $publicHtml 'sleekly-dash\backend')
+$shotModules = Join-Path $publicHtml 'sleekly-dash\backend\scripts\template-screenshots\node_modules'
+if (Test-Path $shotModules) {
+  Remove-Item -Recurse -Force $shotModules
+}
 
 $htmlExclude = @('marketing.html', 'about.html', 'prices.html')
 Get-ChildItem -Path $root -Filter '*.html' -File | Where-Object { $htmlExclude -notcontains $_.Name } | ForEach-Object {

@@ -22,7 +22,31 @@ const ATTENDANT_CONFIRM_RATE_MAX = 30;
 
 function attendant_contract_dir(): string
 {
-    return dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'attendant';
+    static $resolved = null;
+    if (is_string($resolved)) {
+        return $resolved;
+    }
+
+    // public_html/attendant (production build) or repo-root/attendant (local XAMPP)
+    $candidates = [
+        dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'attendant',
+        dirname(__DIR__) . DIRECTORY_SEPARATOR . 'attendant',
+        __DIR__ . DIRECTORY_SEPARATOR . 'contract',
+    ];
+    foreach ($candidates as $dir) {
+        if (is_dir($dir . DIRECTORY_SEPARATOR . 'schemas')
+            && is_dir($dir . DIRECTORY_SEPARATOR . 'prompts')
+            && is_dir($dir . DIRECTORY_SEPARATOR . 'rules')
+            && is_dir($dir . DIRECTORY_SEPARATOR . 'skills')
+        ) {
+            $resolved = $dir;
+            return $resolved;
+        }
+    }
+
+    throw new RuntimeException(
+        'Attendant contract missing (schemas/prompts/rules/skills). Deploy attendant/ into public_html.'
+    );
 }
 
 function attendant_src_dir(): string
