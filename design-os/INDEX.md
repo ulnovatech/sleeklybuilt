@@ -1,7 +1,7 @@
 # Design OS Knowledge Map
 **Version:** 1.0  
 **Status:** Canonical Index  
-**Scope:** All 128 documents in `design-os/`
+**Scope:** All 129 documents in `design-os/`
 
 ---
 
@@ -125,7 +125,7 @@ design-os/
 ├── intelligence/    16 documents
 ├── systems/         20 documents
 ├── components/      17 documents
-├── patterns/        27 documents
+├── patterns/        28 documents
 ├── skills/          13 documents
 ├── prompts/         12 documents
 └── reviews/         12 documents
@@ -281,6 +281,7 @@ patterns/
 ├── notifications.md
 ├── messaging.md
 ├── support.md
+├── attendant.md
 ├── crm.md
 ├── kanban.md
 ├── calendar.md
@@ -503,6 +504,27 @@ systems/error_states_system.md
 reviews/security_review.md
 reviews/accessibility_review.md
 ```
+
+---
+
+## "Build a site attendant"
+
+```text
+intelligence/content_intelligence.md
+patterns/attendant.md
+patterns/messaging.md
+patterns/support.md
+patterns/contact.md
+systems/empty_states_system.md
+systems/loading_states_system.md
+systems/error_states_system.md
+reviews/ux_review.md
+reviews/accessibility_review.md
+reviews/security_review.md
+reviews/final_approval.md
+```
+
+The Attendant Pattern is the governing screen. Messaging supplies transcript honesty. Support supplies the always-visible human path. Contact supplies intent routing into existing lead backends. Runtime behaviour is specified in `/attendant/` and must not contradict this pattern.
 
 ---
 

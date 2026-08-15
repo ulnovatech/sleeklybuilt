@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/action.json",
+  "title": "AttendantClientAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["navigate", "highlight", "none"]
+    },
+    "page_id": { "type": "string" },
+    "section_id": { "type": ["string", "null"] },
+    "path": { "type": "string", "pattern": "^/" },
+    "hash": { "type": ["string", "null"] },
+    "external": { "type": "boolean" },
+    "highlight": { "type": "boolean" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "type": { "enum": ["navigate", "highlight"] } }
+      },
+      "then": { "required": ["page_id", "path"] }
+    }
+  ]
+}

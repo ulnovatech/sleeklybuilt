@@ -1,13 +1,19 @@
 # Design OS Roadmap
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Active  
-**Last Reviewed:** 2026-08-06
+**Last Reviewed:** 2026-08-14
 
 ---
 
 # Purpose
 
 This document records what is complete, what is known to be imperfect, and what is planned.
+
+---
+
+# Current State (1.3 — Attendant pattern)
+
+Pattern `attendant.md` added. INDEX routes `"Build a site attendant"`. Runtime contract lives in repo-root `attendant/` (not counted in the 129).
 
 ---
 
@@ -18,7 +24,7 @@ constitution/     7 documents      complete
 intelligence/    16 documents      complete
 systems/         20 documents      consolidated
 components/      17 documents      complete
-patterns/        27 documents      + file_upload, multi_step_form, data_import, error_recovery
+patterns/        28 documents      + attendant (SleeklyBuilt site attendant)
 skills/          13 documents      complete
 prompts/         12 documents      complete
 reviews/         12 documents      + judgment constraint gate
@@ -30,7 +36,7 @@ CI                .github/workflows/ci.yml          validate-design-os job (bloc
 marketing tokens  semantic CSS + Tailwind roles     bound
 ```
 
-Total design-os markdown: **128** files. Empty: **0**.
+Total design-os markdown: **129** files. Empty: **0**.
 
 ---
 
@@ -58,7 +64,7 @@ Priority: Product follow-through (marketing).
 
 ## 2. Other apps not yet token-bound
 
-ulndash, portfolio, discovery UIs should adopt the same role → CSS map when next touched.
+sleekly-dash, portfolio, discovery UIs should adopt the same role → CSS map when next touched.
 
 Priority: On demand per app.
 
@@ -76,7 +82,7 @@ Hard rules and AGENTS.md make the correct path the default. A user can still ins
 
 ```
 Migrate marketing components to semantic Tailwind keys opportunistically
-Bind ulndash/portfolio when those UIs are next redesigned
+Bind sleekly-dash/portfolio when those UIs are next redesigned
 Keep validate-design-os green in CI
 ```
 

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/context.json",
+  "title": "AttendantPageContext",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["current_url", "page_id"],
+  "properties": {
+    "current_url": { "type": "string", "maxLength": 2048 },
+    "page_id": {
+      "type": "string",
+      "enum": [
+        "home",
+        "sleek-pages",
+        "websites",
+        "mobile-apps",
+        "business-systems",
+        "products",
+        "contact",
+        "about",
+        "prices",
+        "track-order",
+        "portfolio",
+        "unknown"
+      ]
+    },
+    "section_id": { "type": ["string", "null"], "maxLength": 80 },
+    "path": { "type": "string", "maxLength": 512 },
+    "query": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "visible_product_id": { "type": ["string", "null"] },
+    "visible_product_kind": {
+      "type": ["string", "null"],
+      "enum": ["orderable_package", "display_package", "layout", null]
+    },
+    "visible_service_id": {
+      "type": ["string", "null"],
+      "enum": ["sleek-pages", "websites", "mobile-apps", "business-systems", null]
+    },
+    "recent_page_ids": {
+      "type": "array",
+      "maxItems": 8,
+      "items": { "type": "string" }
+    }
+  }
+}

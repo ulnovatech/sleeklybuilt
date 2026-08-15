@@ -1,0 +1,50 @@
+{
+  "services": [
+    {
+      "id": "sleek-pages",
+      "label": "Sleek Pages",
+      "tagline": "Premium layouts that go live in a day",
+      "href": "/sleek-pages",
+      "page_id": "sleek-pages",
+      "keywords": ["sleek page", "sleek pages", "one page", "one-pager", "template", "layout", "landing"],
+      "faq_ids": ["sp-what-is", "sp-how-fast", "sp-vs-website", "sp-cost", "sp-change"],
+      "order_path": "gallery"
+    },
+    {
+      "id": "websites",
+      "label": "Websites",
+      "tagline": "Multi-page sites built to grow with you",
+      "href": "/websites",
+      "page_id": "websites",
+      "keywords": ["website", "websites", "multi-page", "cms", "shop", "ecommerce site"],
+      "faq_ids": ["web-how-long", "web-cms", "web-ecommerce", "web-vs-sleek", "web-hosting"],
+      "order_path": "gallery"
+    },
+    {
+      "id": "mobile-apps",
+      "label": "Mobile Apps",
+      "tagline": "Android and iOS with Mobile Money",
+      "href": "/mobile-apps",
+      "page_id": "mobile-apps",
+      "keywords": ["app", "apps", "mobile app", "android", "ios", "mobile money"],
+      "faq_ids": ["app-platforms", "app-momo", "app-how-long", "app-maintain", "app-admin"],
+      "order_path": "capture_lead"
+    },
+    {
+      "id": "business-systems",
+      "label": "Business Systems",
+      "tagline": "Dashboards, CRM, POS and custom ops software",
+      "href": "/business-systems",
+      "page_id": "business-systems",
+      "keywords": ["system", "crm", "pos", "dashboard", "inventory", "sacco", "school"],
+      "faq_ids": ["sys-what", "sys-custom", "sys-time", "sys-data", "sys-support"],
+      "order_path": "capture_lead"
+    }
+  ],
+  "aliases": {
+    "restaurant_websites": { "canonical_id": "websites", "hint": { "layout_fit": "ordering" } },
+    "restaurant": { "canonical_id": "websites", "hint": { "layout_fit": "ordering" } },
+    "ecommerce": { "canonical_id": "websites", "hint": { "layout_fit": "commerce" } },
+    "online_shop": { "canonical_id": "websites", "hint": { "layout_fit": "commerce" } }
+  }
+}

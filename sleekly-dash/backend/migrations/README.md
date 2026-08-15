@@ -84,3 +84,10 @@ Adds `discovery_account_id` / score / payload on prospects, outcome fields on co
 - `GET /api/integrations/catalog`
 - `GET /api/integrations/inbound?since=`
 
+**SleeklyBuilt Attendant (visitor chat state + telemetry):**
+
+```bash
+php php/attendant/scripts/apply_attendant_migration.php
+```
+
+Creates `attendant_sessions`, `attendant_conversations`, `attendant_messages`, `attendant_pending_actions`, `attendant_events`. Same MySQL as leads (`php/.env` `DB_*`). Public HTTP: `/php/attendant/session.php`, `chat.php` (SSE), `confirm.php`. Requires `GEMINI_API_KEY` for chat.

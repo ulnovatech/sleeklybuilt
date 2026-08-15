@@ -1,0 +1,102 @@
+{
+  "chunks": [
+    {
+      "id": "home-uganda-momo",
+      "title": "Mobile Money and local payments",
+      "text": "Yes. We design for Uganda first — Mobile Money, mobile-first use, and connections your customers actually have — then scale outward when you need it.",
+      "source": "homePeopleAsk:uganda",
+      "keywords": ["mobile money", "momo", "airtel", "local payments", "uganda", "payment"]
+    },
+    {
+      "id": "home-how-long",
+      "title": "How long does a typical project take?",
+      "text": "Sleek Pages can go live in about a day once you pick a layout. Multi-page websites usually take a few weeks. Mobile apps and business systems are scoped after a short conversation so the timeline matches the work.",
+      "source": "homePeopleAsk:how-long",
+      "keywords": ["how long", "timeline", "duration", "weeks", "day"]
+    },
+    {
+      "id": "home-how-much",
+      "title": "How much will it cost?",
+      "text": "Website packages start from published prices on our pricing page. Apps and custom systems are quoted after we understand the workflow. You get a written scope before we start — no surprise invoices.",
+      "source": "homePeopleAsk:how-much",
+      "keywords": ["cost", "price", "how much", "quote", "pricing"]
+    },
+    {
+      "id": "home-after-launch",
+      "title": "Will you still be here after launch?",
+      "text": "Yes. Launch is the start of the relationship. We stay involved for fixes, improvements, and guidance as the product grows with your business.",
+      "source": "homePeopleAsk:after-launch",
+      "keywords": ["after launch", "support", "maintain", "fixes"]
+    },
+    {
+      "id": "home-get-started",
+      "title": "How do we get started?",
+      "text": "Tell us what you need on the contact page. A real person replies within one working day with a clear next step — usually a short call and a written plan.",
+      "source": "homePeopleAsk:get-started",
+      "keywords": ["get started", "start", "begin", "contact"]
+    },
+    {
+      "id": "home-see-work",
+      "title": "Can I see real work before I decide?",
+      "text": "Yes. Browse live layouts in our projects gallery, open the previews, and click through them. What you see is published work, not mockups.",
+      "source": "homePeopleAsk:see-work",
+      "keywords": ["portfolio", "gallery", "see work", "examples", "layouts"]
+    },
+    {
+      "id": "sp-what-is",
+      "title": "What is a Sleek Page?",
+      "text": "A premium one-page or compact layout we personalise for your brand and publish quickly. It is a finished foundation — not a DIY builder kit.",
+      "source": "productPages:sp-what-is",
+      "keywords": ["sleek page", "what is", "one page", "layout"]
+    },
+    {
+      "id": "sp-how-fast",
+      "title": "How fast can I go live?",
+      "text": "Most Sleek Pages launch within about a day once you have chosen a layout and shared your logo, colours and copy. If content is missing, we help you fill the gaps first.",
+      "source": "productPages:sp-how-fast",
+      "keywords": ["sleek", "24 hours", "go live", "fast"]
+    },
+    {
+      "id": "web-ecommerce",
+      "title": "Do you build online shops?",
+      "text": "Yes — product pages, cart and checkout suited to your catalogue size. For Mobile Money and local payments, we design around how your customers actually pay.",
+      "source": "productPages:web-ecommerce",
+      "keywords": ["online shop", "ecommerce", "cart", "checkout", "mobile money"]
+    },
+    {
+      "id": "app-momo",
+      "title": "Can you integrate Mobile Money?",
+      "text": "Yes. Mobile Money is a first-class requirement for most of the apps we build — not a nice-to-have.",
+      "source": "productPages:app-momo",
+      "keywords": ["mobile money", "momo", "app payment", "airtel"]
+    },
+    {
+      "id": "price-currency",
+      "title": "What currency are these prices in?",
+      "text": "All listed prices are in Ugandan Shillings (UGX). We do not convert to other currencies on this page — the number you see is what we quote in UGX.",
+      "source": "pricingFaq:price-currency",
+      "keywords": ["currency", "ugx", "shillings"]
+    },
+    {
+      "id": "price-deposit",
+      "title": "How do website layout orders work?",
+      "text": "Ready website layouts from the portfolio use deposit checkout. Custom apps and systems start with a conversation and a scoped quote — no surprise invoices.",
+      "source": "pricingFaq:price-deposit",
+      "keywords": ["deposit", "layout order", "checkout", "portfolio"]
+    },
+    {
+      "id": "price-tax",
+      "title": "Is tax included?",
+      "text": "Listed package prices exclude VAT unless we state otherwise in your written quote. Tax treatment is confirmed before you pay a deposit.",
+      "source": "pricingFaq:price-tax",
+      "keywords": ["tax", "vat", "include"]
+    },
+    {
+      "id": "sys-what",
+      "title": "What counts as a business system?",
+      "text": "Software your team uses to run the operation — CRM, POS, inventory, HR, invoicing, bookings, school or SACCO platforms. If it replaces a messy spreadsheet, it belongs here.",
+      "source": "productPages:sys-what",
+      "keywords": ["business system", "crm", "pos", "inventory", "sacco"]
+    }
+  ]
+}

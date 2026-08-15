@@ -1,0 +1,178 @@
+{
+  "packages": [
+    {
+      "id": "starter",
+      "kind": "display_package",
+      "title": "Starter Web",
+      "price_ugx": 250000,
+      "price_label": null,
+      "ideal_for": "Best for students, hustlers, and small traders",
+      "features": [
+        "Mobile friendly design",
+        "WhatsApp chat button",
+        "Business contact info",
+        "Basic Google visibility setup",
+        "Free .ug domain (optional)",
+        "Free support for 14 days"
+      ],
+      "orderable": false,
+      "cta_path": "/portfolio-app/order"
+    },
+    {
+      "id": "business-basic",
+      "kind": "display_package",
+      "title": "Business Basic",
+      "price_ugx": 400000,
+      "price_label": null,
+      "ideal_for": "Best for small businesses and startups",
+      "features": [
+        "Mobile responsive layout",
+        "About, Services, Contact, Gallery pages",
+        "Contact form & WhatsApp link",
+        "Social media integration",
+        "Google-friendly structure",
+        "Hosting setup included"
+      ],
+      "orderable": false,
+      "cta_path": "/portfolio-app/order"
+    },
+    {
+      "id": "standard-growth",
+      "kind": "display_package",
+      "title": "Standard Growth",
+      "price_ugx": 850000,
+      "price_label": null,
+      "ideal_for": "Best for SMEs, NGOs, schools, and clinics",
+      "features": [
+        "Mobile-first responsive design",
+        "Admin Dashboard / CMS",
+        "Blog or News section",
+        "Google SEO boost",
+        "SSL security",
+        "Embedded maps, social feeds, sliders"
+      ],
+      "orderable": false,
+      "cta_path": "/portfolio-app/order"
+    },
+    {
+      "id": "pro-ecommerce",
+      "kind": "display_package",
+      "title": "Pro E-Commerce",
+      "price_ugx": 2500000,
+      "price_label": null,
+      "ideal_for": "Best for online shops and boutiques",
+      "features": [
+        "Responsive online store design",
+        "Shopping cart, checkout, categories",
+        "Mobile Money (MoMo/Airtel) integration",
+        "Admin dashboard for orders, stock, users",
+        "Email alerts + SSL security",
+        "Product search + filters"
+      ],
+      "orderable": false,
+      "cta_path": "/portfolio-app/order"
+    },
+    {
+      "id": "custom-web",
+      "kind": "display_package",
+      "title": "Custom web systems",
+      "price_ugx": null,
+      "price_label": "From UGX 3,500,000",
+      "ideal_for": "SACCOs, schools, dashboards, internal tools",
+      "features": [
+        "Custom dashboards and roles",
+        "Integrations (e.g. MoMo)",
+        "Built around your workflows"
+      ],
+      "orderable": false,
+      "cta_path": "/contact?intent=project"
+    },
+    {
+      "id": "ecommerce-app",
+      "kind": "display_package",
+      "title": "E-Commerce App",
+      "price_ugx": null,
+      "price_label": "From UGX 2,500,000",
+      "ideal_for": "Best for shops and fashion stores",
+      "features": [
+        "Product listings & search",
+        "Shopping cart + checkout",
+        "Mobile Money integration",
+        "Admin dashboard",
+        "Order management",
+        "Push/email notifications"
+      ],
+      "orderable": false,
+      "cta_path": "/contact?intent=project"
+    },
+    {
+      "id": "restaurant-app",
+      "kind": "display_package",
+      "title": "Restaurant & Delivery",
+      "price_ugx": null,
+      "price_label": "From UGX 3,500,000",
+      "ideal_for": "Best for restaurants and takeaways",
+      "features": [
+        "Menu browsing",
+        "Order placement + cart",
+        "Rider/driver panel (optional)",
+        "Real-time status updates",
+        "MoMo/AirtelPay checkout",
+        "Admin dashboard"
+      ],
+      "orderable": false,
+      "cta_path": "/contact?intent=project"
+    },
+    {
+      "id": "sacco-app",
+      "kind": "display_package",
+      "title": "SACCO / Finance",
+      "price_ugx": null,
+      "price_label": "From UGX 4,000,000",
+      "ideal_for": "Best for SACCOs and microfinance",
+      "features": [
+        "Member registration & loans",
+        "Transactions & balances",
+        "MoMo integration (optional)",
+        "Staff/admin dashboard",
+        "Reports, analytics & downloads",
+        "Secure authentication"
+      ],
+      "orderable": false,
+      "cta_path": "/contact?intent=project"
+    },
+    {
+      "id": "school-app",
+      "kind": "display_package",
+      "title": "School Management",
+      "price_ugx": null,
+      "price_label": "From UGX 3,800,000",
+      "ideal_for": "Best for private schools and colleges",
+      "features": [
+        "Student enrollment & records",
+        "Class schedules",
+        "Staff/teacher panels",
+        "Fees tracking + invoices",
+        "Reports & result slips",
+        "MoMo payment options"
+      ],
+      "orderable": false,
+      "cta_path": "/contact?intent=project"
+    },
+    {
+      "id": "custom-app",
+      "kind": "display_package",
+      "title": "Custom system",
+      "price_ugx": null,
+      "price_label": "Quote only",
+      "ideal_for": "Any specialized app or internal tool",
+      "features": [
+        "Built to your workflows",
+        "API integrations",
+        "Roles and scale from day one"
+      ],
+      "orderable": false,
+      "cta_path": "/contact?intent=project"
+    }
+  ]
+}

@@ -46,7 +46,7 @@ jobs:
         run: |
           test -f public_html/index.html
           test -d public_html/dash
-          test -f public_html/ulndash/backend/api.php
+          test -f public_html/sleekly-dash/backend/api.php
 
   build-discovery:
     name: Build Discovery Intelligence
@@ -128,3 +128,51 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm lint
+
+  attendant-layer-a:
+    name: Attendant Layer A + widget checks
+    runs-on: ubuntu-latest
+    needs: [validate-design-os]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: ulnovatech
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: ''
+      DB_NAME: ulnovatech
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install PHP
+        run: sudo apt-get update && sudo apt-get install -y php-cli php-mysql php-mbstring php-xml php-curl
+
+      - name: Apply attendant migration
+        run: php php/attendant/scripts/apply_attendant_migration.php
+
+      - name: Layer A regression
+        run: php php/attendant/tests/run.php
+
+      - name: Widget static checks
+        run: node marketing/scripts/check-attendant-widget.mjs
+
+      - name: Marketing production build
+        working-directory: marketing
+        run: |
+          npm ci
+          npm run build

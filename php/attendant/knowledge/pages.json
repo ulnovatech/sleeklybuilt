@@ -1,0 +1,173 @@
+{
+  "pages": [
+    {
+      "page_id": "home",
+      "path": "/",
+      "title": "Home",
+      "external": false,
+      "section_ids": [
+        "hero",
+        "positioning",
+        "problems",
+        "what-we-build",
+        "work",
+        "process",
+        "faq",
+        "contact",
+        "how-long",
+        "how-much",
+        "after-launch",
+        "uganda",
+        "get-started",
+        "see-work"
+      ],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "sleek-pages",
+      "path": "/sleek-pages",
+      "title": "Sleek Pages",
+      "external": false,
+      "section_ids": [
+        "features",
+        "faq",
+        "layouts",
+        "browse-layouts",
+        "sp-what-is",
+        "sp-how-fast",
+        "sp-vs-website",
+        "sp-cost",
+        "sp-change"
+      ],
+      "default_service_id": "sleek-pages",
+      "default_product_kind": null
+    },
+    {
+      "page_id": "websites",
+      "path": "/websites",
+      "title": "Websites",
+      "external": false,
+      "section_ids": [
+        "features",
+        "faq",
+        "layouts",
+        "browse-layouts",
+        "web-how-long",
+        "web-cms",
+        "web-ecommerce",
+        "web-vs-sleek",
+        "web-hosting"
+      ],
+      "default_service_id": "websites",
+      "default_product_kind": null
+    },
+    {
+      "page_id": "mobile-apps",
+      "path": "/mobile-apps",
+      "title": "Mobile Apps",
+      "external": false,
+      "section_ids": [
+        "features",
+        "faq",
+        "app-platforms",
+        "app-momo",
+        "app-how-long",
+        "app-maintain",
+        "app-admin"
+      ],
+      "default_service_id": "mobile-apps",
+      "default_product_kind": null
+    },
+    {
+      "page_id": "business-systems",
+      "path": "/business-systems",
+      "title": "Business Systems",
+      "external": false,
+      "section_ids": [
+        "features",
+        "faq",
+        "sys-what",
+        "sys-custom",
+        "sys-time",
+        "sys-data",
+        "sys-support"
+      ],
+      "default_service_id": "business-systems",
+      "default_product_kind": null
+    },
+    {
+      "page_id": "products",
+      "path": "/products",
+      "title": "Products",
+      "external": false,
+      "section_ids": [
+        "catalogue",
+        "product-guide",
+        "faq",
+        "all-which",
+        "all-layout-fit",
+        "all-systems-depth",
+        "all-bundle",
+        "all-price",
+        "all-start"
+      ],
+      "default_service_id": null,
+      "default_product_kind": "display_package"
+    },
+    {
+      "page_id": "contact",
+      "path": "/contact",
+      "title": "Contact",
+      "external": false,
+      "section_ids": ["contact"],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "about",
+      "path": "/about",
+      "title": "About",
+      "external": false,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "prices",
+      "path": "/prices",
+      "title": "Prices",
+      "external": false,
+      "section_ids": [
+        "plans",
+        "tax-note",
+        "pricing-faq",
+        "price-currency",
+        "price-tax",
+        "price-negotiable",
+        "price-deposit",
+        "price-wrong-plan"
+      ],
+      "default_service_id": null,
+      "default_product_kind": "display_package"
+    },
+    {
+      "page_id": "track-order",
+      "path": "/track-order",
+      "title": "Track order",
+      "external": false,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "portfolio",
+      "path": "/portfolio-app/",
+      "title": "Projects gallery",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": "layout"
+    }
+  ]
+}

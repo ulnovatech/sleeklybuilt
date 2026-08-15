@@ -245,6 +245,20 @@ body {
   .focus-ring {
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2;
   }
+
+  /* Attendant section highlight — temporary outline after show_section / navigate */
+  .attendant-section-highlight {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 6px;
+    border-radius: var(--radius-md);
+    transition: outline-color 200ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .attendant-section-highlight {
+      transition: none;
+    }
+  }
 }
 
 /* ── Obsidian surface ─────────────────────────────────────────────

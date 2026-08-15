@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/page.json",
+  "title": "AttendantPage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["page_id", "path", "title", "external", "section_ids"],
+  "properties": {
+    "page_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "path": { "type": "string", "pattern": "^/" },
+    "title": { "type": "string" },
+    "external": { "type": "boolean" },
+    "section_ids": { "type": "array", "items": { "type": "string" } },
+    "default_service_id": {
+      "type": ["string", "null"],
+      "enum": ["sleek-pages", "websites", "mobile-apps", "business-systems", null]
+    },
+    "default_product_kind": {
+      "type": ["string", "null"],
+      "enum": ["orderable_package", "display_package", "layout", null]
+    }
+  }
+}

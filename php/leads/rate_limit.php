@@ -2,10 +2,14 @@
 /**
  * Lightweight IP rate limiter for public lead forms.
  */
-function uln_rate_limit(string $bucket, int $maxAttempts = 12, int $windowSeconds = 3600): void
+
+/**
+ * Non-exiting check for internal callers (attendant tools).
+ */
+function uln_rate_limit_allows(string $bucket, int $maxAttempts = 12, int $windowSeconds = 3600): bool
 {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'ulnovatech_rate';
+    $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sleeklybuilt_rate';
 
     if (!is_dir($dir)) {
         @mkdir($dir, 0755, true);
@@ -26,6 +30,17 @@ function uln_rate_limit(string $bucket, int $maxAttempts = 12, int $windowSecond
     }
 
     if ((int) $data['count'] >= $maxAttempts) {
+        return false;
+    }
+
+    $data['count'] = (int) $data['count'] + 1;
+    @file_put_contents($file, json_encode($data));
+    return true;
+}
+
+function uln_rate_limit(string $bucket, int $maxAttempts = 12, int $windowSeconds = 3600): void
+{
+    if (!uln_rate_limit_allows($bucket, $maxAttempts, $windowSeconds)) {
         http_response_code(429);
         echo json_encode([
             'status' => 'error',
@@ -33,7 +48,4 @@ function uln_rate_limit(string $bucket, int $maxAttempts = 12, int $windowSecond
         ]);
         exit;
     }
-
-    $data['count'] = (int) $data['count'] + 1;
-    @file_put_contents($file, json_encode($data));
 }

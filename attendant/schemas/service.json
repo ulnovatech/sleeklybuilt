@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/service.json",
+  "title": "AttendantService",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "label", "href", "page_id"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "enum": ["sleek-pages", "websites", "mobile-apps", "business-systems"]
+    },
+    "label": { "type": "string" },
+    "tagline": { "type": "string" },
+    "href": { "type": "string" },
+    "page_id": { "type": "string" },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "faq_ids": { "type": "array", "items": { "type": "string" } },
+    "canonical_id": { "type": ["string", "null"] },
+    "hint": { "type": ["string", "null"] }
+  }
+}

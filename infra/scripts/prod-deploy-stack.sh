@@ -84,6 +84,16 @@ echo "==> apply_template_import_migrations"
 dc exec -T php-fpm \
   php /var/www/public_html/sleekly-dash/backend/scripts/apply_template_import_migrations.php
 
+echo "==> apply_attendant_migration"
+dc exec -T php-fpm \
+  php /var/www/public_html/php/attendant/scripts/apply_attendant_migration.php \
+  || echo "WARN: attendant migration skipped"
+
+echo "==> template screenshot deps (puppeteer)"
+dc exec -T php-fpm \
+  sh -lc 'cd /var/www/public_html/sleekly-dash/backend/scripts/template-screenshots \
+    && if [ -f package.json ]; then npm install --omit=dev --no-fund --no-audit; else echo "WARN: screenshot package missing"; fi'
+
 echo "==> merge_template_catalog"
 dc exec -T php-fpm \
   php /var/www/public_html/sleekly-dash/backend/scripts/merge_template_catalog.php

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/product.json",
+  "title": "AttendantProduct",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "title", "orderable"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "kind": {
+      "type": "string",
+      "enum": ["orderable_package", "display_package", "layout"]
+    },
+    "title": { "type": "string" },
+    "orderable": { "type": "boolean" },
+    "currency": { "type": "string", "enum": ["UGX"] },
+    "price_ugx": { "type": ["integer", "null"], "minimum": 0 },
+    "deposit_ugx": { "type": ["integer", "null"], "minimum": 0 },
+    "price_label": { "type": ["string", "null"] },
+    "badge": { "type": ["string", "null"] },
+    "ideal_for": { "type": ["string", "null"] },
+    "features": { "type": "array", "items": { "type": "string" } },
+    "cta_path": { "type": ["string", "null"] },
+    "collection": {
+      "type": ["string", "null"],
+      "enum": ["websites", "sleek-pages", null]
+    },
+    "layout_fit": { "type": ["string", "null"] },
+    "business_types": { "type": "array", "items": { "type": "string" } }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "orderable_package" } } },
+      "then": {
+        "properties": {
+          "id": { "enum": ["basic", "smart", "premium"] },
+          "orderable": { "const": true }
+        },
+        "required": ["price_ugx", "deposit_ugx"]
+      }
+    }
+  ]
+}

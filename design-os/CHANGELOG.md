@@ -1,5 +1,5 @@
 # Design OS Changelog
-**Version:** 1.2  
+**Version:** 1.3  
 **Status:** Active  
 **Format:** Reverse chronological. Newest entries at the top.
 
@@ -16,6 +16,20 @@ Fixed        corrected errors, broken references, or inconsistencies
 Removed      deleted documents or retired guidance
 Known        defects accepted into the release, tracked in ROADMAP.md
 ```
+
+---
+
+# 1.3 — 2026-08-14 — SleeklyBuilt Attendant Pattern
+
+## Added
+
+- Pattern `attendant.md` — site-resident professional attendant (launcher, panel, confirmation, human path)
+- INDEX routing `"Build a site attendant"` composing attendant + messaging + support + contact
+- Authoritative runtime contract in repo-root `attendant/` (loaded by the PHP engine; not Design OS corpus)
+
+## Changed
+
+- INDEX and ROADMAP pattern count 27 → 28 (129 design-os markdown files)
 
 ---
 

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/tool-result.json",
+  "title": "AttendantToolResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ok", "tool", "code", "side_effects"],
+  "properties": {
+    "ok": { "type": "boolean" },
+    "tool": { "type": "string", "minLength": 1 },
+    "code": { "type": "string" },
+    "user_safe_error": { "type": ["string", "null"] },
+    "data": { "type": ["object", "array", "null"] },
+    "side_effects": {
+      "type": "string",
+      "enum": ["none", "client_navigation", "writes_lead", "writes_quote"]
+    },
+    "confirmation_required": { "type": "boolean" },
+    "summary": { "type": ["string", "null"] }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "ok": { "const": false } } },
+      "then": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "validation_error",
+              "unknown_destination",
+              "unknown_section",
+              "not_found",
+              "ambiguous_id",
+              "confirmation_required",
+              "unauthorized",
+              "rate_limited",
+              "backend_error",
+              "unsupported"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "ok": { "const": true } } },
+      "then": {
+        "properties": {
+          "confirmation_required": { "const": false }
+        }
+      }
+    }
+  ]
+}
