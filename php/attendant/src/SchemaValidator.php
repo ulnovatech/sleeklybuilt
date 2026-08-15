@@ -121,6 +121,10 @@ final class SchemaValidator
         }
         $allowed = is_array($types) ? $types : [$types];
         $actual = $this->phpType($value);
+        // JSON `{}` decodes to `[]` in PHP — accept empty list as object when schema expects object.
+        if ($actual === 'array' && $value === [] && in_array('object', $allowed, true)) {
+            $actual = 'object';
+        }
         if (!in_array($actual, $allowed, true) && !($value === null && in_array('null', $allowed, true))) {
             return "{$key} has invalid type";
         }

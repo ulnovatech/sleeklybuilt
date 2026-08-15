@@ -20,6 +20,21 @@ $okContext = $validator->validateContext([
 ]);
 AttendantTest::assertTrue($okContext['ok'] ?? false, 'valid home context');
 
+$emptyQueryObject = $validator->validateContext([
+    'current_url' => 'http://localhost/',
+    'page_id' => 'home',
+    // Mimics JSON `{"query":{}}` which PHP json_decode(..., true) turns into []
+    'query' => [],
+]);
+AttendantTest::assertTrue($emptyQueryObject['ok'] ?? false, 'empty query object from JSON is valid');
+
+$withQuery = $validator->validateContext([
+    'current_url' => 'http://localhost/prices?category=websites',
+    'page_id' => 'prices',
+    'query' => ['category' => 'websites'],
+]);
+AttendantTest::assertTrue($withQuery['ok'] ?? false, 'string-map query is valid');
+
 $unknownPage = $validator->validateContext([
     'current_url' => 'http://localhost/x',
     'page_id' => 'mars-catalogue',

@@ -35,12 +35,15 @@ export function buildPageContext(loc, recentPageIds = []) {
     visibleProductKind = 'display_package'
   }
 
+  const params = Object.fromEntries(new URLSearchParams(loc.search || ''))
+  const query = Object.keys(params).length > 0 ? params : undefined
+
   return {
     current_url: loc.href || `${window.location.origin}${pathname}${loc.search || ''}${loc.hash || ''}`,
     page_id: pageId,
     section_id: sectionId,
     path: pathname,
-    query: Object.fromEntries(new URLSearchParams(loc.search || '')),
+    ...(query ? { query } : {}),
     visible_product_id: visibleProductId,
     visible_product_kind: visibleProductKind,
     visible_service_id: SERVICE_BY_PAGE[pageId] ?? null,
