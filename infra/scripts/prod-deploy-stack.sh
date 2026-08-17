@@ -113,6 +113,15 @@ else
   dc up -d discovery-web
 fi
 
+echo "==> restore deploy ownership of public_html for next rsync"
+HOST_UID="$(id -u)"
+HOST_GID="$(id -g)"
+dc exec -T -u 0 php-fpm chown -R "${HOST_UID}:${HOST_GID}" /var/www/public_html \
+  || echo "WARN: public_html chown skipped"
+dc exec -T php-fpm \
+  sh -lc 'chgrp 33 /var/www/public_html/portfolio/portfolio && chmod 2775 /var/www/public_html/portfolio/portfolio' \
+  || echo "WARN: portfolio chgrp skipped"
+
 echo "==> recreate nginx"
 dc up -d --force-recreate --no-deps nginx
 

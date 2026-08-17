@@ -75,6 +75,30 @@ jobs:
           chmod 600 ~/.ssh/gce_deploy_key
           ssh-keyscan -H "$GCE_SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
 
+      - name: Reset public_html ownership for rsync
+        env:
+          GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
+          GCE_SSH_USER: ${{ secrets.GCE_SSH_USER }}
+        run: |
+          DEPLOY_USER="${GCE_SSH_USER:-deploy}"
+          DEPLOY_HOST="${DEPLOY_USER}@${GCE_SSH_HOST}"
+          SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
+          # php-fpm (www-data) can own bind-mounted files after runtime writes;
+          # rsync then cannot update attendant/ or delete leftover ulndash/.
+          ssh $SSH_OPTS "$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set +e
+          UID_N=$(id -u)
+          GID_N=$(id -g)
+          CID=$(docker ps -qf "name=php-fpm" | head -1)
+          if [ -n "$CID" ]; then
+            docker exec -u 0 "$CID" chown -R "${UID_N}:${GID_N}" /var/www/public_html
+            docker exec -u 0 "$CID" rm -rf /var/www/public_html/ulndash
+          fi
+          chown -R "${UID_N}:${GID_N}" /opt/sleeklybuilt/public_html 2>/dev/null
+          rm -rf /opt/sleeklybuilt/public_html/ulndash 2>/dev/null
+          true
+          REMOTE
+
       - name: Rsync artifacts to GCE VM
         env:
           GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
