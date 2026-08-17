@@ -26,7 +26,16 @@ Sections are highlightable regions. Ids match existing DOM ids / FAQ ids in mark
 
 ## Prices
 
-`plans`, `tax-note`, `pricing-faq`, `price-currency`, `price-tax`, `price-negotiable`, `price-deposit`, `price-wrong-plan`.
+`hero`, `plans`, `tax-note`, `pricing-faq`, FAQ items `price-*`, plus display package cards:
+`starter`, `business-basic`, `standard-growth`, `pro-ecommerce`, `ecommerce-app`, `restaurant-app`, `sacco-app`, `school-app`, `custom-web`, `custom-app`.
+
+## Product line pages
+
+Shared ids (`hero`, `features`, `faq`, `layouts`) are page-scoped: `show_section` must include the current `page_id` (or a unique section id). Ambiguous ids without `page_id` fail closed.
+
+## Policies
+
+Path-segment nav (`/policies/{slug}`). Section ids: `terms`, `privacy`, `payment`, `refund`, `delivery`, `revisions`, `support`, `ip`, `hosting`, `ai-attendant`. DOM stamps use the same slug; client highlights via `section_id` when `hash` is null.
 
 ## Contact
 
@@ -34,11 +43,11 @@ Sections are highlightable regions. Ids match existing DOM ids / FAQ ids in mark
 
 ## Behaviour
 
-`show_section` fails if `section_id` is not on the target page (or not globally unique). Do not treat query strings as sections.
+`show_section` fails if `section_id` is not on the target page (or not globally unique when page is omitted). Do not treat query strings as sections.
 
-## Widget (Chunk 2)
+## Widget (Chunk 2 / 3E)
 
-Elements that should highlight need `id` and `data-attendant-section="{section_id}"` where missing.
+Elements that should highlight need `id` and `data-attendant-section="{section_id}"` where missing. `Section` and package cards stamp both. Client `applyClientAction` focuses `hash` or `section_id` (retries for async policy pages).
 
 ## Acceptance
 

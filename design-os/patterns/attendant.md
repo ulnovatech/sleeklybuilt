@@ -356,3 +356,15 @@ No navigation unless they ask to see it.
 # Final Rule
 
 If the panel could be swapped onto another brand's site after stripping the header word "SleeklyBuilt", the attendant is too generic. If it could claim an order without `order.php` succeeding, it is not this pattern.
+
+---
+
+# As-built notes (repo — Chunks 2–3)
+
+These are product facts already shipped; do not re-invent:
+
+- **Decision UI:** SSE `choices` → chips → `choice.php` (composer disabled while pending).
+- **Policies:** `/policies/:slug` with `data-attendant-section`; path-segment registry nav; highlight via `section_id` when hash is null.
+- **Payment:** confirmed quote → client navigate to `/portfolio-app/order` only; never attendant `payment-init`.
+- **Human channel:** escalation pauses the LLM; admin-mobile Attendant inbox; visitor polls human messages; WhatsApp remains a parallel escape.
+- **Quality gate:** `attendant/QUALITY_RUBRIC.md` + Layer A `php/attendant/tests/run.php` + widget check script.

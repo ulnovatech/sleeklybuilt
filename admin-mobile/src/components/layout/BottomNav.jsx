@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { HiHome, HiInbox, HiCog } from 'react-icons/hi'
+import { HiHome, HiInbox, HiCog, HiChatAlt2 } from 'react-icons/hi'
 
 const tabs = [
   { to: '/', label: 'Home', icon: HiHome, end: true },
   { to: '/inbox', label: 'Inbox', icon: HiInbox },
+  { to: '/attendant', label: 'Chat', icon: HiChatAlt2 },
   { to: '/settings', label: 'Settings', icon: HiCog },
 ]
 

@@ -22,7 +22,7 @@ Every tool returns `ok`, `code`, `user_safe_error` (when not ok), `data`, `side_
 
 | Class | Tools |
 | --- | --- |
-| none | getters, search, navigate, show_section, compare, get_order_status, handoff, get_current_page |
+| none | getters, search, get_company_document, update_customer_model, present_choices, navigate, show_section, compare, get_order_status, handoff, get_current_page |
 | required | `capture_lead`, `start_order` |
 
 Payment tools are not registered.
@@ -35,6 +35,9 @@ Payment tools are not registered.
 | --- | --- |
 | [navigation.md](navigation.md) | `get_current_page`, `navigate_to`, `show_section` |
 | [knowledge-search.md](knowledge-search.md) | `search_knowledge` |
+| [company-document.md](company-document.md) | `get_company_document` |
+| [customer-model.md](customer-model.md) | `update_customer_model` |
+| [present-choices.md](present-choices.md) | `present_choices` |
 | [product-lookup.md](product-lookup.md) | `get_product`, `compare_products` |
 | [service-lookup.md](service-lookup.md) | `get_service` |
 | [lead-capture.md](lead-capture.md) | `capture_lead` |

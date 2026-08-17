@@ -5,14 +5,20 @@ declare(strict_types=1);
 namespace Attendant\Tools;
 
 use Attendant\AttendantTool;
+use Attendant\PageRegistry;
 use Attendant\ProductCatalogue;
 use Attendant\ToolContext;
 use Attendant\ToolResults;
 
 final class StartOrderTool implements AttendantTool
 {
-    public function __construct(private ProductCatalogue $catalogue)
-    {
+    private PageRegistry $registry;
+
+    public function __construct(
+        private ProductCatalogue $catalogue,
+        ?PageRegistry $registry = null,
+    ) {
+        $this->registry = $registry ?? new PageRegistry();
     }
 
     public function name(): string
@@ -108,9 +114,13 @@ final class StartOrderTool implements AttendantTool
 
         return ToolResults::ok($this->name(), [
             'order_id' => $result['order_id'] ?? null,
+            'package' => $package,
+            'template' => $template,
             'success' => true,
             'message' => (string) ($result['message'] ?? ''),
             'reserved' => false,
+            'paid' => false,
+            'payment_handoff' => $this->registry->resolvePaymentHandoff($template, $package),
         ], 'writes_quote');
     }
 }

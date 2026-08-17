@@ -18,6 +18,7 @@ require_once __DIR__ . '/controllers/IntegrationsController.php';
 require_once __DIR__ . '/controllers/TemplateImportController.php';
 require_once __DIR__ . '/controllers/TemplateCatalogController.php';
 require_once __DIR__ . '/controllers/SettingsController.php';
+require_once __DIR__ . '/controllers/AttendantOperatorController.php';
 
 $auth = new SessionAuth($pdo);
 $mobileAuth = new MobileTokenAuth($pdo);
@@ -198,6 +199,19 @@ try {
                 echo json_encode(
                     $templateImportController->rollback(
                         (int) $matches[1],
+                        $apiAuth->user()
+                    )
+                );
+            } elseif (
+                $method === 'POST' &&
+                preg_match('#^/api/template-imports/(\d+)/screenshots$#', $path, $matches)
+            ) {
+                $body = json_body();
+                $force = !array_key_exists('force', $body) || $body['force'] === true;
+                echo json_encode(
+                    $templateImportController->captureScreenshots(
+                        (int) $matches[1],
+                        $force,
                         $apiAuth->user()
                     )
                 );
@@ -525,6 +539,36 @@ try {
         } else {
             http_response_code(405);
             echo json_encode(['error' => 'Method not allowed']);
+        }
+        exit;
+    }
+
+    if (strpos($path, '/api/attendant') === 0) {
+        $attendantOps = new AttendantOperatorController($pdo);
+        $user = $apiAuth->user();
+        $userId = is_array($user) && isset($user['id']) ? (int) $user['id'] : null;
+        try {
+            if ($method === 'GET' && $path === '/api/attendant/escalations') {
+                $attendantOps->index();
+            } elseif ($method === 'GET' && preg_match('#^/api/attendant/conversations/([a-zA-Z0-9_-]+)$#', $path, $m)) {
+                $attendantOps->show($m[1]);
+            } elseif ($method === 'POST' && preg_match('#^/api/attendant/conversations/([a-zA-Z0-9_-]+)/takeover$#', $path, $m)) {
+                $attendantOps->takeover($m[1], $userId);
+            } elseif ($method === 'POST' && preg_match('#^/api/attendant/conversations/([a-zA-Z0-9_-]+)/resume$#', $path, $m)) {
+                $attendantOps->resume($m[1]);
+            } elseif ($method === 'POST' && preg_match('#^/api/attendant/conversations/([a-zA-Z0-9_-]+)/messages$#', $path, $m)) {
+                $attendantOps->postMessage($m[1], json_body(), $userId);
+            } else {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Attendant endpoint not found']);
+            }
+        } catch (Throwable $e) {
+            $code = (int) $e->getCode();
+            if ($code < 400 || $code > 599) {
+                $code = 500;
+            }
+            http_response_code($code);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit;
     }

@@ -168,6 +168,9 @@ jobs:
       - name: Layer A regression
         run: php php/attendant/tests/run.php
 
+      - name: Hub smoke (3H gate)
+        run: php php/attendant/scripts/smoke_hub.php
+
       - name: Widget static checks
         run: node marketing/scripts/check-attendant-widget.mjs
 

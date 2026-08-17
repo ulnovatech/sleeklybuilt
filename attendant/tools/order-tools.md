@@ -20,17 +20,19 @@
 
 **Side effects:** `writes_quote`. Not payment. Not `templates.status` reserve (that happens on paid complete).
 
-**Success:** `{ order_id, success: true }` from the API.
+**Success data:** `{ order_id, package, template, success: true, paid: false, payment_handoff }`.
+
+`payment_handoff` is a registry-resolved `client_action` to `/portfolio-app/order` (optional `?template=&package=`). Confirm API and TurnEngine emit it so the widget opens the **existing** Flutterwave checkout — the attendant never calls `payment-init.php`.
 
 **Failure:** validation, rate limit (`website_order`), DB.
 
-**User-visible:** request received, not "paid".
+**User-visible:** quote / request received; open secure checkout. Never "paid".
 
 ---
 
 ## `get_order_status`
 
-**Purpose:** `POST /portfolio/api/order-status.php`.
+**Purpose:** Look up `order_payments` by `tx_ref` + phone (same truth as portfolio `order-status.php`).
 
 **Confirmation:** none.
 
@@ -38,9 +40,9 @@
 
 **Side effects:** none.
 
-**Success:** pass through verified fields only (status, amounts if present).
+**Success:** pass through verified fields only (status, amounts if present). This is the **only** source of truth for payment language. `successful` / `paid` may advance commercial state to `complete`; `pending` stays `payment`.
 
-**Failure:** not found / mismatch — `ok: false`, do not invent processing.
+**Failure:** not found / mismatch — `ok: false`, do not invent processing or paid.
 
 ---
 
@@ -48,8 +50,10 @@
 
 `payment-init`, `payment-verify`, `add_to_cart`, `submit_order` (legacy `php/submit_order.php`).
 
+Payment is **handoff-to-secure-flow** only (`page_id: portfolio-order`).
+
 ---
 
 ## Acceptance
 
-PHPUnit-style tests: display id `starter` rejected. Confirmation missing → no INSERT. Status tool never returns `paid` unless the API body did.
+PHPUnit-style tests: display id `starter` rejected. Confirmation missing → no INSERT. Status tool never returns `paid` unless the API body did. Handoff path contains `/portfolio-app/order` and never a Flutterwave host or `payment-init`.

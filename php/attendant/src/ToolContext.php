@@ -15,6 +15,8 @@ final class ToolContext
         public readonly bool $confirmed = false,
         public readonly ?ConfirmationGate $gate = null,
         public readonly ?\PDO $pdo = null,
+        public readonly ?Telemetry $telemetry = null,
+        public readonly ?int $sessionId = null,
     ) {
     }
 }

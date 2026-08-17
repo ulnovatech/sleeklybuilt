@@ -11,6 +11,7 @@ import { apiEndpoints, hubHref, siteConfig } from '../site.config'
 export default function Order() {
   const [searchParams] = useSearchParams()
   const templateName = searchParams.get('template') || ''
+  const packageFromUrl = searchParams.get('package') || ''
 
   const templateUrl = templateName
     ? `${apiEndpoints.portfolioDetail}?template=${encodeURIComponent(templateName)}`
@@ -64,7 +65,11 @@ export default function Order() {
         </div>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-12">
-          <GamifiedOrderWizard templateName={templateName} templateData={templateData} />
+          <GamifiedOrderWizard
+            templateName={templateName}
+            templateData={templateData}
+            initialPackage={packageFromUrl}
+          />
 
           <div className="space-y-6">
             {templateData ? (

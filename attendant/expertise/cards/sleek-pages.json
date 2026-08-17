@@ -1,0 +1,22 @@
+{
+  "id": "sleek-pages",
+  "label": "Sleek Pages",
+  "service_id": "sleek-pages",
+  "package": null,
+  "what_it_is": "A fast, focused page (or small set) when speed-to-publish matters more than a full multi-page site.",
+  "best_for": [
+    "Campaigns, offers, and simple presence needs",
+    "Clients who need something sharp quickly"
+  ],
+  "good_when": [
+    "One clear story or offer",
+    "They do not need a large site architecture yet"
+  ],
+  "not_good_when": [
+    "They need a full institutional website with many sections",
+    "They need portals, apps, or business systems"
+  ],
+  "expert_recommendation": "Recommend when speed and focus beat a full website build.",
+  "upsell_only_when": "They outgrow a single page and need a full websites package or system.",
+  "important_tradeoff": "Speed and simplicity vs breadth of a full site."
+}

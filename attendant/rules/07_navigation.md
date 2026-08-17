@@ -28,9 +28,10 @@ Known pages (registry source of truth in knowledge + PHP):
 | `about` | `/about` |
 | `prices` | `/prices` |
 | `track-order` | `/track-order` |
+| `policies` | `/policies` (policy slug → `/policies/{slug}` via `section_id`) |
 | `portfolio` | `/portfolio-app/` (full page load) |
 
-Sections include home `hero`, `faq`, `contact`; product `features`, `faq`, `layouts`; prices `plans`; FAQ item ids such as `how-much`, `web-how-long`, `sp-what-is`. Unknown section → tool failure, do not guess a hash.
+Sections include home `hero`, `faq`, `contact`; product `features`, `faq`, `layouts`; prices `plans`; FAQ item ids such as `how-much`, `web-how-long`, `sp-what-is`; policies `privacy`, `terms`, `payment`, `refund`, and other public slugs. Unknown section → tool failure, do not guess a hash.
 
 ---
 

@@ -16,6 +16,10 @@ import {
 function navigateFromNotification(navigate, data = {}) {
   const type = data.request_type || data.requestType
   const id = data.source_id || data.sourceId
+  if (type === 'attendant_escalation' && id) {
+    navigate(`/attendant/${id}`)
+    return
+  }
   if (type && id) {
     navigate(`/inbox/${type}/${id}`)
     return

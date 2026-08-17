@@ -167,7 +167,12 @@ export default function LayoutsGallery({
         {showPersuasion ? <LayoutPersuasionBand /> : null}
 
         {/* Persuasion CTA target — present before filters hydrate */}
-        <div id="browse-layouts" className="scroll-mt-28" aria-hidden="true" />
+        <div
+          id="browse-layouts"
+          data-attendant-section="browse-layouts"
+          className="scroll-mt-28"
+          aria-hidden="true"
+        />
 
         {stale ? (
           <div

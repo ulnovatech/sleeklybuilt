@@ -24,7 +24,10 @@ AttendantTest::assertTrue(!$gate->requiresConfirmation('navigate_to'), 'navigate
 
 $router = new ToolRouter($gate, $pdo);
 $registered = $router->registeredTools();
-AttendantTest::assertSame(11, count($registered), 'exactly 11 tools registered');
+AttendantTest::assertSame(14, count($registered), 'exactly 14 tools registered');
+AttendantTest::assertTrue(in_array('get_company_document', $registered, true), 'get_company_document registered');
+AttendantTest::assertTrue(in_array('update_customer_model', $registered, true), 'update_customer_model registered');
+AttendantTest::assertTrue(in_array('present_choices', $registered, true), 'present_choices registered');
 
 $decls = $router->declarations(['navigate_to', 'capture_lead', 'do_evil']);
 AttendantTest::assertSame(2, count($decls), 'declarations intersect allow-list only');

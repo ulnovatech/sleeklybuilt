@@ -1,0 +1,21 @@
+{
+  "id": "mobile-apps",
+  "label": "Mobile Apps",
+  "service_id": "mobile-apps",
+  "package": null,
+  "what_it_is": "Custom mobile applications for Android/iOS use cases.",
+  "best_for": [
+    "Products that need an app experience",
+    "Workflows that belong on phones, not only a website"
+  ],
+  "good_when": [
+    "They describe app-like usage, push, or mobile-first operations"
+  ],
+  "not_good_when": [
+    "A website or Sleek Page would solve the need",
+    "Requirements are unclear — qualify before scoping"
+  ],
+  "expert_recommendation": "Qualify the job-to-be-done before recommending an app build.",
+  "upsell_only_when": "Never push an app when a site or system is the real need.",
+  "important_tradeoff": "Higher effort and cost vs website-only solutions."
+}

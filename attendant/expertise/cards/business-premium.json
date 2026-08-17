@@ -1,0 +1,22 @@
+{
+  "id": "business-premium",
+  "label": "Business Premium",
+  "service_id": "websites",
+  "package": "premium",
+  "what_it_is": "The highest published website package for richer commerce or advanced site needs.",
+  "best_for": [
+    "Sites that need the published Premium inclusions",
+    "Organisations whose requirements clearly exceed Smart"
+  ],
+  "good_when": [
+    "Commerce depth or advanced site features are in the live Premium list",
+    "They understand the cost and need the extras"
+  ],
+  "not_good_when": [
+    "A brochure or mid-tier site would solve it",
+    "They actually need a custom business system — say so and route correctly"
+  ],
+  "expert_recommendation": "Recommend Premium only when requirements justify it; otherwise protect the client from overbuying.",
+  "upsell_only_when": "Never as a default. Only when Smart cannot cover the stated need.",
+  "important_tradeoff": "More features and cost. Willing to recommend against Premium when Basic/Smart fits."
+}

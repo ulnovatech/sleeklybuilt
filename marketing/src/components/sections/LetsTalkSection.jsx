@@ -32,7 +32,11 @@ export default function LetsTalkSection() {
   ]
 
   return (
-    <section id="contact" className="surface-obsidian section-dark scroll-mt-24">
+    <section
+      id="contact"
+      data-attendant-section="contact"
+      className="surface-obsidian section-dark scroll-mt-24"
+    >
       <div className="mx-auto max-w-content px-6 py-14 lg:px-10 lg:py-16">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,28rem)] lg:items-start lg:justify-between lg:gap-12">
           <div>

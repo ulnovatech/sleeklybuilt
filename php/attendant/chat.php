@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * POST /php/attendant/chat.php
- * SSE stream: message_delta | confirmation_required | client_action | error | done
+ * SSE stream: message_delta | confirmation_required | choices | client_action | error | done
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -60,6 +60,7 @@ $gate = new Attendant\ConfirmationGate($pdo);
 $telemetry = new Attendant\Telemetry($pdo);
 $llm = new Attendant\GeminiProvider();
 $router = new Attendant\ToolRouter($gate, $pdo);
+$choiceGate = new Attendant\ChoiceGate($pdo);
 
 try {
     $engine = new Attendant\TurnEngine(
@@ -71,7 +72,11 @@ try {
         new Attendant\PromptComposer(),
         $llm,
         $telemetry,
-        $router
+        $router,
+        new Attendant\KnowledgeCorpus(),
+        new Attendant\CustomerModelUpdater(),
+        new Attendant\CompanyDocumentStore(),
+        $choiceGate
     );
 
     $engine->runChat(

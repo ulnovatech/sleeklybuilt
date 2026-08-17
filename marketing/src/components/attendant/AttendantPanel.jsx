@@ -4,6 +4,7 @@ import { useAttendant } from './AttendantProvider'
 import AttendantHeader from './AttendantHeader'
 import AttendantComposer from './AttendantComposer'
 import {
+  AttendantChoices,
   AttendantConfirm,
   AttendantEmpty,
   AttendantError,
@@ -25,13 +26,20 @@ export default function AttendantPanel() {
     submitConfirm,
     cancelConfirm,
     confirmBusy,
+    pendingChoices,
+    submitChoice,
+    cancelChoices,
+    choiceBusy,
     resetSession,
     sendMessage,
+    escalationState,
   } = useAttendant()
 
   const panelRef = useRef(null)
   const transcriptRef = useRef(null)
   const lastVisitorFailed = [...messages].reverse().find((m) => m.role === 'visitor' && m.status === 'failed')
+  const connecting =
+    escalationState === 'escalated' || escalationState === 'human_active'
 
   useEffect(() => {
     if (!open || !panelRef.current) return undefined
@@ -53,7 +61,7 @@ export default function AttendantPanel() {
     const el = transcriptRef.current
     if (!el) return
     el.scrollTop = el.scrollHeight
-  }, [messages, pendingConfirm, error, streaming])
+  }, [messages, pendingConfirm, pendingChoices, error, streaming])
 
   if (!open) return null
 
@@ -75,6 +83,16 @@ export default function AttendantPanel() {
         className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92vh] flex-col overflow-hidden rounded-t-2xl border border-subtle bg-surface-raised shadow-xl md:inset-auto md:bottom-6 md:right-5 md:h-[min(640px,calc(100vh-3rem))] md:w-[380px] md:rounded-2xl"
       >
         <AttendantHeader onClose={closePanel} />
+
+        {connecting ? (
+          <div className="border-b border-subtle bg-surface-sunken px-4 py-2.5" role="status">
+            <p className="text-xs leading-relaxed text-content-muted">
+              {escalationState === 'human_active'
+                ? 'You are chatting with the SleeklyBuilt team. WhatsApp remains available anytime.'
+                : 'Connecting you with the team… Keep messaging here; WhatsApp remains available anytime.'}
+            </p>
+          </div>
+        ) : null}
 
         <div
           ref={transcriptRef}
@@ -104,6 +122,13 @@ export default function AttendantPanel() {
             }}
           />
         ) : null}
+
+        <AttendantChoices
+          pending={pendingChoices}
+          busy={choiceBusy || streaming}
+          onSelect={submitChoice}
+          onCancel={cancelChoices}
+        />
 
         <AttendantConfirm
           pending={pendingConfirm}

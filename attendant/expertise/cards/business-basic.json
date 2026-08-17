@@ -1,0 +1,25 @@
+{
+  "id": "business-basic",
+  "label": "Business Basic",
+  "service_id": "websites",
+  "package": "basic",
+  "what_it_is": "A straightforward professional business or institutional website.",
+  "best_for": [
+    "Businesses and institutions that need a strong public presence",
+    "Schools and organisations that need credibility, information, and enquiries"
+  ],
+  "good_when": [
+    "Credibility and trust matter",
+    "Courses, services, or about pages need to be clear",
+    "Visitors should contact or enquire easily",
+    "No student/staff login or complex workflows are required"
+  ],
+  "not_good_when": [
+    "Accounts or portals are required",
+    "Online learning / LMS is required",
+    "Multi-role workflows or heavy automation are required"
+  ],
+  "expert_recommendation": "Recommend when the primary need is presentation, trust, and enquiries — not when they describe a system.",
+  "upsell_only_when": "Requirements clearly outgrow a brochure site (logins, workflows, commerce depth).",
+  "important_tradeoff": "Lower cost and simpler delivery vs fewer advanced workflows. Do not sell complexity they do not need."
+}

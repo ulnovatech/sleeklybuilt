@@ -46,6 +46,27 @@ After answering "what's included in Sleek Pages"
 
 ---
 
+## N7 — Policy path segment
+
+"Show the refund policy." / "Can I get a refund?" (with navigate)  
+**Expect:** `navigate_to` or `show_section` → `page_id` `policies`, `section_id` `refund`, path `/policies/refund`, `hash` null. Client highlights `[data-attendant-section="refund"]`.
+
+---
+
+## N8 — Package card
+
+On `/prices` or via navigate: "Show me the Starter package."  
+**Expect:** `show_section` `starter` (page `prices`), path `/prices`, hash `starter`. Card has `data-attendant-section="starter"`; `visible_product_id` becomes `starter`.
+
+---
+
+## N9 — Shared section on current page
+
+On `/websites`: "Show me the features."  
+**Expect:** `show_section` `features` with current `page_id` websites → `/websites#features`, not another product line.
+
+---
+
 ## Fail if
 
-Raw URL in tool args; wrong hash; navigation on a pure definition question.
+Raw URL in tool args; wrong hash; navigation on a pure definition question; ambiguous shared section without page context succeeding.

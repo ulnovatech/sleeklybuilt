@@ -19,7 +19,7 @@ export default function ContactPage() {
         intro="One question at a time. We reply within one working day."
       />
 
-      <Section className="section-light py-10 md:py-14" id="contact">
+      <Section className="section-light scroll-mt-24 py-10 md:py-14" id="contact">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-14">
           <GamifiedContactForm />
           <ContactChannelPanel className="lg:sticky lg:top-24" />

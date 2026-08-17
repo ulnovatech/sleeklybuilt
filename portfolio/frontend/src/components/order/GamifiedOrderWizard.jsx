@@ -36,17 +36,22 @@ function cn(...parts) {
  * Layout order wizard — guided steps with field-level errors, announced progress,
  * and review-before-pay (Wave 9 Phase C).
  */
-export default function GamifiedOrderWizard({ templateName = '', templateData = null }) {
+export default function GamifiedOrderWizard({ templateName = '', templateData = null, initialPackage = '' }) {
   const formId = useId()
   const stepStatusId = `${formId}-step-status`
   const summaryRef = useRef(null)
   const stepHeadingRef = useRef(null)
+
+  const packageSeed = ['basic', 'smart', 'premium'].includes(String(initialPackage).toLowerCase())
+    ? String(initialPackage).toLowerCase()
+    : 'smart'
 
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({
     ...emptyForm,
     websiteName: templateName,
     template: templateName,
+    package: packageSeed,
   })
   const [paying, setPaying] = useState(false)
   const [quoteSubmitting, setQuoteSubmitting] = useState(false)

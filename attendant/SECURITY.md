@@ -89,3 +89,21 @@ Do not disable the attendant into a mode that returns canned successful orders.
 ## Honest unavailable
 
 If Gemini is missing or down, the UI offers WhatsApp/call. That is the degraded path. Inventing business answers from the widget is forbidden.
+
+---
+
+## Company document access (as-built)
+
+| Access class | Visitor tools |
+| --- | --- |
+| `PUBLIC` | Allowed (`get_company_document`, search merge, `/policies`) |
+| `CUSTOMER_CONTEXT` | Allowed in tools when appropriate |
+| `ATTENDANT_INTERNAL` / `OPERATOR_ONLY` / `SYSTEM_ONLY` | Never returned to visitor tools |
+
+Denied retrieval emits telemetry `retrieval_access_denied`. Do not put authority-matrix or company-truth bodies in tool results or prompts for visitors.
+
+---
+
+## Operator channel
+
+Admin attendant APIs require dash/mobile JWT (`ApiAuth`). Visitor session tokens cannot call takeover/resume/post. Operator messages use role `human` with optional idempotency keys.

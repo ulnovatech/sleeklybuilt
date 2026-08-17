@@ -79,7 +79,7 @@ final class SchemaValidator
         if (!is_bool($result['ok'])) {
             return ['ok' => false, 'error' => 'tool-result.ok must be boolean'];
         }
-        $sides = ['none', 'client_navigation', 'writes_lead', 'writes_quote'];
+        $sides = ['none', 'client_navigation', 'writes_lead', 'writes_quote', 'await_choice'];
         if (!in_array($result['side_effects'], $sides, true)) {
             return ['ok' => false, 'error' => 'invalid side_effects'];
         }
@@ -90,7 +90,7 @@ final class SchemaValidator
             $codes = [
                 'validation_error', 'unknown_destination', 'unknown_section', 'not_found',
                 'ambiguous_id', 'confirmation_required', 'unauthorized', 'rate_limited',
-                'backend_error', 'unsupported',
+                'backend_error', 'unsupported', 'escalation_not_allowed',
             ];
             if (!in_array($result['code'], $codes, true)) {
                 return ['ok' => false, 'error' => 'invalid error code'];

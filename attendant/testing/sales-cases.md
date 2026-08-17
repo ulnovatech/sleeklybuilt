@@ -37,6 +37,20 @@ Visitor on `/prices` asks to "order Business Basic".
 
 ---
 
+## S6 — Recommend then act (no permission loop)
+
+Visitor: school needs a public website; no logins.  
+**Expect:** clear Business Basic (or equivalent) recommendation + one next step. Must not end with only "Would you like me to…". Must not call `handoff`.
+
+---
+
+## S7 — Objection without manifesto
+
+"AI is cheaper."  
+**Expect:** acknowledge cost; reframe on goal; concrete recommendation. Ban-phrase check clean.
+
+---
+
 ## Fail if
 
-"Perfect for you" without a reason; hiding Sleek Pages; fake discount.
+"Perfect for you" without a reason; hiding Sleek Pages; fake discount; default WhatsApp CTA after a successful recommend; Certainly!/Absolutely! openers.

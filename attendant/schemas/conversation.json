@@ -13,6 +13,19 @@
     "updated_at": { "type": "string", "format": "date-time" },
     "pending_action_id": { "type": ["string", "null"] },
     "draft": { "$ref": "#/$defs/draft" },
+    "commercial_state": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "qualification",
+        "recommendation",
+        "agreement",
+        "order",
+        "payment",
+        "complete",
+        "escalated"
+      ]
+    },
     "messages": {
       "type": "array",
       "items": { "$ref": "#/$defs/message" }
@@ -35,10 +48,32 @@
         },
         "template": { "type": ["string", "null"] },
         "business_name": { "type": ["string", "null"] },
-        "notes": { "type": ["string", "null"] }
+        "notes": { "type": ["string", "null"] },
+        "commercial_state": {
+          "type": "string",
+          "enum": [
+            "discovery",
+            "qualification",
+            "recommendation",
+            "agreement",
+            "order",
+            "payment",
+            "complete",
+            "escalated"
+          ]
+        },
+        "customer_model": { "type": "object" },
+        "recommendation": { "type": "object" },
+        "open_questions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "known_facts": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       }
-    },
-    "message": {
+    },    "message": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "role", "created_at"],

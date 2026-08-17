@@ -70,6 +70,7 @@ final class ConfirmationGate
             'SELECT id, tool_name, payload_json, summary_text, expires_at
              FROM attendant_pending_actions
              WHERE conversation_id = ? AND consumed_at IS NULL
+               AND tool_name IN (\'capture_lead\', \'start_order\')
              ORDER BY id DESC
              LIMIT 1'
         );

@@ -16,9 +16,9 @@ Pages are semantic. The model never owns URLs.
 
 ## Locked page_ids
 
-`home`, `sleek-pages`, `websites`, `mobile-apps`, `business-systems`, `products`, `contact`, `about`, `prices`, `track-order`, `portfolio`.
+`home`, `sleek-pages`, `websites`, `mobile-apps`, `business-systems`, `products`, `contact`, `about`, `prices`, `track-order`, `policies`, `portfolio`.
 
-Optional query context (not separate pages): `contact` + `intent`, `prices` + `category=websites|apps`.
+Optional query context (not separate pages): `contact` + `intent`, `prices` + `category=websites|apps`. Policy detail uses `policies` + `section_id` (slug) resolving to `/policies/{slug}`.
 
 ## Resolution
 

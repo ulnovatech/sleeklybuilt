@@ -30,6 +30,7 @@
       "title": "Sleek Pages",
       "external": false,
       "section_ids": [
+        "hero",
         "features",
         "faq",
         "layouts",
@@ -49,6 +50,7 @@
       "title": "Websites",
       "external": false,
       "section_ids": [
+        "hero",
         "features",
         "faq",
         "layouts",
@@ -68,6 +70,7 @@
       "title": "Mobile Apps",
       "external": false,
       "section_ids": [
+        "hero",
         "features",
         "faq",
         "app-platforms",
@@ -85,6 +88,7 @@
       "title": "Business Systems",
       "external": false,
       "section_ids": [
+        "hero",
         "features",
         "faq",
         "sys-what",
@@ -139,6 +143,7 @@
       "title": "Prices",
       "external": false,
       "section_ids": [
+        "hero",
         "plans",
         "tax-note",
         "pricing-faq",
@@ -146,7 +151,17 @@
         "price-tax",
         "price-negotiable",
         "price-deposit",
-        "price-wrong-plan"
+        "price-wrong-plan",
+        "starter",
+        "business-basic",
+        "standard-growth",
+        "pro-ecommerce",
+        "ecommerce-app",
+        "restaurant-app",
+        "sacco-app",
+        "school-app",
+        "custom-web",
+        "custom-app"
       ],
       "default_service_id": null,
       "default_product_kind": "display_package"
@@ -161,6 +176,27 @@
       "default_product_kind": null
     },
     {
+      "page_id": "policies",
+      "path": "/policies",
+      "title": "Policies",
+      "external": false,
+      "section_nav": "path_segment",
+      "section_ids": [
+        "terms",
+        "privacy",
+        "payment",
+        "refund",
+        "delivery",
+        "revisions",
+        "support",
+        "ip",
+        "hosting",
+        "ai-attendant"
+      ],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
       "page_id": "portfolio",
       "path": "/portfolio-app/",
       "title": "Projects gallery",
@@ -168,6 +204,15 @@
       "section_ids": [],
       "default_service_id": null,
       "default_product_kind": "layout"
+    },
+    {
+      "page_id": "portfolio-order",
+      "path": "/portfolio-app/order",
+      "title": "Secure checkout",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": "orderable_package"
     }
   ]
 }

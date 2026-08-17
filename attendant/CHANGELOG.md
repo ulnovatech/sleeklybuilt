@@ -4,6 +4,23 @@
 
 ---
 
+# 0.6 — 2026-08-17 — Full upgrade (3A–3H) + hub smoke
+
+## Added
+
+- Company corpus `attendant/company/` (01–20) + access-classed retrieval
+- Customer/commercial state, expertise cards, Decision UI, policy pages
+- Operator escalation (admin-mobile inbox) + payment honesty handoff
+- Hub smoke gate: `php/attendant/scripts/smoke_hub.php` (`npm run test:attendant:smoke`)
+- Optional HTTP probes via `ATTENDANT_SMOKE_BASE`
+
+## Changed
+
+- CI `attendant-layer-a` runs hub smoke after Layer A
+- Eval/regression docs list hub smoke as release gate
+
+---
+
 # 0.5 — 2026-08-15 — Evaluation / hardening (2B)
 
 ## Added

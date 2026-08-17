@@ -1,17 +1,27 @@
 # Tool: handoff
 
-**Purpose:** Return human channels from `GET /api/public/site-contact` (server-side fetch or shared SettingsController data). Fallback: static company record from knowledge JSON, still not from the model.
+**Purpose:** Escalate to a human path. Returns public channels and writes an operator brief + escalation state. Not a default CTA.
 
-**Input:** `{ "reason"?: string }` optional telemetry.
+**Input:**
 
-**Confirmation:** none. This does not send a WhatsApp message as the visitor.
+```json
+{
+  "reason_code": "explicit_human|knowledge_failure|authority_breach|legal_dispute|high_consequence|repeated_failure|safety",
+  "reason": "optional short operator note",
+  "suggested_next_action": "optional"
+}
+```
 
-**Side effects:** none (telemetry `handoff=true`).
+`reason_code` is required. `EscalationPolicy` rejects unknown codes (`escalation_not_allowed`).
 
-**Success:** `{ whatsapp_url, primary_phone, email, phones[] }`.
+**Confirmation:** none. Does not send WhatsApp as the visitor.
 
-**Failure:** if both remote and fallback missing — `ok: false` (should not happen if knowledge JSON exists).
+**Side effects:** updates `escalation_state`, `operator_brief_json`, `commercial_state=escalated` when ConversationStore is available (Chunk 3G delivers to admin-mobile).
 
-**User-visible:** model presents these channels. Widget header already shows them (Chunk 2).
+**Success:** `{ whatsapp_url, primary_phone, email, phones[], reason_code, operator_brief, escalation_state }`.
 
-**Acceptance:** numbers ⊆ public contact settings or site.config fallback used by the engine.
+**Failure:** missing/invalid reason; contact settings unavailable.
+
+**User-visible:** model presents channels from the result only. Widget header may also show WhatsApp.
+
+**Acceptance:** numbers ⊆ public contact settings or company fallback. Soft handoff without allowed reason fails Layer A.

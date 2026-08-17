@@ -31,6 +31,7 @@
     "test:attendant": "php php/attendant/tests/run.php",
     "test:attendant:widget": "node marketing/scripts/check-attendant-widget.mjs",
     "test:attendant:live": "php php/attendant/tests/live_eval.php",
+    "test:attendant:smoke": "php php/attendant/scripts/smoke_hub.php",
     "ship:cloud": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/cloud-ship.ps1"
   },
   "devDependencies": {

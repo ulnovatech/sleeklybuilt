@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import NewsletterForm from '../forms/NewsletterForm'
 import FooterLinks from './FooterLinks'
 import { footerServiceLinks, footerUsefulLinks } from '../../site.config'
@@ -58,11 +59,30 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col justify-between gap-3 border-t border-obsidian-line pt-8 text-xs text-cream/55 md:flex-row">
+        <div className="mt-14 flex flex-col justify-between gap-3 border-t border-obsidian-line pt-8 text-xs text-cream/55 md:flex-row md:items-center">
           <p>
             © {year} {siteConfig.name}. All rights reserved.
           </p>
-          <p>Designed and built with intention.</p>
+          <p className="flex flex-wrap gap-x-4 gap-y-2">
+            <Link
+              to={siteConfig.links.policies}
+              className="hover:text-gold focus:outline-none focus-visible:underline"
+            >
+              Policies
+            </Link>
+            <Link
+              to={`${siteConfig.links.policies}/privacy`}
+              className="hover:text-gold focus:outline-none focus-visible:underline"
+            >
+              Privacy
+            </Link>
+            <Link
+              to={`${siteConfig.links.policies}/terms`}
+              className="hover:text-gold focus:outline-none focus-visible:underline"
+            >
+              Terms
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

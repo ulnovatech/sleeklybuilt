@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "authority_order": [
+    "legal_contractual",
+    "published_policy",
+    "product_service",
+    "operational_rule",
+    "attendant_guidance",
+    "improvisation"
+  ],
+  "access_classes": [
+    "PUBLIC",
+    "CUSTOMER_CONTEXT",
+    "ATTENDANT_INTERNAL",
+    "OPERATOR_ONLY",
+    "SYSTEM_ONLY"
+  ],
+  "visitor_allowed": [
+    "PUBLIC",
+    "CUSTOMER_CONTEXT"
+  ],
+  "documents": [
+    {
+      "id": "01_company_profile",
+      "file": "01_company_profile.md",
+      "access": "CUSTOMER_CONTEXT",
+      "slug": "company",
+      "title": "Company profile",
+      "topics": [
+        "company",
+        "about",
+        "uganda",
+        "africa"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "02_services_catalog",
+      "file": "02_services_catalog.md",
+      "access": "CUSTOMER_CONTEXT",
+      "slug": "services",
+      "title": "Services catalogue",
+      "topics": [
+        "services",
+        "packages",
+        "custom"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "03_company_principles",
+      "file": "03_company_principles.md",
+      "access": "CUSTOMER_CONTEXT",
+      "slug": "principles",
+      "title": "Company principles",
+      "topics": [
+        "principles",
+        "honesty"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "04_product_expertise",
+      "file": "04_product_expertise.md",
+      "access": "ATTENDANT_INTERNAL",
+      "slug": null,
+      "title": "Product expertise",
+      "topics": [
+        "recommendation",
+        "judgment"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "05_terms_and_conditions",
+      "file": "05_terms_and_conditions.md",
+      "access": "PUBLIC",
+      "slug": "terms",
+      "title": "Terms and Conditions",
+      "topics": [
+        "terms",
+        "agreement",
+        "legal"
+      ],
+      "public_route": "/policies/terms"
+    },
+    {
+      "id": "06_privacy_policy",
+      "file": "06_privacy_policy.md",
+      "access": "PUBLIC",
+      "slug": "privacy",
+      "title": "Privacy Policy",
+      "topics": [
+        "privacy",
+        "data",
+        "attendant"
+      ],
+      "public_route": "/policies/privacy"
+    },
+    {
+      "id": "07_payment_policy",
+      "file": "07_payment_policy.md",
+      "access": "PUBLIC",
+      "slug": "payment",
+      "title": "Payment Policy",
+      "topics": [
+        "payment",
+        "flutterwave",
+        "mobile money",
+        "commitment",
+        "deposit"
+      ],
+      "public_route": "/policies/payment"
+    },
+    {
+      "id": "08_refund_cancellation_policy",
+      "file": "08_refund_cancellation_policy.md",
+      "access": "PUBLIC",
+      "slug": "refund",
+      "title": "Refund & Cancellation",
+      "topics": [
+        "refund",
+        "cancel",
+        "cancellation"
+      ],
+      "public_route": "/policies/refund"
+    },
+    {
+      "id": "09_delivery_policy",
+      "file": "09_delivery_policy.md",
+      "access": "PUBLIC",
+      "slug": "delivery",
+      "title": "Delivery Policy",
+      "topics": [
+        "delivery",
+        "timeline",
+        "launch"
+      ],
+      "public_route": "/policies/delivery"
+    },
+    {
+      "id": "10_revision_scope_policy",
+      "file": "10_revision_scope_policy.md",
+      "access": "PUBLIC",
+      "slug": "revisions",
+      "title": "Revision & Scope",
+      "topics": [
+        "revision",
+        "scope",
+        "change"
+      ],
+      "public_route": "/policies/revisions"
+    },
+    {
+      "id": "11_support_maintenance_policy",
+      "file": "11_support_maintenance_policy.md",
+      "access": "PUBLIC",
+      "slug": "support",
+      "title": "Support & Maintenance",
+      "topics": [
+        "support",
+        "warranty",
+        "maintenance"
+      ],
+      "public_route": "/policies/support"
+    },
+    {
+      "id": "12_intellectual_property_policy",
+      "file": "12_intellectual_property_policy.md",
+      "access": "PUBLIC",
+      "slug": "ip",
+      "title": "Intellectual Property",
+      "topics": [
+        "ip",
+        "ownership",
+        "portfolio"
+      ],
+      "public_route": "/policies/ip"
+    },
+    {
+      "id": "13_hosting_domain_policy",
+      "file": "13_hosting_domain_policy.md",
+      "access": "PUBLIC",
+      "slug": "hosting",
+      "title": "Hosting & Domain",
+      "topics": [
+        "hosting",
+        "domain",
+        "dns"
+      ],
+      "public_route": "/policies/hosting"
+    },
+    {
+      "id": "14_ai_attendant_policy",
+      "file": "14_ai_attendant_policy.md",
+      "access": "PUBLIC",
+      "slug": "ai-attendant",
+      "title": "AI Attendant Policy",
+      "topics": [
+        "ai",
+        "attendant",
+        "chatbot"
+      ],
+      "public_route": "/policies/ai-attendant"
+    },
+    {
+      "id": "15_client_onboarding",
+      "file": "15_client_onboarding.md",
+      "access": "CUSTOMER_CONTEXT",
+      "slug": "onboarding",
+      "title": "Client onboarding",
+      "topics": [
+        "onboarding",
+        "kickoff"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "16_client_responsibilities",
+      "file": "16_client_responsibilities.md",
+      "access": "CUSTOMER_CONTEXT",
+      "slug": "responsibilities",
+      "title": "Client responsibilities",
+      "topics": [
+        "client",
+        "content",
+        "approvals"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "17_project_handover",
+      "file": "17_project_handover.md",
+      "access": "CUSTOMER_CONTEXT",
+      "slug": "handover",
+      "title": "Project handover",
+      "topics": [
+        "handover",
+        "credentials",
+        "exit"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "18_attendant_authority_matrix",
+      "file": "18_attendant_authority_matrix.md",
+      "access": "ATTENDANT_INTERNAL",
+      "slug": null,
+      "title": "Attendant authority matrix",
+      "topics": [
+        "authority",
+        "permissions"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "19_human_escalation_policy",
+      "file": "19_human_escalation_policy.md",
+      "access": "ATTENDANT_INTERNAL",
+      "slug": null,
+      "title": "Human escalation policy",
+      "topics": [
+        "escalation",
+        "handoff",
+        "human"
+      ],
+      "public_route": null
+    },
+    {
+      "id": "20_attendant_company_truth",
+      "file": "20_attendant_company_truth.md",
+      "access": "SYSTEM_ONLY",
+      "slug": null,
+      "title": "Company truth bridge",
+      "topics": [
+        "hierarchy",
+        "truth"
+      ],
+      "public_route": null
+    }
+  ]
+}

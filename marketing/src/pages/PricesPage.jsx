@@ -48,8 +48,11 @@ function PlanCard({ pkg }) {
 
   return (
     <article
+      id={pkg.id}
+      data-attendant-section={pkg.id}
+      data-attendant-product={pkg.id}
       className={cn(
-        'relative flex h-full flex-col rounded-2xl border bg-surface-raised p-6 shadow-sm sm:p-7',
+        'relative flex h-full scroll-mt-28 flex-col rounded-2xl border bg-surface-raised p-6 shadow-sm sm:p-7',
         pkg.recommended ? 'border-emerald/40 shadow-md ring-1 ring-emerald/15' : 'border-cream-deep',
       )}
       aria-label={`${pkg.title}, ${price}, one-time project price in UGX`}
@@ -98,7 +101,12 @@ function PlanCard({ pkg }) {
 
 function EnterpriseBand({ band }) {
   return (
-    <div className="mt-10 rounded-2xl border border-cream-deep bg-surface-sunken p-6 sm:p-8 md:flex md:items-end md:justify-between md:gap-10">
+    <div
+      id={band.id}
+      data-attendant-section={band.id}
+      data-attendant-product={band.id}
+      className="mt-10 scroll-mt-28 rounded-2xl border border-cream-deep bg-surface-sunken p-6 sm:p-8 md:flex md:items-end md:justify-between md:gap-10"
+    >
       <div className="max-w-2xl">
         <p className="eyebrow">Custom scope</p>
         <h3 className="mt-3 display-card text-emerald-deep">{band.title}</h3>
@@ -264,9 +272,34 @@ export default function PricesPage() {
     setSearchParams(next, { replace: true })
   }
 
+  // Attendant / deep-link: switch tab so the stamped package card is in the DOM.
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash.replace(/^#/, '')
+      if (!hash) return
+      const inApps =
+        appPackages.some((p) => p.id === hash) || appEnterprise.id === hash
+      const inWeb =
+        websitePackages.some((p) => p.id === hash) || websiteEnterprise.id === hash
+      if (inApps && category !== 'apps') {
+        const next = new URLSearchParams(searchParams)
+        next.set('category', 'apps')
+        setSearchParams(next, { replace: true })
+      } else if (inWeb && !inApps && category !== 'websites') {
+        const next = new URLSearchParams(searchParams)
+        next.set('category', 'websites')
+        setSearchParams(next, { replace: true })
+      }
+    }
+    syncFromHash()
+    window.addEventListener('hashchange', syncFromHash)
+    return () => window.removeEventListener('hashchange', syncFromHash)
+  }, [category, searchParams, setSearchParams])
+
   return (
     <>
       <PageHeader
+        sectionId="hero"
         eyebrow="Transparent pricing"
         title="Packages built for Ugandan businesses"
         intro="Website layouts from our portfolio include deposit checkout. Custom apps and systems start with a scoped quote."
@@ -346,7 +379,11 @@ export default function PricesPage() {
 
         {category === 'websites' ? <WebsiteFeatureMatrix plans={websitePackages} /> : null}
 
-        <p className="mt-12 max-w-3xl text-sm text-ink-soft" id="tax-note">
+        <p
+          className="mt-12 max-w-3xl scroll-mt-28 text-sm text-ink-soft"
+          id="tax-note"
+          data-attendant-section="tax-note"
+        >
           <span className="font-semibold text-emerald-deep">Tax & currency. </span>
           Prices are listed in UGX and exclude VAT unless your written quote says otherwise. Tax is confirmed
           before deposit. We do not show converted foreign-currency estimates on this page.

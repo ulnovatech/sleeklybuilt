@@ -11,6 +11,8 @@ import ContactPage from './pages/ContactPage'
 import AboutPage from './pages/AboutPage'
 import PricesPage from './pages/PricesPage'
 import TrackOrderPage from './pages/TrackOrderPage'
+import PoliciesPage from './pages/PoliciesPage'
+import PolicyDetailPage from './pages/PolicyDetailPage'
 import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
@@ -29,6 +31,8 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/prices" element={<PricesPage />} />
           <Route path="/track-order" element={<TrackOrderPage />} />
+          <Route path="/policies" element={<PoliciesPage />} />
+          <Route path="/policies/:slug" element={<PolicyDetailPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Layout>

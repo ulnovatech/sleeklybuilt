@@ -12,7 +12,11 @@ import { trustCommitments } from '../../config/proof'
  */
 export default function HeroSection() {
   return (
-    <section id="hero" className="surface-obsidian pb-14 pt-24 md:pb-20 md:pt-28">
+    <section
+      id="hero"
+      data-attendant-section="hero"
+      className="surface-obsidian scroll-mt-24 pb-14 pt-24 md:pb-20 md:pt-28"
+    >
       <div className="mx-auto w-full max-w-content px-6 lg:px-10">
         <div className="max-w-3xl">
           <Eyebrow tone="invert">{siteConfig.name}</Eyebrow>

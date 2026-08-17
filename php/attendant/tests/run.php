@@ -24,7 +24,14 @@ try {
 
 require __DIR__ . '/cases/schema_and_prompt.php';
 require __DIR__ . '/cases/registry_and_knowledge.php';
+require __DIR__ . '/cases/company_documents.php';
+require __DIR__ . '/cases/customer_model.php';
+require __DIR__ . '/cases/behavior_escalation.php';
+require __DIR__ . '/cases/escalation_operator.php';
+require __DIR__ . '/cases/adversarial_access.php';
+require __DIR__ . '/cases/decision_ui.php';
 require __DIR__ . '/cases/catalogue_and_skills.php';
+require __DIR__ . '/cases/order_payment_honesty.php';
 require __DIR__ . '/cases/tools_and_confirmation.php';
 require __DIR__ . '/cases/telemetry_and_failures.php';
 require __DIR__ . '/cases/missing_key.php';

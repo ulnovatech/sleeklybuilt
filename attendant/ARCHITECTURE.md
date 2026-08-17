@@ -86,8 +86,19 @@ Capability modules from `attendant/skills/*.md`. `SkillActivator` selects a smal
 ### 4. Knowledge
 
 - **Structured truth:** packages, ids, routes, order states, confirmation classes
-- **Searchable:** FAQ and explanatory copy via `search_knowledge`
+- **Searchable:** FAQ and explanatory copy via `search_knowledge`, plus visitor-allowed company corpus (`attendant/company/`) via the same tool and `get_company_document`
+- **Public policies:** `PUBLIC` access docs are also served at `/policies` and `/policies/:slug` from `php/attendant/public_policy.php` (same markdown files)
+- **Customer model:** typed draft in `draft_json` (`CustomerModel`) with commercial funnel state; updated deterministically from messages/tools and via `update_customer_model`
+- **Expertise:** selective cards/guidance from `attendant/expertise/` (`ExpertiseLibrary`) — never the whole folder
+- **Escalation:** `handoff` requires `EscalationPolicy` reason codes; writes operator brief + `escalation_state` (operator delivery in Chunk 3G)
+- **Decision UI:** `present_choices` → SSE `choices` → widget chips → POST `choice.php` (persist model + resume turn)
+- **Website presence:** marketing sections stamp `data-attendant-section`; `clientActions` scroll/highlight (incl. policy path segments); package cards set `visible_product_id` via hash/query
+- **Payment honesty:** confirmed `start_order` quote → `payment_handoff` `client_action` to `/portfolio-app/order` only; `get_order_status` alone may mark `complete`; no attendant `payment-init`
+- **Operator channel:** `handoff` → `escalation_state` + operator brief + FCM `attendant_escalation`; TurnEngine skips LLM while `escalated|human_active`; admin-mobile Attendant inbox; visitor polls `messages.php` for human replies
+- **Eval / observability (3H):** Layer A + widget CI; first-class events `escalation`, `operator_takeover`, `choice_selected`, `payment_handoff`, `retrieval_access_denied`; [QUALITY_RUBRIC.md](QUALITY_RUBRIC.md)
 - **Runtime:** the context object
+
+Access classes (`PUBLIC`, `CUSTOMER_CONTEXT`, `ATTENDANT_INTERNAL`, `OPERATOR_ONLY`, `SYSTEM_ONLY`) are enforced in `CompanyDocumentStore` — visitor tools never receive INTERNAL/OPERATOR/SYSTEM bodies.
 
 Prices the visitor can check out with: `uln_packages()` only.
 
@@ -114,7 +125,7 @@ MySQL (same database as contact leads), migration `sleekly-dash/backend/migratio
 | Table | Purpose |
 | --- | --- |
 | `attendant_sessions` | Opaque session token hash, IP/rate metadata |
-| `attendant_conversations` | One thread per session (until expiry) |
+| `attendant_conversations` | One thread per session (until expiry); `draft_json` customer model; `commercial_state` / `escalation_state` (migration 015) |
 | `attendant_messages` | Role, text, tool traces (no raw prompts dumped wholesale) |
 | `attendant_pending_actions` | Confirmation tokens, payload, expiry |
 | `attendant_events` | Telemetry |
@@ -136,6 +147,7 @@ The server streams SSE events:
 - `message_delta` — text
 - `client_action` — `{ type: "navigate"|"highlight", page_id, section_id, path, hash }`
 - `confirmation_required` — `{ token, summary, tool }`
+- `choices` — `{ id, token, prompt, options[{id,label}], multi?, expires_at }` (Decision UI; POST `choice.php` to select and resume)
 - `error` — `{ code, message }` (user-safe)
 - `done` — `{ conversation_id }`
 

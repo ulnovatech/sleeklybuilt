@@ -112,6 +112,19 @@ export default function HomePage() {
 
           {summary ? (
             <div className="space-y-4">
+              <Link
+                to="/attendant"
+                className="flex min-h-14 items-center justify-between rounded-2xl border border-brand/30 bg-brand/10 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <div>
+                  <p className="font-semibold text-white">Attendant chats</p>
+                  <p className="text-sm text-white/55">Open escalations needing a human</p>
+                </div>
+                <span className="text-brand" aria-hidden>
+                  →
+                </span>
+              </Link>
+
               <div className="grid grid-cols-2 gap-3">
                 <SummaryStatCard
                   label="New leads"

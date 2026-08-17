@@ -32,6 +32,7 @@ export const siteConfig = {
     about: '/about',
     prices: '/prices',
     trackOrder: '/track-order',
+    policies: '/policies',
     getStarted: '/contact',
     logo: '/assets/img/sleeklybuilt-logo.png',
   },
@@ -52,6 +53,8 @@ export const apiEndpoints = {
   orderStatus: `${portfolioApi}/order-status.php`,
   /** Published layout catalog — accepts ?collection=websites|sleek-pages */
   layouts: `${portfolioApi}/portfolios.php`,
+  /** PUBLIC company policies (same markdown as attendant/company) */
+  publicPolicy: '/php/attendant/public_policy.php',
 }
 
 /**
@@ -73,6 +76,7 @@ export const footerUsefulLinks = [
   { label: 'Pricing', href: siteConfig.links.prices },
   { label: 'Track order', href: siteConfig.links.trackOrder },
   { label: 'Projects', href: siteConfig.links.portfolio },
+  { label: 'Policies', href: siteConfig.links.policies },
   { label: 'Contact', href: siteConfig.links.contact },
 ]
 

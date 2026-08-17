@@ -2,11 +2,12 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useAttendant } from './AttendantProvider'
 
 export default function AttendantComposer() {
-  const { sendMessage, streaming, pendingConfirm, sessionStatus } = useAttendant()
+  const { sendMessage, streaming, pendingConfirm, pendingChoices, sessionStatus } = useAttendant()
   const [value, setValue] = useState('')
   const inputRef = useRef(null)
   const labelId = useId()
-  const disabled = streaming || Boolean(pendingConfirm) || sessionStatus === 'loading'
+  const blocked = Boolean(pendingConfirm) || Boolean(pendingChoices)
+  const disabled = streaming || blocked || sessionStatus === 'loading'
 
   useEffect(() => {
     if (!disabled && window.matchMedia('(min-width: 768px)').matches) {
@@ -44,7 +45,13 @@ export default function AttendantComposer() {
               onSubmit(e)
             }
           }}
-          placeholder={pendingConfirm ? 'Confirm or cancel above' : 'Ask about products, prices, or next steps'}
+          placeholder={
+            pendingChoices
+              ? 'Pick an option above'
+              : pendingConfirm
+                ? 'Confirm or cancel above'
+                : 'Ask about products, prices, or next steps'
+          }
           className="max-h-28 min-h-11 flex-1 resize-none rounded-xl border border-subtle bg-surface-base px-3 py-2.5 text-sm text-content-primary placeholder:text-content-muted focus:border-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-60"
           aria-labelledby={labelId}
         />

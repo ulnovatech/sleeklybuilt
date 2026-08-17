@@ -58,6 +58,16 @@ $result = $router->execute(
     true
 );
 
+$clientAction = null;
+$data = is_array($result['data'] ?? null) ? $result['data'] : [];
+if (($result['ok'] ?? false) && !empty($data['payment_handoff']) && is_array($data['payment_handoff'])) {
+    $clientAction = $data['payment_handoff'];
+}
+
+$updater = new Attendant\CustomerModelUpdater();
+$draft = $updater->fromToolResult($session['draft'] ?? null, (string) $pending['tool_name'], $result);
+$store->saveDraft($session['conversation_id'], $draft);
+
 $telemetry->emit('confirm_attempt', [
     'conversation_id' => $session['conversation_id'],
     'session_id' => $session['session_id'],
@@ -67,8 +77,23 @@ $telemetry->emit('confirm_attempt', [
     'meta' => [
         'conversion' => (bool) ($result['ok'] ?? false),
         'handoff' => false,
+        'payment_handoff' => $clientAction !== null,
     ],
 ]);
+
+if ($clientAction !== null) {
+    $telemetry->emit('payment_handoff', [
+        'conversation_id' => $session['conversation_id'],
+        'session_id' => $session['session_id'],
+        'tool_name' => $pending['tool_name'],
+        'tool_ok' => true,
+        'meta' => [
+            'path' => $clientAction['path'] ?? null,
+            'package' => $data['package'] ?? null,
+            'source' => 'confirm',
+        ],
+    ]);
+}
 
 $store->addMessage(
     $session['conversation_id'],
@@ -85,4 +110,6 @@ attendant_json_out([
     'user_safe_error' => $result['user_safe_error'] ?? null,
     'summary' => $pending['summary'],
     'data' => $result['data'] ?? null,
+    'client_action' => $clientAction,
+    'commercial_state' => $draft['commercial_state'] ?? null,
 ]);

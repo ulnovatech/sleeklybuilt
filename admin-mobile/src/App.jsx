@@ -7,6 +7,8 @@ import PushNotificationManager from './components/PushNotificationManager'
 import AppResumeHandler from './components/AppResumeHandler'
 import HomePage from './pages/HomePage'
 import InboxPage from './pages/InboxPage'
+import AttendantInboxPage from './pages/AttendantInboxPage'
+import AttendantThreadPage from './pages/AttendantThreadPage'
 import LoginPage from './pages/LoginPage'
 import RequestDetailPage from './pages/RequestDetailPage'
 import SettingsPage from './pages/SettingsPage'
@@ -21,9 +23,11 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/inbox/:type/:id" element={<RequestDetailPage />} />
+            <Route path="/attendant/:id" element={<AttendantThreadPage />} />
             <Route element={<AppShell />}>
               <Route index element={<HomePage />} />
               <Route path="inbox" element={<InboxPage />} />
+              <Route path="attendant" element={<AttendantInboxPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Route>

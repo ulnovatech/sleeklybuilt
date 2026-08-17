@@ -1,0 +1,22 @@
+{
+  "id": "business-smart",
+  "label": "Business Smart",
+  "service_id": "websites",
+  "package": "smart",
+  "what_it_is": "A more structured website when content and features need more room than Basic.",
+  "best_for": [
+    "Organisations that need richer structure or content management",
+    "Sites that go beyond a simple brochure without becoming a full system"
+  ],
+  "good_when": [
+    "More pages, structure, or mid-tier features match published Smart inclusions",
+    "They need more than Basic but not portals/LMS"
+  ],
+  "not_good_when": [
+    "They only need a simple public presence — stay on Basic",
+    "They need student logins, gated learning, or ops workflows — that is a system"
+  ],
+  "expert_recommendation": "Recommend Smart when live package facts match a mid-complexity site need — verify inclusions with get_product.",
+  "upsell_only_when": "Published Premium features are actually required.",
+  "important_tradeoff": "More capability and cost vs Basic simplicity. Prefer Basic when presentation + enquiry is enough."
+}

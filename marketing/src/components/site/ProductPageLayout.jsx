@@ -26,6 +26,7 @@ export default function ProductPageLayout({
   return (
     <>
       <PageHeader
+        sectionId="hero"
         eyebrow={eyebrow}
         title={title}
         intro={intro}

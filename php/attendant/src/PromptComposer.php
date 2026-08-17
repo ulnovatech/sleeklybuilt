@@ -25,7 +25,10 @@ final class PromptComposer
      *   draft_json:string,
      *   pending_json:string,
      *   company_json:string,
-     *   retrieved_json:string
+     *   retrieved_json:string,
+     *   customer_json?:string,
+     *   commercial_json?:string,
+     *   expertise_json?:string
      * } $contextBlocks
      * @param list<array<string,mixed>> $toolDeclarations
      * @return array{system:string,skill_ids:list<string>,prompt_hash:string}
@@ -46,8 +49,12 @@ final class PromptComposer
             '{{visible_json}}' => $contextBlocks['visible_json'],
             '{{draft_json}}' => $contextBlocks['draft_json'],
             '{{pending_json}}' => $contextBlocks['pending_json'],
+            '{{choices_json}}' => $contextBlocks['choices_json'] ?? 'null',
             '{{company_json}}' => $contextBlocks['company_json'],
             '{{retrieved_json}}' => $contextBlocks['retrieved_json'],
+            '{{customer_json}}' => $contextBlocks['customer_json'] ?? '{}',
+            '{{commercial_json}}' => $contextBlocks['commercial_json'] ?? '{}',
+            '{{expertise_json}}' => $contextBlocks['expertise_json'] ?? '{"cards":[],"guidance":[]}',
         ]);
 
         $skillTpl = $this->readRequired('prompts/skill-injection.md');

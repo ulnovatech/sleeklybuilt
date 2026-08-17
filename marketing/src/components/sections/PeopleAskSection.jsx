@@ -82,7 +82,12 @@ export default function PeopleAskSection({
       <SectionBody>
         <div className="max-w-3xl border-t border-subtle">
           {items.map((item) => (
-            <div key={item.id} id={item.id} className="scroll-mt-28">
+            <div
+              key={item.id}
+              id={item.id}
+              data-attendant-section={item.id}
+              className="scroll-mt-28"
+            >
               <FaqItem
                 item={item}
                 open={openIds.has(item.id)}

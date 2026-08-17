@@ -8,9 +8,17 @@ import { Eyebrow } from './Section'
  * Obsidian budget: this band counts toward the journey’s dark allotment.
  * Keep padding compact; do not stack an extra mid-page dark band on the same route.
  */
-export default function PageHeader({ eyebrow, title, intro, actions }) {
+/**
+ * @param {{ eyebrow?: string, title: string, intro?: string, actions?: import('react').ReactNode, sectionId?: string }} props
+ * sectionId stamps the header for attendant show_section / highlight (e.g. "hero" on product lines).
+ */
+export default function PageHeader({ eyebrow, title, intro, actions, sectionId }) {
   return (
-    <section className="surface-obsidian pb-10 pt-24 md:pb-12 md:pt-28">
+    <section
+      id={sectionId}
+      {...(sectionId ? { 'data-attendant-section': sectionId } : {})}
+      className="surface-obsidian scroll-mt-24 pb-10 pt-24 md:pb-12 md:pt-28"
+    >
       <div className="mx-auto max-w-content px-6 lg:px-10">
         <div className="max-w-3xl">
           {eyebrow ? <Eyebrow tone="invert">{eyebrow}</Eyebrow> : null}

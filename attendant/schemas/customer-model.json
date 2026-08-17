@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sleeklybuilt.pro/attendant/schemas/customer-model.json",
+  "title": "AttendantCustomerModelDraft",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "service_id": { "type": ["string", "null"] },
+    "product_id": { "type": ["string", "null"] },
+    "product_kind": {
+      "type": ["string", "null"],
+      "enum": ["orderable_package", "display_package", "layout", null]
+    },
+    "package": {
+      "type": ["string", "null"],
+      "enum": ["basic", "smart", "premium", null]
+    },
+    "template": { "type": ["string", "null"] },
+    "business_name": { "type": ["string", "null"] },
+    "notes": { "type": ["string", "null"] },
+    "commercial_state": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "qualification",
+        "recommendation",
+        "agreement",
+        "order",
+        "payment",
+        "complete",
+        "escalated"
+      ]
+    },
+    "customer_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "who": { "type": ["string", "null"], "maxLength": 200 },
+        "org_type": { "type": ["string", "null"], "maxLength": 64 },
+        "org_name": { "type": ["string", "null"], "maxLength": 120 },
+        "objective": { "type": ["string", "null"], "maxLength": 300 },
+        "why": { "type": ["string", "null"], "maxLength": 300 },
+        "matters": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "worries": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "unknowns": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "maxLength": 120 }
+        },
+        "constraints": {
+          "type": "array",
+          "maxItems": 8,
+          "items": { "type": "string", "maxLength": 120 }
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "service_id": { "type": ["string", "null"] },
+        "package": {
+          "type": ["string", "null"],
+          "enum": ["basic", "smart", "premium", null]
+        },
+        "label": { "type": ["string", "null"], "maxLength": 120 },
+        "rationale": { "type": ["string", "null"], "maxLength": 400 },
+        "next_step": { "type": ["string", "null"], "maxLength": 200 }
+      }
+    },
+    "open_questions": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "type": "string", "maxLength": 160 }
+    },
+    "known_facts": {
+      "type": "array",
+      "maxItems": 24,
+      "items": { "type": "string", "maxLength": 80 }
+    }
+  }
+}

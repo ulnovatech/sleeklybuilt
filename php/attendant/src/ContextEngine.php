@@ -6,10 +6,13 @@ namespace Attendant;
 
 /**
  * Builds structured turn context for PromptComposer placeholders.
- * Knowledge retrieval is empty until 1C wires the corpus.
  */
 final class ContextEngine
 {
+    public function __construct(private ExpertiseLibrary $expertise = new ExpertiseLibrary())
+    {
+    }
+
     /**
      * @param array<string,mixed> $page
      * @param array<string,mixed>|null $draft
@@ -22,11 +25,21 @@ final class ContextEngine
      *   pending_json:string,
      *   company_json:string,
      *   retrieved_json:string,
+     *   customer_json:string,
+     *   commercial_json:string,
+     *   expertise_json:string,
      *   retrieved_ids:list<string>
      * }
      */
-    public function build(array $page, ?array $draft, ?array $pending, array $retrieved = []): array
-    {
+    public function build(
+        array $page,
+        ?array $draft,
+        ?array $pending,
+        array $retrieved = [],
+        string $message = '',
+        ?array $choicePending = null
+    ): array {
+        $normalized = CustomerModel::normalize($draft);
         $visible = [
             'visible_product_id' => $page['visible_product_id'] ?? null,
             'visible_product_kind' => $page['visible_product_kind'] ?? null,
@@ -40,6 +53,25 @@ final class ContextEngine
             }
         }
 
+        $expertise = $this->expertise->select($page, $normalized, $message);
+
+        $choiceJson = null;
+        if ($choicePending !== null) {
+            $cp = $choicePending['payload'] ?? $choicePending;
+            $choiceJson = [
+                'waiting' => true,
+                'prompt' => $cp['prompt'] ?? $choicePending['summary'] ?? null,
+                'options' => array_map(
+                    static fn ($o) => [
+                        'id' => is_array($o) ? ($o['id'] ?? null) : null,
+                        'label' => is_array($o) ? ($o['label'] ?? null) : null,
+                    ],
+                    is_array($cp['options'] ?? null) ? $cp['options'] : []
+                ),
+                'multi' => !empty($cp['multi']),
+            ];
+        }
+
         return [
             'page_json' => $this->encode([
                 'current_url' => $page['current_url'] ?? '',
@@ -49,21 +81,35 @@ final class ContextEngine
                 'recent_page_ids' => $page['recent_page_ids'] ?? [],
             ]),
             'visible_json' => $this->encode($visible),
-            'draft_json' => $this->encode($draft ?? new \stdClass()),
+            'draft_json' => $this->encode([
+                'service_id' => $normalized['service_id'],
+                'product_id' => $normalized['product_id'],
+                'product_kind' => $normalized['product_kind'],
+                'package' => $normalized['package'],
+                'template' => $normalized['template'],
+                'business_name' => $normalized['business_name'],
+                'notes' => $normalized['notes'],
+            ]),
             'pending_json' => $this->encode($pending === null ? null : [
                 'tool' => $pending['tool_name'] ?? $pending['tool'] ?? null,
                 'summary' => $pending['summary'] ?? $pending['summary_text'] ?? null,
                 'waiting' => true,
             ]),
+            'choices_json' => $this->encode($choiceJson),
             'company_json' => $this->encode($this->companyRecord()),
             'retrieved_json' => $this->encode($retrieved),
+            'customer_json' => $this->encode(CustomerModel::forPrompt($normalized)),
+            'commercial_json' => $this->encode([
+                'state' => $normalized['commercial_state'],
+                'hint' => $this->commercialHint((string) $normalized['commercial_state']),
+            ]),
+            'expertise_json' => $this->encode($expertise),
             'retrieved_ids' => $ids,
         ];
     }
 
     /**
-     * Fallback company facts aligned with marketing/src/site.config.js.
-     * 1C may replace with live site-contact when available.
+     * Contact + positioning facts for handoff and context (not the full company corpus).
      *
      * @return array<string,mixed>
      */
@@ -81,6 +127,9 @@ final class ContextEngine
             'whatsapp_url' => 'https://wa.me/256749594464',
             'location' => 'Kampala, Uganda',
             'address_note' => 'Office under development',
+            'policies_index' => '/policies',
+            'authority_note' =>
+                'Policies and catalogue tools beat improvisation. Prefer get_company_document / search_knowledge for policy facts.',
             'social' => [
                 'x' => 'https://x.com/sleeklybuilt',
                 'instagram' => 'https://www.instagram.com/sleeklybuilt/?hl=en',
@@ -88,6 +137,21 @@ final class ContextEngine
                 'youtube' => 'https://www.youtube.com/@SleeklyBuilt',
             ],
         ];
+    }
+
+    private function commercialHint(string $state): string
+    {
+        return match ($state) {
+            CommercialStateMachine::DISCOVERY => 'Learn who they are and what they need. One clarifying question max if blocked.',
+            CommercialStateMachine::QUALIFICATION => 'You have enough to start judging fit. Ask only what unblocks a recommendation.',
+            CommercialStateMachine::RECOMMENDATION => 'Lead with a clear recommendation and one next step. Do not re-qualify known facts.',
+            CommercialStateMachine::AGREEMENT => 'They are aligning. Move toward order/lead with confirmation — no brochure dump.',
+            CommercialStateMachine::ORDER => 'Order/quote path is in play. Be precise; use tools.',
+            CommercialStateMachine::PAYMENT => 'Payment handoff only via real secure flow — never invent payment success.',
+            CommercialStateMachine::COMPLETE => 'Work is complete for this thread unless they open a new need.',
+            CommercialStateMachine::ESCALATED => 'Human path is active or needed. Do not fake resolution.',
+            default => 'Stay grounded in the customer model.',
+        };
     }
 
     private function encode(mixed $value): string

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "cards": [
+    {
+      "id": "business-basic",
+      "file": "cards/business-basic.json",
+      "topics": ["website", "basic", "brochure", "school", "institution", "credibility", "enquiry"],
+      "service_ids": ["websites"],
+      "packages": ["basic"]
+    },
+    {
+      "id": "business-smart",
+      "file": "cards/business-smart.json",
+      "topics": ["website", "smart", "structure", "accounts", "cms"],
+      "service_ids": ["websites"],
+      "packages": ["smart"]
+    },
+    {
+      "id": "business-premium",
+      "file": "cards/business-premium.json",
+      "topics": ["website", "premium", "commerce", "advanced"],
+      "service_ids": ["websites"],
+      "packages": ["premium"]
+    },
+    {
+      "id": "sleek-pages",
+      "file": "cards/sleek-pages.json",
+      "topics": ["sleek", "landing", "fast", "page"],
+      "service_ids": ["sleek-pages"],
+      "packages": []
+    },
+    {
+      "id": "mobile-apps",
+      "file": "cards/mobile-apps.json",
+      "topics": ["app", "mobile", "android", "ios"],
+      "service_ids": ["mobile-apps"],
+      "packages": []
+    },
+    {
+      "id": "business-systems",
+      "file": "cards/business-systems.json",
+      "topics": ["system", "portal", "login", "workflow", "lms", "erp"],
+      "service_ids": ["business-systems"],
+      "packages": []
+    }
+  ],
+  "guidance": [
+    {
+      "id": "technical_translation",
+      "file": "technical_translation.md",
+      "topics": ["hosting", "seo", "dns", "ssl", "technical", "setup"]
+    },
+    {
+      "id": "recommendation_policy",
+      "file": "recommendation_policy.md",
+      "topics": ["recommend", "upsell", "fit", "package"]
+    },
+    {
+      "id": "tradeoff_policy",
+      "file": "tradeoff_policy.md",
+      "topics": ["tradeoff", "cheaper", "ai", "diy", "cost"]
+    },
+    {
+      "id": "business_judgment",
+      "file": "business_judgment.md",
+      "topics": ["school", "institution", "business", "credibility"]
+    }
+  ]
+}

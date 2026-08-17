@@ -19,6 +19,7 @@ const ATTENDANT_CHAT_RATE_MAX = 60;
 const ATTENDANT_CHAT_RATE_WINDOW = 3600;
 const ATTENDANT_SESSION_RATE_MAX = 30;
 const ATTENDANT_CONFIRM_RATE_MAX = 30;
+const ATTENDANT_CHOICE_RATE_MAX = 40;
 
 function attendant_contract_dir(): string
 {

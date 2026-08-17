@@ -1,0 +1,22 @@
+{
+  "id": "business-systems",
+  "label": "Business Systems",
+  "service_id": "business-systems",
+  "package": null,
+  "what_it_is": "Custom operational software: portals, workflows, roles, and internal tools.",
+  "best_for": [
+    "Schools/businesses that need logins, applications, or multi-role processes",
+    "Operations that a brochure website cannot carry"
+  ],
+  "good_when": [
+    "Student/staff accounts",
+    "Online applications, gated content, or multi-step ops",
+    "They describe a system, not a marketing site"
+  ],
+  "not_good_when": [
+    "They only need public credibility and enquiries — recommend a website package instead"
+  ],
+  "expert_recommendation": "Say plainly when the need is a system. Do not sell a Basic website as if it were an LMS.",
+  "upsell_only_when": "N/A — this is the correct lane when workflows require it.",
+  "important_tradeoff": "More discovery and build time vs a simple public site. Be honest about scope."
+}

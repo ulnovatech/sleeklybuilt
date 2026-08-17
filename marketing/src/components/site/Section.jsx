@@ -2,7 +2,11 @@ import { cn } from '../../lib/utils'
 
 export function Section({ children, className = '', id }) {
   return (
-    <section id={id} className={cn('w-full', className)}>
+    <section
+      id={id}
+      {...(id ? { 'data-attendant-section': id } : {})}
+      className={cn('w-full', className)}
+    >
       <div className="mx-auto max-w-content px-6 lg:px-10">{children}</div>
     </section>
   )

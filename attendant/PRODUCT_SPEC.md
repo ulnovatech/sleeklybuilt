@@ -51,12 +51,14 @@ Do not optimize for maximum response length, personality, autonomy, or feature c
 - Semantic destinations only (`page_id`, `section_id`). Never invent URLs.
 - Navigate when the visitor asks to see something, not after every answer.
 - Highlight/open a section when the registry supports it.
+- Policy pages use path segments (`/policies/refund`); package cards use hash (`/prices#starter`) and set `visible_product_id`.
 
 ### Act
 
 - Capture a lead via the existing contact handler after explicit confirmation.
 - Start a **quote** order via `order.php` after explicit confirmation.
-- Check order status via `order-status.php` when the visitor has `tx_ref` and phone.
+- After a real quote: **payment handoff** navigates to portfolio secure checkout (`portfolio-order`). Never pay-in-chat.
+- Check order status via `order-status.php` / `get_order_status` when the visitor has `tx_ref` and phone — sole source of truth for paid/pending/failed language.
 - Hand off to WhatsApp, telephone, or email from public site-contact settings.
 
 ### Recover
@@ -72,8 +74,9 @@ Do not optimize for maximum response length, personality, autonomy, or feature c
 
 | Request | Honest behaviour |
 | --- | --- |
-| Take a Flutterwave payment | Direct to `/portfolio-app/order`. Never call `payment-init.php`. |
+| Take a Flutterwave payment | After a confirmed quote, hand off to `/portfolio-app/order` (secure checkout). Never call `payment-init.php` from the attendant. |
 | Book a consultation slot | No booking API. Offer WhatsApp/call or a lead. |
+| Talk to a human | `handoff` with allowed `reason_code` → operator brief + FCM; AI pauses until operator resumes. WhatsApp remains a parallel escape. |
 | Write to Discovery CRM | Operator-only. Never. |
 | WhatsApp as a chat channel | Later. Offer the existing `wa.me` link. |
 | Voice | Not offered. |
