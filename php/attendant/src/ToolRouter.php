@@ -16,7 +16,6 @@ use Attendant\Tools\NavigateToTool;
 use Attendant\Tools\PresentChoicesTool;
 use Attendant\Tools\SearchKnowledgeTool;
 use Attendant\Tools\ShowSectionTool;
-use Attendant\Tools\PresentChoicesTool;
 use Attendant\Tools\StartOrderTool;
 use Attendant\Tools\UpdateCustomerModelTool;
 

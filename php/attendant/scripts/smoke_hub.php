@@ -29,6 +29,12 @@ $assert = static function (bool $cond, string $label) use (&$failures): void {
 
 echo "SleeklyBuilt Attendant — hub smoke (3H)\n\n";
 
+$routerSrc = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'ToolRouter.php';
+$lintOut = [];
+$lintCode = 0;
+exec('php -l ' . escapeshellarg($routerSrc) . ' 2>&1', $lintOut, $lintCode);
+$assert($lintCode === 0, 'ToolRouter.php parses');
+
 // --- Contract on disk ---
 $contract = attendant_contract_dir();
 $assert(is_dir($contract . DIRECTORY_SEPARATOR . 'company'), 'company corpus directory');

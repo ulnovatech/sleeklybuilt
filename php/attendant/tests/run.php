@@ -22,6 +22,7 @@ try {
     AttendantTest::skip('database unavailable: ' . $e->getMessage());
 }
 
+require __DIR__ . '/cases/php_lint.php';
 require __DIR__ . '/cases/schema_and_prompt.php';
 require __DIR__ . '/cases/registry_and_knowledge.php';
 require __DIR__ . '/cases/company_documents.php';

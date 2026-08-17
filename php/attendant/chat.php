@@ -56,13 +56,13 @@ $emit = static function (string $event, array $payload): void {
     }
 };
 
-$gate = new Attendant\ConfirmationGate($pdo);
-$telemetry = new Attendant\Telemetry($pdo);
-$llm = new Attendant\GeminiProvider();
-$router = new Attendant\ToolRouter($gate, $pdo);
-$choiceGate = new Attendant\ChoiceGate($pdo);
-
 try {
+    $gate = new Attendant\ConfirmationGate($pdo);
+    $telemetry = new Attendant\Telemetry($pdo);
+    $llm = new Attendant\GeminiProvider();
+    $router = new Attendant\ToolRouter($gate, $pdo);
+    $choiceGate = new Attendant\ChoiceGate($pdo);
+
     $engine = new Attendant\TurnEngine(
         $store,
         $gate,
