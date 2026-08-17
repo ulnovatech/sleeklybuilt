@@ -77,10 +77,25 @@ cp -a assets/. "$PUBLIC_HTML/assets/"
 cp -a forms "$PUBLIC_HTML/forms"
 cp -a php "$PUBLIC_HTML/php"
 
-# Attendant contract (schemas, prompts, rules, skills) — required by php/attendant at runtime
+# Attendant contract (schemas, prompts, rules, skills, company corpus, expertise) — required by php/attendant at runtime
 if [[ -d attendant ]]; then
   mkdir -p "$PUBLIC_HTML/attendant"
   cp -a attendant/schemas attendant/prompts attendant/rules attendant/skills "$PUBLIC_HTML/attendant/"
+  if [[ -d attendant/company ]]; then
+    cp -a attendant/company "$PUBLIC_HTML/attendant/company"
+  else
+    echo "ERROR: attendant/company corpus missing" >&2
+    exit 1
+  fi
+  if [[ -d attendant/expertise ]]; then
+    cp -a attendant/expertise "$PUBLIC_HTML/attendant/expertise"
+  else
+    echo "ERROR: attendant/expertise layer missing" >&2
+    exit 1
+  fi
+  test -f "$PUBLIC_HTML/attendant/company/manifest.json"
+  test -d "$PUBLIC_HTML/attendant/expertise/cards"
+  echo "==> attendant contract: $(ls -1 "$PUBLIC_HTML/attendant")"
 else
   echo "ERROR: attendant/ contract missing — chat will 500 without schemas/prompts" >&2
   exit 1
