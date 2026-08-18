@@ -16,11 +16,17 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+ARG CLERK_SECRET_KEY=
+ARG ALLOW_DEV_AUTH=false
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ENV CLERK_SECRET_KEY=$CLERK_SECRET_KEY
+ENV ALLOW_DEV_AUTH=$ALLOW_DEV_AUTH
 # Satisfy env validation during `next build` (runtime uses compose env_file).
 ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build
 RUN mkdir -p apps/dashboard/public
+RUN printf 'build clerk_pub_chars=%s allow_dev_auth=%s\n' \
+  "${#NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}" "${ALLOW_DEV_AUTH}"
 RUN pnpm build
 
 # --- Next.js production server (port 3000) ---

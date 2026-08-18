@@ -182,3 +182,5 @@ jobs:
           # Hub smoke with temporary nip.io Host (see docs/ACCESS.md).
           ssh $SSH_OPTS "$DEPLOY_HOST" \
             'curl -sf -H "Host: hub.34.66.94.12.nip.io" http://127.0.0.1/health && SMOKE_HOST=hub.34.66.94.12.nip.io bash /opt/sleeklybuilt/repo/infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1'
+          ssh $SSH_OPTS "$DEPLOY_HOST" \
+            'curl -sf -H "Host: discovery.34.66.94.12.nip.io" http://127.0.0.1/api/health'

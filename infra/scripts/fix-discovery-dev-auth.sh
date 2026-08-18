@@ -42,7 +42,8 @@ source "$DISCOVERY_ENV_FILE"
 set +a
 
 echo "== rebuilding discovery-web =="
-docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
+docker compose --env-file "$DISCOVERY_ENV_FILE" \
+  -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
   build discovery-web
 
 echo "== recreate discovery-web + nginx (refresh upstream IP) =="

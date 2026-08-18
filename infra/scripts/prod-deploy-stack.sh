@@ -57,6 +57,12 @@ dc() {
   docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml "$@"
 }
 
+# Compose interpolates build args from this file (service env_file is runtime-only).
+dc_discovery() {
+  docker compose --env-file "$DISCOVERY_ENV_FILE" \
+    -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml "$@"
+}
+
 echo "==> hub up (mysql php-fpm postgres)"
 dc up -d --build mysql php-fpm postgres
 
@@ -103,14 +109,35 @@ dc exec -T php-fpm \
   php /var/www/public_html/sleekly-dash/backend/scripts/merge_template_catalog.php
 
 echo "==> discovery-migrate"
-if ! dc run --rm discovery-migrate; then
+if ! dc_discovery run --rm discovery-migrate; then
   echo "WARN: discovery-migrate failed — hub/dash auth already migrated; Discovery apps not started"
   docker compose -f infra/docker-compose.full.yml logs --no-color --tail=120 discovery-migrate || true
 else
   echo "==> discovery-web / discovery-worker up"
-  dc up -d --build discovery-web discovery-worker
+  if [[ -n "${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}" ]]; then
+    echo "Clerk publishable key present for image build (${#NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} chars)"
+  else
+    echo "WARN: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY empty — Discovery will skip Clerk init"
+  fi
+  echo "ALLOW_DEV_AUTH=${ALLOW_DEV_AUTH:-} (baked into discovery-web middleware)"
+  dc_discovery up -d --build discovery-web discovery-worker
   sleep 3
-  dc up -d discovery-web
+  dc_discovery up -d discovery-web
+  echo "==> wait for discovery /api/health"
+  discovery_ok=0
+  for i in $(seq 1 45); do
+    if curl -sf http://127.0.0.1:3000/api/health >/dev/null; then
+      discovery_ok=1
+      break
+    fi
+    sleep 2
+  done
+  if [[ "$discovery_ok" -eq 1 ]]; then
+    echo "discovery health ok"
+  else
+    echo "WARN: discovery /api/health failed after wait"
+    dc_discovery logs --no-color --tail=80 discovery-web || true
+  fi
 fi
 
 echo "==> restore deploy ownership of public_html for next rsync"

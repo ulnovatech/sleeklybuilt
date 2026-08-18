@@ -54,5 +54,7 @@ export function getEnv(): Env {
 }
 
 export function isDevAuthEnabled(): boolean {
-  return process.env.ALLOW_DEV_AUTH === 'true' && process.env.NODE_ENV !== 'production';
+  // Next production builds inline NODE_ENV=production, so gating on NODE_ENV
+  // would disable interim GCE deploys that rely on ALLOW_DEV_AUTH without Clerk.
+  return process.env.ALLOW_DEV_AUTH === 'true';
 }

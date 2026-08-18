@@ -151,8 +151,10 @@ When `remaining === 0`, discovery degrades gracefully (economy fallbacks, CSV im
 
 | Mode | When |
 |------|------|
-| **Clerk** | Production — `ALLOW_DEV_AUTH=false` + Clerk keys |
-| **Dev bypass** | Local only — `ALLOW_DEV_AUTH=true`, send `X-Dev-User` header on mutating API calls |
+| **Clerk** | Production — `ALLOW_DEV_AUTH=false` + Clerk keys present at **Docker image build** (`NEXT_PUBLIC_*` is inlined) |
+| **Dev bypass** | Local, or GCE until Clerk keys are set — `ALLOW_DEV_AUTH=true` baked into the discovery-web image. Mutating API calls send `X-Dev-User`. |
+
+Do not wrap routes in `clerkMiddleware()` when the publishable key is empty — Clerk throws and `/api/health` returns 500. Rebuild `discovery-web` after changing Clerk keys or `ALLOW_DEV_AUTH`.
 
 When Clerk is configured and `ALLOW_DEV_AUTH=false`, middleware protects **all app routes** (`/ops`, `/leads`, `/review`, etc.) and API routes except `/api/health` and `/api/auth/status`. Cron poll endpoints accept `CRON_SECRET` without a Clerk session.
 
