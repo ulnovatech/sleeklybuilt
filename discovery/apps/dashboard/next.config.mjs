@@ -8,6 +8,7 @@ loadDotenv({ path: path.join(monorepoRoot, '.env'), override: false });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   transpilePackages: [
     '@agency/config',
     '@agency/geo',
