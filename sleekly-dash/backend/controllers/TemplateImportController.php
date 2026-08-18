@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/TemplateImportPolicy.php';
 require_once __DIR__ . '/../services/TemplateImportLauncher.php';
 require_once __DIR__ . '/../services/TemplatePublisher.php';
+require_once __DIR__ . '/../services/TemplateScreenshotService.php';
 require_once __DIR__ . '/../services/TemplateAuditLogger.php';
 
 final class TemplateImportController
@@ -21,10 +22,12 @@ final class TemplateImportController
         private PDO $pdo,
         private ?TemplateImportLauncher $launcher = null,
         private ?TemplatePublisher $publisher = null,
-        private ?TemplateAuditLogger $audit = null
+        private ?TemplateAuditLogger $audit = null,
+        private ?TemplateScreenshotService $screenshots = null,
     ) {
         $this->publisher ??= new TemplatePublisher($this->pdo);
         $this->audit ??= new TemplateAuditLogger($this->pdo);
+        $this->screenshots ??= new TemplateScreenshotService($this->pdo);
     }
 
     /**
@@ -203,7 +206,56 @@ final class TemplateImportController
             ['force' => $force]
         );
 
+        try {
+            $shot = $this->screenshots->enqueue($id, true);
+            $result['screenshots'] = $shot['screenshots'] ?? null;
+            $this->recordAudit('screenshots_queued', $actor, (string) $result['slug'], $id);
+        } catch (Throwable $e) {
+            $result['screenshots'] = [
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+            ];
+            $this->recordAudit(
+                'screenshots_failed',
+                $actor,
+                (string) $result['slug'],
+                $id,
+                ['error' => mb_substr($e->getMessage(), 0, 500)]
+            );
+        }
+
         return $result;
+    }
+
+    /**
+     * Re-queue gallery screenshots for a published template.
+     *
+     * @return array<string, mixed>
+     */
+    public function captureScreenshots(int $id, bool $force, ?array $user): array
+    {
+        $actor = TemplateAuditLogger::actor($user);
+        $job = $this->findOrFail($id);
+        if ($job['status'] !== 'published') {
+            throw new RuntimeException('Screenshots are available only after publish.', 409);
+        }
+
+        try {
+            $result = $this->screenshots->enqueue($id, $force);
+            $this->recordAudit('screenshots_queued', $actor, (string) $job['slug'], $id, [
+                'force' => $force,
+            ]);
+            return $result;
+        } catch (Throwable $e) {
+            $this->recordAudit(
+                'screenshots_failed',
+                $actor,
+                (string) $job['slug'],
+                $id,
+                ['error' => mb_substr($e->getMessage(), 0, 500)]
+            );
+            throw $e;
+        }
     }
 
     /**

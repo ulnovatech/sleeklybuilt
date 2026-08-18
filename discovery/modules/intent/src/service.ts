@@ -17,6 +17,7 @@ export class IntentService {
 
   createSignal(data: {
     businessId: string;
+    discoveryRunId?: string;
     source: string;
     signalType: string;
     signalStrength: number;
@@ -46,6 +47,14 @@ export class IntentService {
 
   listByBusiness(businessId: string) {
     return this.repo.listByBusiness(businessId);
+  }
+
+  listByBusinessIds(businessIds: string[]) {
+    return this.repo.listByBusinessIds(businessIds);
+  }
+
+  findById(id: string) {
+    return this.repo.findById(id);
   }
 
   deriveSignalsForRun(discoveryRunId: string) {

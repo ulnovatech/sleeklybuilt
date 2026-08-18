@@ -31,6 +31,7 @@ export type WebsiteOpportunityBrief = {
   }>;
   footprintChips?: string[];
   infrastructureGaps?: Array<{ key: string; label: string; severity: 'high' | 'medium' | 'info' }>;
+  segmentEvidence?: string | null;
 };
 
 const TYPE_STYLES: Record<OpportunityType, string> = {
@@ -226,11 +227,17 @@ export function OpportunityBriefPanel({ brief, compact = false }: OpportunityBri
           </div>
         )}
 
+        {!compact && brief.segmentEvidence && (
+          <p className="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded px-2 py-1.5">
+            {brief.segmentEvidence}
+          </p>
+        )}
+
         {!compact && brief.positiveFactors.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {brief.positiveFactors.map((f) => (
               <span key={f.key} className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                {f.label} +{f.value}
+                {f.label} {f.value > 0 ? `+${f.value}` : f.value}
               </span>
             ))}
           </div>

@@ -11,7 +11,7 @@ function uln_dispatch_lead_push(string $type, array $payload): void
             return;
         }
 
-        $backendRoot = dirname(__DIR__, 2) . '/ulndash/backend';
+        $backendRoot = dirname(__DIR__, 2) . '/sleekly-dash/backend';
         $serviceFile = $backendRoot . '/services/PushNotificationService.php';
         if (!is_file($serviceFile)) {
             return;
@@ -44,7 +44,7 @@ function uln_push_pdo(): ?PDO
     }
 
     $host = getenv('DB_HOST') ?: 'localhost';
-    $dbName = getenv('DB_NAME') ?: 'ulnovatech';
+    $dbName = getenv('DB_NAME') ?: 'sleeklybuilt';
     $user = getenv('DB_USER') ?: 'root';
     $pass = getenv('DB_PASS') ?: '';
     $port = getenv('DB_PORT') ?: '3306';

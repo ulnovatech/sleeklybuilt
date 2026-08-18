@@ -25,7 +25,7 @@ if ($templateName === null || !is_dir($portfolioDir . '/' . $templateName)) {
 $scheme = isset($_SERVER['REQUEST_SCHEME']) ? $_SERVER['REQUEST_SCHEME'] : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $domainBase = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false)
-    ? $scheme . '://' . $host . '/ulnovatech'
+    ? $scheme . '://' . $host . '/sleeklybuilt'
     : $scheme . '://' . $host;
 $templatesBaseUrl = $domainBase . $baseUrl;
 
@@ -38,11 +38,17 @@ if (is_dir($imagesDir)) {
     sort($files);
     foreach ($files as $file) {
         $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-            $screenshots[] = $templatesBaseUrl . '/' . $templateName . '/images/' . $file;
+        if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+            continue;
         }
+        if (!uln_is_gallery_shot($file)) {
+            continue;
+        }
+        $screenshots[] = $templatesBaseUrl . '/' . $templateName . '/images/' . $file;
     }
 }
+
+$screenshots = uln_order_gallery_shots($screenshots);
 
 $mainImage = null;
 foreach ($screenshots as $img) {

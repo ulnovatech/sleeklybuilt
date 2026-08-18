@@ -1,5 +1,5 @@
 import { getDb, intentSignals } from '@agency/database';
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { SignalClass } from './types';
 
 export class IntentRepository {
@@ -126,6 +126,27 @@ export class IntentRepository {
       .from(intentSignals)
       .where(eq(intentSignals.businessId, businessId))
       .orderBy(desc(intentSignals.capturedAt));
+  }
+
+  /** Single-query signal lookup for a bounded page of businesses. */
+  async listByBusinessIds(businessIds: string[]) {
+    const unique = [...new Set(businessIds.filter((id) => id.trim()))];
+    const grouped = new Map<string, Awaited<ReturnType<IntentRepository['listByBusiness']>>>();
+    if (unique.length === 0) return grouped;
+
+    const db = getDb();
+    const rows = await db
+      .select()
+      .from(intentSignals)
+      .where(inArray(intentSignals.businessId, unique))
+      .orderBy(desc(intentSignals.capturedAt));
+
+    for (const id of unique) grouped.set(id, []);
+    for (const row of rows) {
+      if (!row.businessId) continue;
+      grouped.get(row.businessId)?.push(row);
+    }
+    return grouped;
   }
 
   async listByRun(discoveryRunId: string) {

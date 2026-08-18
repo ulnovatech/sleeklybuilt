@@ -4,6 +4,7 @@ import {
   DEMAND_PRIORITY_BASE,
   UNVERIFIED_OPPORTUNITY_BASE,
   VERIFIED_OPPORTUNITY_BASE,
+  GREENFIELD_LANE_BONUS,
 } from '../work-queue-priority';
 import { buildDemandEntry, buildOpportunityEntry, mergeWorkQueueEntries } from '../work-queue';
 
@@ -45,6 +46,16 @@ assert(
   computeOpportunityPriority(false, 'high', 40) === UNVERIFIED_OPPORTUNITY_BASE + 40,
   'unverified ignores reachability bonus',
 );
+assert(
+  computeOpportunityPriority(true, 'low', 70, 'greenfield') >
+    computeOpportunityPriority(true, 'high', 100, 'redesign'),
+  'greenfield outranks a contact-rich redesign candidate in the verified tier',
+);
+assert(
+  computeOpportunityPriority(true, 'none', 40, 'greenfield') ===
+    VERIFIED_OPPORTUNITY_BASE + GREENFIELD_LANE_BONUS + 40,
+  'greenfield lane bonus applies within verified tier',
+);
 
 const merged = mergeWorkQueueEntries(
   [buildDemandEntry({
@@ -69,6 +80,7 @@ const merged = mergeWorkQueueEntries(
       demandSignalCount: 0,
       enrichmentSignalCount: 1,
       opportunityType: 'greenfield',
+      acquisitionLane: 'greenfield',
       opportunityTypeLabel: 'Greenfield site',
       pitchAngle: 'Greenfield',
       positiveFactors: [],

@@ -220,6 +220,11 @@ export const TemplateImportsAPI = {
       method: 'POST',
       body: JSON.stringify({ force }),
     }),
+  captureScreenshots: (id, force = true) =>
+    request(`/template-imports/${encodeURIComponent(id)}/screenshots`, {
+      method: 'POST',
+      body: JSON.stringify({ force }),
+    }),
   rollback: (id) =>
     request(`/template-imports/${encodeURIComponent(id)}/rollback`, {
       method: 'POST',

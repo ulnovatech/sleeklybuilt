@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/layout/page-header';
+import { Button, EmptyState, ErrorState, Input, Skeleton, StatusBadge } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
 import { PAGE_COPY } from '@/lib/product-copy';
 
@@ -72,40 +73,58 @@ export default function RevenuePage() {
     });
   };
 
-  if (!summary) return <p>Loading…</p>;
+  if (!summary) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl space-y-8">
-      <PageHeader title={PAGE_COPY.revenue.title} description={PAGE_COPY.revenue.description} />
-      <p className="text-slate-600 text-sm mb-6 -mt-2">
-        Close deals only from PROPOSAL_SENT pursuits. Proposal is marked accepted on close.
-      </p>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader compact title={PAGE_COPY.revenue.title} description={PAGE_COPY.revenue.description} />
+        <Button size="sm" variant="secondary" asChild>
+          <Link href="/ops">Today</Link>
+        </Button>
+      </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm text-slate-500">MTD</p>
-          <p className="text-2xl font-bold">${summary.mtd.toLocaleString()}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="secondary" asChild>
+          <Link href="/proposals">Proposals</Link>
+        </Button>
+        <Button size="sm" variant="ghost" asChild>
+          <Link href="/leads">Pipeline</Link>
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+          <p className="text-xs text-ink-muted">MTD</p>
+          <p className="text-2xl font-semibold text-ink">${summary.mtd.toLocaleString()}</p>
         </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm text-slate-500">All time</p>
-          <p className="text-2xl font-bold">${summary.total.toLocaleString()}</p>
+        <div className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+          <p className="text-xs text-ink-muted">All time</p>
+          <p className="text-2xl font-semibold text-ink">${summary.total.toLocaleString()}</p>
         </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm text-slate-500">Deals</p>
-          <p className="text-2xl font-bold">{summary.dealCount}</p>
+        <div className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+          <p className="text-xs text-ink-muted">Deals</p>
+          <p className="text-2xl font-semibold text-ink">{summary.dealCount}</p>
         </div>
-        <div className="bg-white border rounded-lg p-4">
-          <p className="text-sm text-slate-500">Retainers</p>
-          <p className="text-2xl font-bold">{summary.retainerCount}</p>
+        <div className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+          <p className="text-xs text-ink-muted">Retainers</p>
+          <p className="text-2xl font-semibold text-ink">{summary.retainerCount}</p>
         </div>
       </div>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <ErrorState title="Could not record deal" description={error} />}
 
-      <form onSubmit={closeDeal} className="bg-white border rounded-lg p-4 grid grid-cols-2 gap-4">
-        <h3 className="col-span-2 font-medium">Close deal (PROPOSAL_SENT only)</h3>
+      <form onSubmit={closeDeal} className="grid grid-cols-1 gap-4 rounded-lg border border-line bg-surface p-4 shadow-panel sm:grid-cols-2">
+        <h3 className="font-medium text-ink sm:col-span-2">Close deal (PROPOSAL_SENT only)</h3>
         <select
-          className="border rounded-md px-3 py-2 text-sm col-span-2"
+          className="h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink sm:col-span-2"
           value={form.leadId}
           onChange={(e) => {
             const deal = deals.find((d) => d.lead.id === e.target.value);
@@ -123,25 +142,23 @@ export default function RevenuePage() {
           ))}
         </select>
         {deals.length === 0 && (
-          <p className="col-span-2 text-sm text-slate-500 italic">
+          <p className="text-sm italic text-ink-faint sm:col-span-2">
             No PROPOSAL_SENT leads. Send a proposal from the Proposals page first.
           </p>
         )}
-        <input
-          className="border rounded-md px-3 py-2 text-sm"
+        <Input
           placeholder="Client name"
           value={form.clientName}
           onChange={(e) => setForm({ ...form, clientName: e.target.value })}
           required
         />
-        <input
+        <Input
           type="number"
-          className="border rounded-md px-3 py-2 text-sm"
           value={form.amount}
           onChange={(e) => setForm({ ...form, amount: e.target.value })}
         />
         <select
-          className="border rounded-md px-3 py-2 text-sm"
+          className="h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value as 'one_time' | 'retainer' })}
         >
@@ -149,49 +166,51 @@ export default function RevenuePage() {
           <option value="retainer">Retainer</option>
         </select>
         {form.proposalId && (
-          <p className="col-span-2 text-xs text-slate-500">
+          <p className="text-xs text-ink-muted sm:col-span-2">
             Linked proposal: {form.proposalId.slice(0, 8)}…
           </p>
         )}
-        <button
-          type="submit"
-          className="col-span-2 bg-green-600 text-white py-2 rounded-md font-medium"
-          disabled={deals.length === 0}
-        >
+        <Button type="submit" className="sm:col-span-2" disabled={deals.length === 0}>
           Record closed deal → CLOSED_WON
-        </button>
+        </Button>
       </form>
 
-      <div className="bg-white border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left">
-            <tr>
-              <th className="p-3">Amount</th>
-              <th className="p-3">Type</th>
-              <th className="p-3">Proposal</th>
-              <th className="p-3">Closed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.records.map((r) => (
-              <tr key={r.id} className="border-t">
-                <td className="p-3">${r.amount.toLocaleString()}</td>
-                <td className="p-3">{r.type}</td>
-                <td className="p-3 text-slate-500">
-                  {r.proposalId ? (
-                    <Link href="/proposals" className="text-brand-600 hover:underline">
-                      linked
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </td>
-                <td className="p-3">{new Date(r.closedAt).toLocaleDateString()}</td>
+      {summary.records.length === 0 ? (
+        <EmptyState title="No closed revenue yet" description="Record your first won deal above to start tracking proof." />
+      ) : (
+        <div className="overflow-hidden rounded-lg border border-line bg-surface shadow-panel">
+          <table className="w-full text-sm">
+            <thead className="bg-surface-raised text-left text-[11px] uppercase tracking-wide text-ink-faint">
+              <tr>
+                <th className="p-3 font-semibold">Amount</th>
+                <th className="p-3 font-semibold">Type</th>
+                <th className="p-3 font-semibold">Proposal</th>
+                <th className="p-3 font-semibold">Closed</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {summary.records.map((r) => (
+                <tr key={r.id} className="border-t border-line">
+                  <td className="p-3 font-medium tabular-nums text-ink">${r.amount.toLocaleString()}</td>
+                  <td className="p-3">
+                    <StatusBadge tone={r.type === 'retainer' ? 'info' : 'neutral'}>{r.type}</StatusBadge>
+                  </td>
+                  <td className="p-3 text-ink-muted">
+                    {r.proposalId ? (
+                      <Link href="/proposals" className="text-accent hover:underline">
+                        linked
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="p-3 text-ink-muted">{new Date(r.closedAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

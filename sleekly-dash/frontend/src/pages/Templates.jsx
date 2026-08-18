@@ -99,17 +99,33 @@ function EmptyState({ onImport }) {
 
 function TemplateCard({ template, onEditMetadata, onEditContent }) {
   const initial = template.title?.trim()?.charAt(0)?.toUpperCase() || 'T';
+  const cover = template.entry
+    ? `${String(template.entry).replace(/\/?$/, '/') }images/main.png`
+    : null;
+  const [coverFailed, setCoverFailed] = useState(false);
+
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-800 bg-[#111318] transition hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-2xl hover:shadow-violet-950/20">
       <div className="relative flex h-36 items-end overflow-hidden bg-gradient-to-br from-violet-600/30 via-blue-600/10 to-cyan-500/20 p-5">
+        {cover && !coverFailed ? (
+          <img
+            src={cover}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover object-top opacity-90 transition duration-300 group-hover:scale-[1.02]"
+            onError={() => setCoverFailed(true)}
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111318] via-black/20 to-transparent" />
         <div className="absolute -right-10 -top-14 h-40 w-40 rounded-full bg-violet-400/15 blur-3xl" />
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-2xl font-bold text-white backdrop-blur">
-          {initial}
-        </div>
-        <span className="absolute right-4 top-4 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-200 backdrop-blur">
+        {(!cover || coverFailed) && (
+          <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-2xl font-bold text-white backdrop-blur">
+            {initial}
+          </div>
+        )}
+        <span className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-200 backdrop-blur">
           {template.category}
         </span>
-        <span className="absolute left-4 top-4 rounded-full border border-cyan-400/20 bg-cyan-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-100 backdrop-blur">
+        <span className="absolute left-4 top-4 z-10 rounded-full border border-cyan-400/20 bg-cyan-500/15 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-100 backdrop-blur">
           {collectionLabel(template.collection)}
         </span>
       </div>
@@ -353,17 +369,97 @@ function ImportForm({ onSubmit, submitting }) {
   );
 }
 
+function ScreenshotStatus({ shots, busyAction, onRecapture }) {
+  const status = shots?.status || 'pending';
+  const files = Array.isArray(shots?.files) ? shots.files : [];
+  const pages = Array.isArray(shots?.pages) ? shots.pages : [];
+  const capturing = status === 'queued' || status === 'running';
+
+  const copy = {
+    pending: {
+      title: 'Gallery shots not started',
+      body: 'After publish we capture the homepage plus a few main nav pages for the gallery strip.',
+    },
+    queued: {
+      title: 'Gallery shots queued',
+      body: 'Capturing the homepage and main pages next — usually under a minute.',
+    },
+    running: {
+      title: 'Capturing main pages',
+      body: 'Homepage becomes main.png. Inner pages are limited to the primary nav (max 6 total).',
+    },
+    ready: {
+      title: 'Gallery shots ready',
+      body: `${files.length || pages.length || 0} page shot${(files.length || pages.length) === 1 ? '' : 's'} saved for the portfolio card strip.`,
+    },
+    failed: {
+      title: 'Gallery shots failed',
+      body: shots?.error || 'Could not capture screenshots. Retry after Node/Chromium is available.',
+    },
+  }[status] || {
+    title: 'Gallery shots',
+    body: 'Homepage and main pages only.',
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-700 bg-slate-900/50 p-5">
+      <div className="flex items-start gap-3">
+        {capturing ? (
+          <ArrowPathIcon className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-cyan-300" />
+        ) : status === 'ready' ? (
+          <CheckCircleIcon className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+        ) : status === 'failed' ? (
+          <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+        ) : (
+          <Squares2X2Icon className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
+        )}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold text-white">{copy.title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-400">{copy.body}</p>
+          {pages.length > 0 && status === 'ready' && (
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {pages.map((page) => (
+                <li
+                  key={`${page.path}-${page.filename}`}
+                  className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-[11px] font-medium text-slate-300"
+                >
+                  {page.label || page.filename}
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            type="button"
+            onClick={onRecapture}
+            disabled={busyAction || capturing}
+            className="btn-secondary mt-4"
+          >
+            {busyAction || capturing ? (
+              <ArrowPathIcon className="h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowPathIcon className="h-4 w-4" />
+            )}
+            {status === 'ready' ? 'Recapture shots' : 'Capture shots'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ImportReview({
   job,
   busyAction,
   onPublish,
   onDiscard,
   onRollback,
+  onCaptureScreenshots,
   onStartOver,
 }) {
   const report = job.report || {};
   const acquisition = report.acquisition || {};
   const scrub = report.scrub || {};
+  const shots = report.screenshots || null;
   const active = ACTIVE_STATES.has(job.status);
   const warnings = report.asset_probe?.warnings || [];
 
@@ -443,14 +539,23 @@ function ImportReview({
       )}
 
       {job.status === 'published' && (
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 text-center">
-          <CheckCircleIcon className="mx-auto h-10 w-10 text-emerald-300" />
-          <h3 className="mt-3 font-semibold text-white">Template is live</h3>
-          <p className="mt-1 text-sm text-slate-400">It now appears in the gallery and purchase flow.</p>
-          <a href={`/portfolio/portfolio/${encodeURIComponent(job.slug)}/`} target="_blank" rel="noreferrer" className="btn-secondary mt-4">
-            Open template <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-          </a>
-        </div>
+        <>
+          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-6 text-center">
+            <CheckCircleIcon className="mx-auto h-10 w-10 text-emerald-300" />
+            <h3 className="mt-3 font-semibold text-white">Template is live</h3>
+            <p className="mt-1 text-sm text-slate-400">
+              It appears in the gallery. Main-page shots fill the card strip automatically.
+            </p>
+            <a href={`/portfolio/portfolio/${encodeURIComponent(job.slug)}/`} target="_blank" rel="noreferrer" className="btn-secondary mt-4">
+              Open template <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+            </a>
+          </div>
+          <ScreenshotStatus
+            shots={shots}
+            busyAction={busyAction}
+            onRecapture={() => onCaptureScreenshots(job)}
+          />
+        </>
       )}
 
       <div className="sticky bottom-0 -mx-5 flex flex-col-reverse gap-2 border-t border-slate-800 bg-[#0d0f13]/95 px-5 py-4 backdrop-blur sm:-mx-7 sm:flex-row sm:px-7">
@@ -625,11 +730,15 @@ export default function Templates() {
   }, [loadAll]);
 
   const hasActiveJobs = jobs.some((job) => ACTIVE_STATES.has(job.status));
+  const hasScreenshotJobs = jobs.some((job) => {
+    const status = job?.report?.screenshots?.status;
+    return status === 'queued' || status === 'running';
+  });
   useEffect(() => {
-    if (!hasActiveJobs) return undefined;
+    if (!hasActiveJobs && !hasScreenshotJobs) return undefined;
     const timer = window.setInterval(() => loadAll(true), 2000);
     return () => window.clearInterval(timer);
-  }, [hasActiveJobs, loadAll]);
+  }, [hasActiveJobs, hasScreenshotJobs, loadAll]);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -679,7 +788,7 @@ export default function Templates() {
     setBusyAction(true);
     try {
       await TemplateImportsAPI.publish(job.id, force);
-      setToast(force ? 'Existing template replaced safely.' : 'Template published.');
+      setToast(force ? 'Published — capturing gallery shots.' : 'Published — capturing gallery shots.');
       await loadAll(true);
     } catch (publishError) {
       if (publishError.status === 409 && !force) {
@@ -697,6 +806,19 @@ export default function Templates() {
       setBusyAction(false);
     }
     return undefined;
+  };
+
+  const captureScreenshots = async (job) => {
+    setBusyAction(true);
+    try {
+      await TemplateImportsAPI.captureScreenshots(job.id, true);
+      setToast('Gallery screenshot capture started.');
+      await loadAll(true);
+    } catch (captureError) {
+      setError(captureError.message || 'Unable to capture screenshots.');
+    } finally {
+      setBusyAction(false);
+    }
   };
 
   const discard = async (job) => {
@@ -874,6 +996,7 @@ export default function Templates() {
               onPublish={publish}
               onDiscard={discard}
               onRollback={rollback}
+              onCaptureScreenshots={captureScreenshots}
               onStartOver={() => {
                 setError('');
                 setSelectedJobId(null);

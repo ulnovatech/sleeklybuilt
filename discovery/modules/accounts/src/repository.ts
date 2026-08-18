@@ -140,6 +140,35 @@ export class AccountRepository {
     return row ?? null;
   }
 
+  /**
+   * Known accounts for a monitor plan target — prefer least-recently crawled.
+   */
+  async listForMonitorSeed(opts: {
+    country: string;
+    city: string;
+    industry: string;
+    limit: number;
+  }): Promise<AccountRow[]> {
+    const db = getDb();
+    const country = opts.country.trim().toLowerCase();
+    const city = opts.city.trim().toLowerCase();
+    const industry = opts.industry.trim().toLowerCase();
+    const limit = Math.min(200, Math.max(1, opts.limit));
+    return db
+      .select()
+      .from(accounts)
+      .where(
+        and(
+          eq(accounts.suppressed, false),
+          sql`lower(trim(coalesce(${accounts.country}, ''))) = ${country}`,
+          sql`lower(trim(coalesce(${accounts.city}, ''))) = ${city}`,
+          sql`lower(trim(coalesce(${accounts.industry}, ''))) = ${industry}`,
+        ),
+      )
+      .orderBy(sql`${accounts.lastCrawledAt} ASC NULLS FIRST`, desc(accounts.updatedAt))
+      .limit(limit);
+  }
+
   async listSuppressionEntries(limit = 200) {
     const db = getDb();
     return db

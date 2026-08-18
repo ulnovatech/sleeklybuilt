@@ -1,3 +1,4 @@
+import type { AgencyPackage, AgencyService } from '@agency/settings';
 import type { BusinessIntelligenceProfile } from '../bi/types';
 import { buildBoIGapsAndPains, type BoIIntentSignalInput } from './build-structured-pains';
 import { buildDepthEnrichment } from './build-depth-enrichment';
@@ -23,14 +24,21 @@ export function synthesizeOpportunityIntelligence(input: {
   profile: BusinessIntelligenceProfile;
   intentSignals?: BoIIntentSignalInput[];
   pageSpeed?: BoIPageSpeedSnapshot | null;
+  agencyServices?: AgencyService[];
+  agencyPackages?: AgencyPackage[];
 }): BoIOpportunityIntelligence {
   const { evidence, digitalGaps, pains } = buildBoIGapsAndPains(input);
-  const solutions = mapPainsToSolutions({ pains, digitalGaps });
+  const solutions = mapPainsToSolutions({
+    pains,
+    digitalGaps,
+    agencyServices: input.agencyServices,
+  });
   const purchaseReadiness = computePurchaseReadiness(input.profile, digitalGaps, pains);
   const depth = buildDepthEnrichment({
     profile: input.profile,
     digitalGaps,
     pageSpeed: input.pageSpeed,
+    agencyPackages: input.agencyPackages,
   });
   const salesBrief = buildSalesBrief({
     profile: input.profile,

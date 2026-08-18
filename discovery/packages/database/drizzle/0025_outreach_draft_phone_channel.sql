@@ -1,0 +1,2 @@
+-- Outreach draft channel value 'phone' is supported by application code.
+-- No schema change: outreach_drafts.channel is varchar(30).

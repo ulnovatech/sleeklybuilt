@@ -1,19 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { PAGE_COPY } from '@/lib/product-copy';
 import { MarkRepliedForm } from '@/components/MarkRepliedForm';
 import { ReplySuggestionsPanel } from '@/components/ReplySuggestionsPanel';
-import { OutreachCompose } from '@/components/OutreachCompose';
-import {
-  OpportunityBriefPanel,
-  type WebsiteOpportunityBrief,
-} from '@/components/opportunities/opportunity-brief-panel';
+import { PursuitWorkspace } from '@/components/pursuit';
+import type { DraftChannel } from '@/components/pursuit';
+import { SendToCrmButton } from '@/components/crm/send-to-crm-button';
+import { PageHeader } from '@/components/layout/page-header';
+import { Button, Dialog, EmptyState, Input, Skeleton, StatusBadge } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
+import { PAGE_COPY } from '@/lib/product-copy';
+import { useSearchParams } from 'next/navigation';
 
-type Tab = 'overview' | 'outreach' | 'proposals' | 'signals' | 'analysis';
+type Tab = 'overview' | 'timeline' | 'proposals' | 'signals';
 
 type LeadHub = {
   lead: {
@@ -35,7 +36,6 @@ type LeadHub = {
     mobileFriendly: boolean | null;
     notes: string | null;
   } | null;
-  opportunityBrief: WebsiteOpportunityBrief | null;
   notes: { id: string; content: string; createdAt: string }[];
   activities: { id: string; type: string; description: string; createdAt: string }[];
   signals: {
@@ -69,72 +69,157 @@ type LeadHub = {
     fromEmail: string | null;
     receivedAt: string | null;
   }>;
+  crmBridge?: {
+    configured: boolean;
+    lastPushAt: string | null;
+    lastPushStatus: string | null;
+  };
 };
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
-  { id: 'outreach', label: 'Outreach' },
+  { id: 'timeline', label: 'Timeline' },
   { id: 'proposals', label: 'Proposals' },
   { id: 'signals', label: 'Signals' },
-  { id: 'analysis', label: 'Analysis' },
 ];
 
 export default function LeadDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
+  const rawChannel = searchParams.get('channel') ?? 'email';
+  const composeChannel: DraftChannel = ['email', 'whatsapp', 'phone', 'follow_up'].includes(rawChannel)
+    ? (rawChannel as DraftChannel)
+    : 'email';
   const [data, setData] = useState<LeadHub | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('overview');
   const [note, setNote] = useState('');
   const [proposalAmount, setProposalAmount] = useState('5000');
+  const [proposalPackageId, setProposalPackageId] = useState('');
+  const [agencyPackages, setAgencyPackages] = useState<
+    Array<{ id: string; title: string; priceUgx: number; depositUgx?: number }>
+  >([]);
+  const [agencyCurrency, setAgencyCurrency] = useState('UGX');
   const [autoQualify, setAutoQualify] = useState(false);
   const [proposalError, setProposalError] = useState('');
   const [lossReason, setLossReason] = useState('');
+  const [closeLostOpen, setCloseLostOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const load = () =>
-    api<LeadHub>(`/api/crm/leads/${id}`).then(setData).catch(console.error);
+    api<LeadHub>(`/api/crm/leads/${id}`)
+      .then((hub) => {
+        setData(hub);
+        setLoadError(null);
+      })
+      .catch((reason) => {
+        setLoadError(reason instanceof Error ? reason.message : 'Failed to load lead');
+      });
 
   useEffect(() => {
-    load();
+    void load();
   }, [id]);
 
+  useEffect(() => {
+    void api<{
+      currency: string;
+      packages: Array<{ id: string; title: string; priceUgx: number; depositUgx?: number }>;
+    }>('/api/proposals/packages')
+      .then((data) => {
+        setAgencyPackages(data.packages ?? []);
+        setAgencyCurrency(data.currency ?? 'UGX');
+        if (data.packages?.[0]) {
+          setProposalPackageId(data.packages[0].id);
+          setProposalAmount(String(data.packages[0].priceUgx));
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const timeline = useMemo(() => {
+    if (!data) return [];
+    const noteEvents = data.notes.map((entry) => ({
+      id: `note-${entry.id}`,
+      kind: 'note' as const,
+      label: entry.content,
+      at: entry.createdAt,
+    }));
+    const activityEvents = data.activities.map((entry) => ({
+      id: `act-${entry.id}`,
+      kind: 'activity' as const,
+      label: entry.description,
+      at: entry.createdAt,
+    }));
+    const outreachEvents = data.outreach.map((entry) => ({
+      id: `out-${entry.id}`,
+      kind: 'outreach' as const,
+      label: `${entry.channel.toUpperCase()}: ${entry.subject || entry.body.slice(0, 80)}`,
+      at: entry.sentAt ?? '',
+    }));
+    return [...noteEvents, ...activityEvents, ...outreachEvents]
+      .filter((event) => event.at)
+      .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  }, [data]);
+
   const transition = async (toStatus: string, transitionNote?: string) => {
-    await api(`/api/crm/leads/${id}/transition`, {
-      method: 'POST',
-      body: JSON.stringify({ toStatus, note: transitionNote }),
-    });
-    await load();
+    setBusy(true);
+    try {
+      await api(`/api/crm/leads/${id}/transition`, {
+        method: 'POST',
+        body: JSON.stringify({ toStatus, note: transitionNote }),
+      });
+      await load();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const closeLost = async () => {
-    const reason = lossReason.trim() || window.prompt('Loss reason?')?.trim();
+    const reason = lossReason.trim();
     if (!reason) return;
-    await api(`/api/crm/leads/${id}/close-lost`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
-    setLossReason('');
-    await load();
+    setBusy(true);
+    try {
+      await api(`/api/crm/leads/${id}/close-lost`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      });
+      setLossReason('');
+      setCloseLostOpen(false);
+      await load();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const addNote = async () => {
     if (!note.trim()) return;
-    await api(`/api/crm/leads/${id}/notes`, {
-      method: 'POST',
-      body: JSON.stringify({ content: note }),
-    });
-    setNote('');
-    await load();
+    setBusy(true);
+    try {
+      await api(`/api/crm/leads/${id}/notes`, {
+        method: 'POST',
+        body: JSON.stringify({ content: note }),
+      });
+      setNote('');
+      await load();
+    } finally {
+      setBusy(false);
+    }
   };
 
   const createProposal = async () => {
     setProposalError('');
+    setBusy(true);
     try {
       await api('/api/proposals', {
         method: 'POST',
         body: JSON.stringify({
           leadId: id,
-          title: `Web development proposal — ${data?.business.name}`,
+          title: proposalPackageId
+            ? `${agencyPackages.find((p) => p.id === proposalPackageId)?.title ?? 'Package'} — ${data?.business.name}`
+            : `Web development proposal — ${data?.business.name}`,
           amount: Number(proposalAmount),
+          packageId: proposalPackageId || undefined,
           autoQualify,
         }),
       });
@@ -142,343 +227,388 @@ export default function LeadDetailPage() {
       setTab('proposals');
     } catch (e) {
       setProposalError(String(e));
+    } finally {
+      setBusy(false);
     }
   };
 
   const sendProposal = async (proposalId: string) => {
     setProposalError('');
+    setBusy(true);
     try {
       await api(`/api/proposals/${proposalId}/send`, { method: 'POST' });
       await load();
     } catch (e) {
       setProposalError(String(e));
+    } finally {
+      setBusy(false);
     }
   };
 
-  if (!data) return <p className="text-slate-500">Loading…</p>;
+  if (loadError && !data) {
+    return (
+      <EmptyState
+        title="Lead unavailable"
+        description={loadError}
+        action={
+          <Button size="sm" onClick={() => void load()}>
+            Retry
+          </Button>
+        }
+      />
+    );
+  }
 
-  const canMarkReplied =
-    data.lead.status === 'CONTACTED' || data.lead.status === 'NO_RESPONSE';
+  if (!data) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    );
+  }
+
+  const canMarkReplied = data.lead.status === 'CONTACTED' || data.lead.status === 'NO_RESPONSE';
   const canCloseLost = data.allowedTransitions.includes('CLOSED_LOST');
   const canCreateProposal =
-    data.lead.status === 'QUALIFIED' ||
-    (data.lead.status === 'REPLIED' && autoQualify);
+    data.lead.status === 'QUALIFIED' || (data.lead.status === 'REPLIED' && autoQualify);
 
   return (
-    <div className="max-w-5xl">
-      <div className="mb-6">
-        <Link href="/leads" className="text-sm text-brand-700 hover:underline">
-          ← {PAGE_COPY.pursuits.title}
-        </Link>
-        <h2 className="text-2xl font-semibold mt-2">{data.business.name}</h2>
-        <p className="text-xs text-slate-500 mt-0.5">Pursuit</p>
-        {data.suppression?.suppressed && (
-          <p className="mt-2">
-            <span className="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-800">
-              {data.suppression.source === 'account'
-                ? 'Account suppressed'
-                : 'On suppression list'}
-            </span>
-          </p>
-        )}
-        <p className="text-slate-600 text-sm mt-1">
-          Status: <strong>{data.lead.status}</strong> · Priority: {data.lead.priority}
-          {data.lead.nextFollowUpAt && (
-            <span>
-              {' '}
-              · Follow up {new Date(data.lead.nextFollowUpAt).toLocaleDateString()}
-            </span>
-          )}
-        </p>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/leads" className="text-sm text-accent hover:underline">
+            ← {PAGE_COPY.pursuits.title}
+          </Link>
+          <PageHeader compact title={data.business.name} />
+          <div className="mt-2 flex flex-wrap gap-2">
+            <StatusBadge tone="info">{data.lead.status}</StatusBadge>
+            <StatusBadge tone="neutral">Priority {data.lead.priority}</StatusBadge>
+            {data.lead.nextFollowUpAt && (
+              <StatusBadge tone="warning">
+                Follow-up {new Date(data.lead.nextFollowUpAt).toLocaleDateString()}
+              </StatusBadge>
+            )}
+            {data.suppression?.suppressed && (
+              <StatusBadge tone="danger">
+                {data.suppression.source === 'account' ? 'Account suppressed' : 'On suppression list'}
+              </StatusBadge>
+            )}
+          </div>
+        </div>
         {data.lead.accountId && (
-          <p className="text-sm mt-2">
-            <Link
-              href={`/data-quality?accountId=${encodeURIComponent(data.lead.accountId)}`}
-              className="text-brand-700 hover:underline"
-            >
-              Check duplicate accounts
+          <Button size="sm" variant="secondary" asChild>
+            <Link href={`/data-quality?accountId=${encodeURIComponent(data.lead.accountId)}`}>
+              Check duplicates
             </Link>
-          </p>
-        )}
-        {(data.business.email || data.business.phone) && (
-          <p className="text-sm text-slate-500 mt-1">
-            {data.business.email}
-            {data.business.email && data.business.phone && ' · '}
-            {data.business.phone}
-          </p>
+          </Button>
         )}
       </div>
 
-      {data.opportunityBrief && (
-        <div className="mb-6">
-          <OpportunityBriefPanel brief={data.opportunityBrief} />
-        </div>
-      )}
+      <PursuitWorkspace
+        leadId={id}
+        defaultChannel={composeChannel}
+        onOutreachRecorded={() => void load()}
+      />
 
-      <div className="flex flex-wrap gap-1 border-b border-slate-200 mb-6">
-        {TABS.map((t) => (
+      <div className="flex flex-wrap gap-1 border-b border-line">
+        {TABS.map((item) => (
           <button
-            key={t.id}
+            key={item.id}
             type="button"
-            onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-              tab === t.id
-                ? 'border-brand-600 text-brand-700'
-                : 'border-transparent text-slate-600 hover:text-slate-900'
+            onClick={() => setTab(item.id)}
+            className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
+              tab === item.id
+                ? 'border-accent text-accent'
+                : 'border-transparent text-ink-muted hover:text-ink'
             }`}
           >
-            {t.label}
-            {t.id === 'outreach' && data.outreach.length > 0 && (
-              <span className="ml-1 text-xs">({data.outreach.length})</span>
+            {item.label}
+            {item.id === 'timeline' && timeline.length > 0 && (
+              <span className="ml-1 text-xs">({timeline.length})</span>
             )}
-            {t.id === 'proposals' && data.proposals.length > 0 && (
+            {item.id === 'proposals' && data.proposals.length > 0 && (
               <span className="ml-1 text-xs">({data.proposals.length})</span>
             )}
-            {t.id === 'signals' && data.signals.length > 0 && (
+            {item.id === 'signals' && data.signals.length > 0 && (
               <span className="ml-1 text-xs">({data.signals.length})</span>
             )}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           {tab === 'overview' && (
             <>
               {data.gmailConnected && data.replySuggestions && (
-                <ReplySuggestionsPanel
-                  leadId={id}
-                  suggestions={data.replySuggestions}
-                  onDone={load}
-                />
+                <ReplySuggestionsPanel leadId={id} suggestions={data.replySuggestions} onDone={load} />
               )}
-              {canMarkReplied && (
-                <MarkRepliedForm leadId={id} onDone={load} />
-              )}
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-medium mb-2">Notes</h3>
-                <div className="flex gap-2 mb-3">
-                  <input
-                    className="flex-1 border rounded-md px-3 py-2 text-sm"
+              {canMarkReplied && <MarkRepliedForm leadId={id} onDone={load} />}
+              <section className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+                <h3 className="mb-2 text-sm font-semibold text-ink">Operator note</h3>
+                <div className="mb-3 flex gap-2">
+                  <Input
                     value={note}
-                    onChange={(e) => setNote(e.target.value)}
+                    onChange={(event) => setNote(event.target.value)}
                     placeholder="Add a note…"
                   />
-                  <button
-                    onClick={addNote}
-                    className="bg-slate-800 text-white px-4 rounded-md text-sm"
-                  >
+                  <Button size="sm" loading={busy} onClick={() => void addNote()}>
                     Add
-                  </button>
+                  </Button>
                 </div>
-                <ul className="space-y-2 text-sm">
-                  {data.notes.map((n) => (
-                    <li key={n.id} className="text-slate-600 border-l-2 pl-3 border-slate-200">
-                      {n.content}
+                <ul className="space-y-2 text-sm text-ink-muted">
+                  {data.notes.map((entry) => (
+                    <li key={entry.id} className="border-l-2 border-line pl-3">
+                      {entry.content}
                     </li>
                   ))}
-                  {data.notes.length === 0 && (
-                    <li className="text-slate-400 italic">No notes yet.</li>
-                  )}
+                  {data.notes.length === 0 && <li className="italic text-ink-faint">No notes yet.</li>}
                 </ul>
-              </div>
-              <div className="bg-white border rounded-lg p-4">
-                <h3 className="font-medium mb-2">Activity</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  {data.activities.map((a) => (
-                    <li key={a.id}>
-                      {a.description}{' '}
-                      <span className="text-xs text-slate-400">
-                        {new Date(a.createdAt).toLocaleString()}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              </section>
             </>
           )}
 
-          {tab === 'outreach' && (
-            <div className="space-y-4">
-              {canMarkReplied && (
-                <MarkRepliedForm leadId={id} onDone={load} />
+          {tab === 'timeline' && (
+            <section className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+              <h3 className="mb-3 text-sm font-semibold text-ink">Activity timeline</h3>
+              {timeline.length === 0 ? (
+                <p className="text-sm italic text-ink-faint">No activity recorded yet.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {timeline.map((event) => (
+                    <li key={event.id} className="border-l-2 border-line pl-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge tone={event.kind === 'outreach' ? 'info' : 'neutral'}>
+                          {event.kind}
+                        </StatusBadge>
+                        <span className="text-xs text-ink-faint">
+                          {new Date(event.at).toLocaleString()}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-ink">{event.label}</p>
+                    </li>
+                  ))}
+                </ul>
               )}
-              <OutreachCompose
-                leadId={id}
-                leadLabel={data.business.name}
-                onRecorded={load}
-              />
-              <div className="bg-white border rounded-lg p-4 space-y-3">
-                <h3 className="font-medium">Outreach history</h3>
-                {data.outreach.length === 0 && (
-                  <p className="text-sm text-slate-500 italic">No outreach recorded yet.</p>
-                )}
-                {data.outreach.map((m) => (
-                  <div key={m.id} className="border border-slate-100 rounded p-3 text-sm">
-                    <p className="font-medium text-slate-800">
-                      {m.subject || '(no subject)'} · {m.channel}
-                    </p>
-                    <p className="text-slate-600 mt-1 whitespace-pre-wrap">{m.body}</p>
-                    {m.sentAt && (
-                      <p className="text-xs text-slate-400 mt-2">
-                        {new Date(m.sentAt).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            </section>
           )}
 
           {tab === 'proposals' && (
-            <div className="bg-white border rounded-lg p-4 space-y-3">
-              <h3 className="font-medium">Proposals</h3>
-              {proposalError && <p className="text-sm text-red-600">{proposalError}</p>}
+            <section className="space-y-3 rounded-lg border border-line bg-surface p-4 shadow-panel">
+              <h3 className="font-medium text-ink">Proposals</h3>
+              {proposalError && <p className="text-sm text-danger">{proposalError}</p>}
               {data.proposals.length === 0 && (
-                <p className="text-sm text-slate-500 italic">No proposals yet.</p>
+                <p className="text-sm italic text-ink-faint">No proposals yet.</p>
               )}
-              {data.proposals.map((p) => (
+              {data.proposals.map((proposal) => (
                 <div
-                  key={p.id}
-                  className="flex justify-between items-start gap-3 border border-slate-100 rounded p-3 text-sm"
+                  key={proposal.id}
+                  className="flex items-start justify-between gap-3 rounded border border-line p-3 text-sm"
                 >
                   <div>
-                    <p className="font-medium">{p.title}</p>
-                    <p className="text-slate-500">{p.status}</p>
-                    {p.status === 'draft' && data.lead.status === 'QUALIFIED' && (
-                      <button
-                        type="button"
-                        onClick={() => sendProposal(p.id)}
-                        className="mt-2 text-brand-600 hover:underline text-xs"
+                    <p className="font-medium text-ink">{proposal.title}</p>
+                    <p className="text-ink-muted">{proposal.status}</p>
+                    {proposal.status === 'draft' && data.lead.status === 'QUALIFIED' && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="mt-2"
+                        loading={busy}
+                        onClick={() => void sendProposal(proposal.id)}
                       >
-                        Send proposal → PROPOSAL_SENT
-                      </button>
+                        Mark proposal sent
+                      </Button>
                     )}
-                    {p.status === 'draft' && data.lead.status !== 'QUALIFIED' && (
-                      <p className="mt-1 text-xs text-amber-700">Qualify lead before sending</p>
+                    {proposal.status === 'draft' && data.lead.status !== 'QUALIFIED' && (
+                      <p className="mt-1 text-xs text-warning-foreground">Qualify lead before sending</p>
                     )}
                   </div>
-                  <p className="font-semibold text-brand-700 shrink-0">
-                    ${Number(p.amount).toLocaleString()}
+                  <p className="shrink-0 font-semibold text-accent">
+                    ${Number(proposal.amount).toLocaleString()}
                   </p>
                 </div>
               ))}
-            </div>
+            </section>
           )}
 
           {tab === 'signals' && (
-            <div className="bg-white border rounded-lg p-4 space-y-2">
-              <h3 className="font-medium mb-2">Intent signals</h3>
+            <section className="space-y-2 rounded-lg border border-line bg-surface p-4 shadow-panel">
+              <h3 className="mb-2 font-medium text-ink">Intent signals</h3>
               {data.signals.length === 0 && (
-                <p className="text-sm text-slate-500 italic">No signals linked to this business.</p>
+                <p className="text-sm italic text-ink-faint">No signals linked to this business.</p>
               )}
-              {data.signals.map((s) => (
+              {data.signals.map((signal) => (
                 <div
-                  key={s.id}
-                  className={`text-sm px-3 py-2 rounded border ${
-                    s.signalClass === 'demand'
-                      ? 'bg-amber-50 border-amber-100 text-amber-900'
-                      : 'bg-purple-50 border-purple-100 text-purple-900'
-                  }`}
+                  key={signal.id}
+                  className="rounded border border-line bg-surface-raised px-3 py-2 text-sm"
                 >
-                  <strong>{s.title ?? s.signalType}</strong> ({s.signalStrength})
-                  <span className="ml-1 opacity-70">
-                    · {s.signalClass === 'demand' ? 'demand' : 'enrichment'}
+                  <strong>{signal.title ?? signal.signalType}</strong> ({signal.signalStrength})
+                  <span className="ml-1 text-ink-muted">
+                    · {signal.signalClass === 'demand' ? 'demand' : 'enrichment'}
                   </span>
-                  {s.snippet && <p className="mt-1 font-normal opacity-90">{s.snippet}</p>}
+                  {signal.snippet && <p className="mt-1 text-ink-muted">{signal.snippet}</p>}
                 </div>
               ))}
-            </div>
-          )}
-
-          {tab === 'analysis' && (
-            <div className="space-y-4">
-              {data.opportunityBrief ? (
-                <OpportunityBriefPanel brief={data.opportunityBrief} />
-              ) : (
-                <p className="text-sm text-slate-500 italic">
-                  No opportunity brief — run discovery or link demand signals first.
-                </p>
+              {data.analysis && (
+                <div className="mt-4 border-t border-line pt-3 text-sm text-ink-muted">
+                  <p>
+                    Website detected:{' '}
+                    <strong className="text-ink">{data.analysis.hasWebsite ? 'Yes' : 'No'}</strong>
+                  </p>
+                  <p className="mt-1">
+                    HTTPS:{' '}
+                    {data.analysis.httpsEnabled == null
+                      ? 'Unknown'
+                      : data.analysis.httpsEnabled
+                        ? 'Enabled'
+                        : 'Missing'}
+                  </p>
+                  <p className="mt-1">
+                    Mobile friendly:{' '}
+                    {data.analysis.mobileFriendly == null
+                      ? 'Unknown'
+                      : data.analysis.mobileFriendly
+                        ? 'Yes'
+                        : 'No'}
+                  </p>
+                </div>
               )}
-            </div>
+            </section>
           )}
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-medium mb-3">Status</h3>
+        <aside className="sticky-below-header space-y-4 self-start">
+          <section className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+            <h3 className="mb-3 font-medium text-ink">Advance status</h3>
             <select
-              className="w-full border rounded-md px-3 py-2 text-sm mb-2"
+              className="mb-2 h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
               value=""
-              onChange={(e) => {
-                if (e.target.value) transition(e.target.value);
-                e.target.value = '';
+              disabled={busy}
+              onChange={(event) => {
+                if (event.target.value) void transition(event.target.value);
+                event.target.value = '';
               }}
             >
               <option value="">Change status…</option>
-              {data.allowedTransitions.map((s) => (
-                <option key={s} value={s}>
-                  {s}
+              {data.allowedTransitions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
                 </option>
               ))}
             </select>
             {data.allowedTransitions.length === 0 && (
-              <p className="text-xs text-slate-500">No further transitions available.</p>
+              <p className="text-xs text-ink-muted">No further transitions available.</p>
             )}
-          </div>
+          </section>
+
+          <section className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+            <h3 className="mb-3 font-medium text-ink">SleeklyBuilt CRM</h3>
+            <SendToCrmButton
+              leadId={id}
+              configured={data.crmBridge?.configured ?? false}
+              lastPushAt={data.crmBridge?.lastPushAt}
+              onDone={load}
+            />
+          </section>
 
           {canCloseLost && (
-            <div className="bg-white border border-red-100 rounded-lg p-4">
-              <h3 className="font-medium mb-2 text-red-800">Close lost</h3>
-              <input
-                className="w-full border rounded-md px-3 py-2 text-sm mb-2"
-                placeholder="Loss reason"
-                value={lossReason}
-                onChange={(e) => setLossReason(e.target.value)}
-              />
-              <button
-                onClick={closeLost}
-                className="w-full border border-red-300 text-red-700 py-2 rounded-md text-sm hover:bg-red-50"
-              >
+            <section className="rounded-lg border border-danger/30 bg-surface p-4 shadow-panel">
+              <h3 className="mb-2 font-medium text-danger">Close lost</h3>
+              <Button size="sm" variant="danger" className="w-full" onClick={() => setCloseLostOpen(true)}>
                 Mark CLOSED_LOST
-              </button>
-            </div>
+              </Button>
+            </section>
           )}
 
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-medium mb-2">Create proposal</h3>
-            <p className="text-xs text-slate-500 mb-2">
+          <section className="rounded-lg border border-line bg-surface p-4 shadow-panel">
+            <h3 className="mb-2 font-medium text-ink">Create proposal</h3>
+            <p className="mb-2 text-xs text-ink-muted">
               Requires QUALIFIED, or REPLIED with auto-qualify.
             </p>
             {data.lead.status === 'REPLIED' && (
-              <label className="flex items-center gap-2 text-sm mb-2">
+              <label className="mb-2 flex items-center gap-2 text-sm text-ink">
                 <input
                   type="checkbox"
                   checked={autoQualify}
-                  onChange={(e) => setAutoQualify(e.target.checked)}
+                  onChange={(event) => setAutoQualify(event.target.checked)}
                 />
                 Auto-qualify (REPLIED → QUALIFIED)
               </label>
             )}
-            <input
-              type="number"
-              className="w-full border rounded-md px-3 py-2 text-sm mb-2"
-              value={proposalAmount}
-              onChange={(e) => setProposalAmount(e.target.value)}
-            />
-            {proposalError && (
-              <p className="text-xs text-red-600 mb-2">{proposalError}</p>
+            {agencyPackages.length > 0 && (
+              <label className="mb-2 block space-y-1 text-xs text-ink-muted">
+                Package preset
+                <select
+                  className="h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink"
+                  value={proposalPackageId}
+                  onChange={(event) => {
+                    const nextId = event.target.value;
+                    setProposalPackageId(nextId);
+                    const pkg = agencyPackages.find((p) => p.id === nextId);
+                    if (pkg) setProposalAmount(String(pkg.priceUgx));
+                  }}
+                >
+                  {agencyPackages.map((pkg) => (
+                    <option key={pkg.id} value={pkg.id}>
+                      {pkg.title} · {agencyCurrency} {pkg.priceUgx.toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
-            <button
-              onClick={createProposal}
+            <Input
+              type="number"
+              className="mb-2"
+              value={proposalAmount}
+              onChange={(event) => {
+                setProposalAmount(event.target.value);
+                setProposalPackageId('');
+              }}
+            />
+            {proposalError && <p className="mb-2 text-xs text-danger">{proposalError}</p>}
+            <Button
+              size="sm"
+              className="w-full"
               disabled={!canCreateProposal}
-              className="w-full bg-brand-600 text-white py-2 rounded-md text-sm hover:bg-brand-700 disabled:opacity-50"
+              loading={busy}
+              onClick={() => void createProposal()}
             >
               Create proposal
-            </button>
+            </Button>
+          </section>
+        </aside>
+      </div>
+
+      <Dialog
+        open={closeLostOpen}
+        onOpenChange={setCloseLostOpen}
+        title="Close this pursuit as lost?"
+        description="Provide a loss reason for the audit trail. This cannot be undone from this dialog."
+      >
+        <div className="space-y-3">
+          <Input
+            value={lossReason}
+            onChange={(event) => setLossReason(event.target.value)}
+            placeholder="Loss reason"
+          />
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setCloseLostOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              disabled={!lossReason.trim()}
+              loading={busy}
+              onClick={() => void closeLost()}
+            >
+              Confirm close lost
+            </Button>
           </div>
         </div>
-      </div>
+      </Dialog>
     </div>
   );
 }

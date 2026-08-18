@@ -1,4 +1,4 @@
-import type { OpportunityType, Reachability } from '@agency/scoring';
+import type { AcquisitionLane, OpportunityType, Reachability } from '@agency/scoring';
 import type { ReviewQueueFilters } from './review-queue-query';
 import {
   computeDemandPriority,
@@ -12,6 +12,12 @@ export type WorkQueueKindFilter = 'all' | 'demand' | 'opportunity';
 export type WorkQueueFilters = ReviewQueueFilters & {
   kind?: WorkQueueKindFilter;
   opportunityType?: OpportunityType;
+  /** Primary lane defaults to greenfield; redesign remains explicitly available. */
+  acquisitionLane?: AcquisitionLane | 'all';
+  /** Opportunities with a business or account phone (WhatsApp-ready triage proxy). */
+  hasPhone?: boolean;
+  /** Optional keyset cursor from a prior page (`priority|kind|id`). */
+  cursor?: string;
 };
 
 export type DemandWorkItem = {
@@ -30,9 +36,17 @@ export type OpportunityWorkItem = {
     id: string;
     name: string;
     city: string | null;
+    country?: string | null;
     website: string | null;
     email?: string | null;
     phone?: string | null;
+  };
+  /** Evidence-based WhatsApp readiness for the queue row (never assumes a number works). */
+  whatsapp?: {
+    status: 'wa_ready' | 'wa_probable' | 'wa_unreliable' | 'wa_blocked';
+    reason: string;
+    waMeUrl: string | null;
+    normalizedPhone: string | null;
   };
   account: { id: string };
   run: { id: string; industry: string; city: string };
@@ -44,6 +58,7 @@ export type OpportunityWorkItem = {
   demandSignalCount: number;
   enrichmentSignalCount: number;
   opportunityType: OpportunityType;
+  acquisitionLane: AcquisitionLane;
   opportunityTypeLabel: string;
   pitchAngle: string;
   positiveFactors: Array<{ key: string; label: string; value: number }>;
@@ -114,6 +129,7 @@ export function buildOpportunityEntry(opportunity: OpportunityWorkItem): WorkQue
       opportunity.verified,
       opportunity.reachability,
       opportunity.score,
+      opportunity.acquisitionLane,
     ),
     tier,
     tierLabel: tier === 'verified_opportunity' ? 'Verified opportunity' : 'Unverified opportunity',

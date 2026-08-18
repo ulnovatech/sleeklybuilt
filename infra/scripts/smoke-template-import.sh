@@ -23,7 +23,7 @@ curl -fsS "${CURL_HEADERS[@]}" \
   -o "$TMP_HTML"
 
 if ! grep -Fq '/portfolio/portfolio/cta.js' "$TMP_HTML"; then
-  echo "FAIL: absolute UlnovaTech CTA is missing from ${SLUG}" >&2
+  echo "FAIL: absolute SleeklyBuilt CTA is missing from ${SLUG}" >&2
   exit 1
 fi
 

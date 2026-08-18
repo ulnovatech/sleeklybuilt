@@ -1,7 +1,8 @@
 import { CrmService } from '@agency/crm';
-import type { LeadStatus } from '@agency/types';
+import { platformSettings, type AgencyPackage } from '@agency/settings';
 import { ProposalRepository } from './repository';
 import { assertLeadCanCreateProposal, assertLeadCanSendProposal } from './rules';
+import type { LeadStatus } from '@agency/types';
 
 export class ProposalService {
   private repo = new ProposalRepository();
@@ -13,6 +14,7 @@ export class ProposalService {
     amount: number;
     body?: string;
     autoQualify?: boolean;
+    packageId?: string;
   }) {
     const ctx = await this.repo.getLeadContext(data.leadId);
     if (!ctx) throw new Error('Lead not found');
@@ -24,13 +26,27 @@ export class ProposalService {
       await this.crm.transition(data.leadId, 'QUALIFIED', 'Auto-qualified for proposal');
     }
 
+    await platformSettings.ensureLoaded();
+    const agency = platformSettings.getAgencySettings();
+    const pkg = data.packageId
+      ? agency.packages.find((p: AgencyPackage) => p.id === data.packageId)
+      : undefined;
+
+    const amount = pkg ? pkg.priceUgx : data.amount;
+    const title = data.title.trim() || pkg?.title || `Proposal for ${ctx.business.name}`;
     const body =
-      data.body ?? this.generateDraftBody(ctx.business.name, data.amount);
+      data.body ??
+      this.generateDraftBody(ctx.business.name, amount, {
+        agencyBrand: agency.brandName,
+        currency: agency.currency,
+        packageTitle: pkg?.title,
+        depositUgx: pkg?.depositUgx,
+      });
 
     return this.repo.create({
       leadId: data.leadId,
-      title: data.title,
-      amount: data.amount,
+      title,
+      amount,
       body,
     });
   }
@@ -80,7 +96,35 @@ export class ProposalService {
     });
   }
 
-  generateDraftBody(businessName: string, amount: number) {
-    return `Proposal for ${businessName}\n\nWe recommend a web development package tailored to your goals.\n\nEstimated investment: $${amount.toLocaleString()}\n\nIncludes discovery, design, development, and launch support.`;
+  listPackagePresets(): AgencyPackage[] {
+    return platformSettings.getAgencySettings().packages;
+  }
+
+  generateDraftBody(
+    businessName: string,
+    amount: number,
+    opts?: {
+      agencyBrand?: string;
+      currency?: string;
+      packageTitle?: string;
+      depositUgx?: number;
+    },
+  ) {
+    const brand = opts?.agencyBrand?.trim() || 'We';
+    const currency = opts?.currency ?? 'UGX';
+    const packageLine = opts?.packageTitle
+      ? `Recommended package: ${opts.packageTitle}.\n\n`
+      : '';
+    const depositLine =
+      opts?.depositUgx != null
+        ? `Suggested deposit: ${currency} ${opts.depositUgx.toLocaleString()}\n\n`
+        : '';
+    const investment =
+      currency === 'UGX'
+        ? `UGX ${amount.toLocaleString()}`
+        : `$${amount.toLocaleString()}`;
+    const recommend = brand.toLowerCase() === 'we' ? 'recommend' : 'recommends';
+
+    return `Proposal for ${businessName}\n\n${packageLine}${brand} ${recommend} a web development package tailored to your goals.\n\nEstimated investment: ${investment}\n${depositLine}Includes discovery, design, development, and launch support.`;
   }
 }

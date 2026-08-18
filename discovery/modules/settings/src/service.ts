@@ -1,4 +1,5 @@
 import path from 'path';
+import { buildGenericAgencyPreset, getAgencyPreset } from './agency-presets';
 import { buildDefaultPlatformSettings } from './defaults';
 import { SettingsRepository } from './repository';
 import {
@@ -6,10 +7,13 @@ import {
   SETTINGS_KEYS,
   type AcquisitionMode,
   type AcquisitionSettings,
+  type AgencyPresetId,
+  type AgencySettings,
   type CredentialKey,
   type CredentialStatus,
   type CrawlSettings,
   type DiscoveryOptionsSettings,
+  type DraftSettings,
   type IntentSettings,
   type LocaleSettings,
   type PlatformSettings,
@@ -18,6 +22,15 @@ import {
   type BoiSettings,
   type MarketHunterSettings,
 } from './types';
+
+function deepMergeAgency(base: AgencySettings, patch: Partial<AgencySettings>): AgencySettings {
+  return {
+    ...base,
+    ...patch,
+    packages: patch.packages ?? base.packages,
+    services: patch.services ?? base.services,
+  };
+}
 
 function deepMergeAcquisition(
   base: AcquisitionSettings,
@@ -116,7 +129,7 @@ export class SettingsService {
 
   async loadFromDatabase(): Promise<PlatformSettings> {
     const defaults = buildDefaultPlatformSettings();
-    const [acq, creds, disc, crawl, locales, intent, qualification, crm, boi, marketHunter] =
+    const [acq, creds, disc, crawl, locales, intent, qualification, crm, boi, drafts, marketHunter, agency] =
       await Promise.all([
       this.repo.getJson<AcquisitionSettings>(SETTINGS_KEYS.acquisition),
       this.repo.getJson<Partial<Record<CredentialKey, string>>>(SETTINGS_KEYS.credentials),
@@ -127,7 +140,9 @@ export class SettingsService {
       this.repo.getJson<QualificationSettings>(SETTINGS_KEYS.qualification),
       this.repo.getJson<CrmSettings>(SETTINGS_KEYS.crm),
       this.repo.getJson<BoiSettings>(SETTINGS_KEYS.boi),
+      this.repo.getJson<DraftSettings>(SETTINGS_KEYS.drafts),
       this.repo.getJson<MarketHunterSettings>(SETTINGS_KEYS.marketHunter),
+      this.repo.getJson<AgencySettings>(SETTINGS_KEYS.agency),
     ]);
 
     return {
@@ -146,6 +161,7 @@ export class SettingsService {
         : defaults.qualification,
       crm: crm ? { ...defaults.crm, ...crm } : defaults.crm,
       boi: boi ? { ...defaults.boi, ...boi } : defaults.boi,
+      drafts: drafts ? { ...defaults.drafts, ...drafts } : defaults.drafts,
       marketHunter: marketHunter
         ? {
             ...defaults.marketHunter,
@@ -162,6 +178,7 @@ export class SettingsService {
             },
           }
         : defaults.marketHunter,
+      agency: agency ? deepMergeAgency(defaults.agency, agency) : defaults.agency,
     };
   }
 
@@ -186,10 +203,12 @@ export class SettingsService {
     );
     await this.repo.setJson(SETTINGS_KEYS.crm, settings.crm as unknown as Record<string, unknown>);
     await this.repo.setJson(SETTINGS_KEYS.boi, settings.boi as unknown as Record<string, unknown>);
+    await this.repo.setJson(SETTINGS_KEYS.drafts, settings.drafts as unknown as Record<string, unknown>);
     await this.repo.setJson(
       SETTINGS_KEYS.marketHunter,
       settings.marketHunter as unknown as Record<string, unknown>,
     );
+    await this.repo.setJson(SETTINGS_KEYS.agency, settings.agency as unknown as Record<string, unknown>);
     this.snapshot = settings;
   }
 
@@ -297,6 +316,10 @@ export class SettingsService {
 
   getPlacesTtlDays(settings?: PlatformSettings): number {
     return (settings ?? this.getSync()).acquisition.placesTtlDays;
+  }
+
+  getEnrichmentStaleAfterDays(settings?: PlatformSettings): number {
+    return (settings ?? this.getSync()).acquisition.enrichmentStaleAfterDays;
   }
 
   isAllCities(city: string, settings?: PlatformSettings): boolean {
@@ -438,6 +461,18 @@ export class SettingsService {
     return (settings ?? this.getSync()).boi;
   }
 
+  async updateDrafts(patch: Partial<DraftSettings>) {
+    const current = await this.ensureLoaded();
+    const next = { ...current.drafts, ...patch };
+    await this.repo.setJson(SETTINGS_KEYS.drafts, next as unknown as Record<string, unknown>);
+    this.snapshot = { ...current, drafts: next };
+    return next;
+  }
+
+  getDraftSettings(settings?: PlatformSettings): DraftSettings {
+    return (settings ?? this.getSync()).drafts;
+  }
+
   async updateMarketHunter(patch: Partial<MarketHunterSettings>) {
     const current = await this.ensureLoaded();
     const next: MarketHunterSettings = {
@@ -467,6 +502,30 @@ export class SettingsService {
 
   getMarketHunterSettings(settings?: PlatformSettings): MarketHunterSettings {
     return (settings ?? this.getSync()).marketHunter;
+  }
+
+  async updateAgency(patch: Partial<AgencySettings>) {
+    const current = await this.ensureLoaded();
+    const next = deepMergeAgency(current.agency, {
+      ...patch,
+      presetId: patch.presetId ?? 'custom',
+    });
+    await this.repo.setJson(SETTINGS_KEYS.agency, next as unknown as Record<string, unknown>);
+    this.snapshot = { ...current, agency: next };
+    return next;
+  }
+
+  /** Replace agency profile with a named preset (generic clears catalog). */
+  async applyAgencyPreset(presetId: Exclude<AgencyPresetId, 'custom'>) {
+    const current = await this.ensureLoaded();
+    const next = getAgencyPreset(presetId);
+    await this.repo.setJson(SETTINGS_KEYS.agency, next as unknown as Record<string, unknown>);
+    this.snapshot = { ...current, agency: next };
+    return next;
+  }
+
+  getAgencySettings(settings?: PlatformSettings): AgencySettings {
+    return (settings ?? this.getSync()).agency ?? buildGenericAgencyPreset();
   }
 }
 

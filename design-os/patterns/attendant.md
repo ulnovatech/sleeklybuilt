@@ -141,7 +141,7 @@ One gold control in the viewport: the launcher. Do not keep a second floating Wh
 
 ```
 ┌──────────────────────────┐
-│ SleeklyBuilt      WA  Call X │
+│ SleeklyBuilt      WA  Call v │
 ├──────────────────────────┤
 │                          │
 │  transcript              │
@@ -155,22 +155,19 @@ One gold control in the viewport: the launcher. Do not keep a second floating Wh
 └──────────────────────────┘
 ```
 
-Full-bleed bottom sheet ~92vh. Composer padding accounts for the home indicator. Touch targets 44×44.
+Full-bleed bottom sheet ~92vh. Composer padding accounts for the home indicator. Touch targets 44×44. Chevron down minimizes to the launcher (session kept). Backdrop tap minimizes; the page is usable again with no dim overlay.
 
 ## Tablet / Desktop (open)
 
 ```
-┌─────────────────────────────────────┐
-│ page content                        │
-│                          ┌─────────┐│
-│                          │ header  ││
-│                          │ transcript│
-│                          │ composer││
-│                          └─────────┘│
-└─────────────────────────────────────┘
+┌────────────────────────────────┬─────────┐
+│ page content (reflowed)        │ header  │
+│                                │ transcript│
+│                                │ composer│
+└────────────────────────────────┴─────────┘
 ```
 
-Docked panel ~380px wide, above the footer, not covering the primary heading of the page. Same component tree as mobile.
+Docked panel 380px wide as a reserved right column. Page content reflows (`padding-right`) so the panel does not overlay the primary heading. Same component tree as mobile. Minimized: padding released; gold launcher with chevron up.
 
 ---
 
@@ -180,7 +177,7 @@ Docked panel ~380px wide, above the footer, not covering the primary heading of 
 AttendantProvider
   AttendantLauncher
   AttendantPanel
-    AttendantHeader (title, WhatsApp, call, close)
+    AttendantHeader (title, WhatsApp, call, minimize chevron)
     AttendantTranscript
       AttendantMessage (visitor | attendant | system)
       AttendantStatus (streaming | tool-in-progress)
@@ -214,9 +211,10 @@ Confirm
   → POST confirm with token
   → report verified backend result only
 
-Close
+Minimize
+  → panel collapses to the gold launcher (chevron up)
   → conversation id persists in session storage
-  → reopen at the last read position
+  → expand restores the panel without a new session
 ```
 
 ---
@@ -278,13 +276,13 @@ Launcher and send use visible focus rings (`ring-dos`). Pressed state 150–200m
 
 - Wider transcript, still one column of messages.
 - Opening does not steal the page's primary CTA.
-- Keyboard: `Esc` closes. Focus trap while open.
+- Keyboard: `Esc` minimizes. Focus trap on the mobile sheet only; desktop dock leaves page content tabbable.
 
 ---
 
 # Accessibility Requirements
 
-- Launcher `aria-label` "Open SleeklyBuilt attendant". Panel `role="dialog"` `aria-modal="true"` with labelled title.
+- Launcher `aria-label` "Open SleeklyBuilt attendant" (or "Expand attendant" when minimized). Panel `role="dialog"` `aria-modal="true"` with labelled title. Esc and backdrop minimize; they do not tear down the session.
 - Transcript is a live region for new attendant text (`aria-live="polite"`). Do not live-region every token if that floods AT; announce when a reply completes and when a confirm appears.
 - Composer has a visible label, not placeholder-only.
 - Colour is not the only status signal (sending / failed / confirmed).
@@ -346,7 +344,7 @@ No navigation unless they ask to see it.
 - [ ] Streaming is not marked complete until the server finishes
 - [ ] Navigate/highlight require no confirm; lead/quote require confirm + token
 - [ ] Failed tool never shows a success line
-- [ ] Keyboard: focus trap, Esc, labelled composer
+- [ ] Keyboard: Esc minimizes; focus trap on mobile sheet only; labelled composer
 - [ ] Mobile sheet usable with one hand and with keyboard open
 - [ ] Tokens only — no unexplained raw hex
 - [ ] Conversation survives in-site navigation

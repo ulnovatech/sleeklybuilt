@@ -1,4 +1,4 @@
-# Deploy UlnoVaTech to Google Compute Engine (Docker)
+# Deploy SleeklyBuilt to Google Compute Engine (Docker)
 
 Operator runbook for production on a **single GCE VM** (Ubuntu 22.04/24.04 AMD64) with **GitHub Actions** deploy. Public access is **IP + nip.io** until a custom domain is purchased ([`ACCESS.md`](./ACCESS.md)).
 
@@ -32,25 +32,25 @@ Google Places / CSE / Clerk costs are **outside** GCE compute credit.
 | Field | Value |
 |-------|-------|
 | Project | `cedar-network-468517-e9` |
-| Name | `ulnovatech-prod` |
+| Name | `sleeklybuilt-prod` |
 | Zone | `us-central1-a` |
 | Machine type | `e2-standard-2` (2 vCPU / 8 GB) — resized after freeing quota from `instance-20260708-015724` |
-| Static IP | `34.66.94.12` (`ulnovatech-ip-usc1`) |
-| Network tag | `ulnovatech-web` |
-| Firewall | `ulnovatech-allow-web` (tcp 22/80/443) |
+| Static IP | `34.66.94.12` (`sleeklybuilt-ip-usc1`) |
+| Network tag | `sleeklybuilt-web` |
+| Firewall | `sleeklybuilt-allow-web` (tcp 22/80/443) |
 | Disk | 60 GB pd-balanced |
 | Hub status | HTTP via `http://34.66.94.12/` and `http://hub.34.66.94.12.nip.io/` |
 | Discovery status | `http://discovery.34.66.94.12.nip.io/` — `ALLOW_DEV_AUTH=true` until Clerk keys are set |
-| Public DNS | **No InfinityFree / ulnovatech.store** — temporary nip.io hostnames ([`ACCESS.md`](./ACCESS.md)) |
+| Public DNS | **No InfinityFree / sleeklybuilt.pro** — temporary nip.io hostnames ([`ACCESS.md`](./ACCESS.md)) |
 
 **Compose `.env` location:** put `MYSQL_*` / `POSTGRES_PASSWORD` in **`infra/.env`** (directory of the first `-f` file), not only repo-root `.env`.
 
 **Quota note:** project `CPUS_ALL_REGIONS` was 11/12 when provisioning (other VMs: `videoos-media-ai`, `videoos-worker`, `instance-20260708-015724`). Free ≥1 more vCPU (stop or resize another instance), then:
 
 ```bash
-gcloud compute instances stop ulnovatech-prod --zone=us-central1-a
-gcloud compute instances set-machine-type ulnovatech-prod --zone=us-central1-a --machine-type=e2-standard-2
-gcloud compute instances start ulnovatech-prod --zone=us-central1-a
+gcloud compute instances stop sleeklybuilt-prod --zone=us-central1-a
+gcloud compute instances set-machine-type sleeklybuilt-prod --zone=us-central1-a --machine-type=e2-standard-2
+gcloud compute instances start sleeklybuilt-prod --zone=us-central1-a
 ```
 
 ## 1. Provision GCE VM
@@ -59,20 +59,20 @@ gcloud compute instances start ulnovatech-prod --zone=us-central1-a
 # Example — adjust PROJECT, ZONE, and SSH key path
 export PROJECT=YOUR_GCP_PROJECT
 export ZONE=us-central1-a
-export NAME=ulnovatech-prod
+export NAME=sleeklybuilt-prod
 
 gcloud config set project "$PROJECT"
 
 # Firewall (once per project)
-gcloud compute firewall-rules create ulnovatech-allow-web \
+gcloud compute firewall-rules create sleeklybuilt-allow-web \
   --allow=tcp:22,tcp:80,tcp:443 \
-  --target-tags=ulnovatech-web \
-  --description="UlnoVaTech SSH + HTTP + HTTPS" \
+  --target-tags=sleeklybuilt-web \
+  --description="SleeklyBuilt SSH + HTTP + HTTPS" \
   --direction=INGRESS || true
 
 # Static IP
-gcloud compute addresses create ulnovatech-ip --region=us-central1
-STATIC_IP=$(gcloud compute addresses describe ulnovatech-ip --region=us-central1 --format='get(address)')
+gcloud compute addresses create sleeklybuilt-ip --region=us-central1
+STATIC_IP=$(gcloud compute addresses describe sleeklybuilt-ip --region=us-central1 --format='get(address)')
 
 # VM
 gcloud compute instances create "$NAME" \
@@ -82,8 +82,8 @@ gcloud compute instances create "$NAME" \
   --image-project=ubuntu-os-cloud \
   --boot-disk-size=60GB \
   --boot-disk-type=pd-balanced \
-  --tags=ulnovatech-web \
-  --address=ulnovatech-ip \
+  --tags=sleeklybuilt-web \
+  --address=sleeklybuilt-ip \
   --metadata=enable-oslogin=FALSE
 ```
 
@@ -103,7 +103,7 @@ Creates:
 - Docker Engine + Compose plugin
 - UFW rules: 22, 80, 443
 - User `deploy` in `docker` group
-- `/opt/ulnovatech/{secrets,env,public_html,repo}`
+- `/opt/sleeklybuilt/{secrets,env,public_html,repo}`
 
 Add your SSH key for GitHub Actions and operators:
 
@@ -121,15 +121,15 @@ Configure A/CNAME records per [`CLOUDFLARE_DNS.md`](./CLOUDFLARE_DNS.md) **after
 ## 4. Clone repo and environment
 
 ```bash
-sudo -u deploy git clone https://github.com/YOUR_ORG/ulnovatech.git /opt/ulnovatech/repo
-cd /opt/ulnovatech/repo
+sudo -u deploy git clone https://github.com/YOUR_ORG/sleeklybuilt.git /opt/sleeklybuilt/repo
+cd /opt/sleeklybuilt/repo
 
-cp infra/env/docker.ulnovatech.env.example /opt/ulnovatech/env/docker.ulnovatech.env
-cp infra/env/docker.discovery.env.example /opt/ulnovatech/env/docker.discovery.env
-chmod 644 /opt/ulnovatech/env/*.env   # php-fpm www-data must read bind mounts
+cp infra/env/docker.sleeklybuilt.env.example /opt/sleeklybuilt/env/docker.sleeklybuilt.env
+cp infra/env/docker.discovery.env.example /opt/sleeklybuilt/env/docker.discovery.env
+chmod 644 /opt/sleeklybuilt/env/*.env   # php-fpm www-data must read bind mounts
 ```
 
-Edit `/opt/ulnovatech/env/docker.ulnovatech.env`:
+Edit `/opt/sleeklybuilt/env/docker.sleeklybuilt.env`:
 
 - `BASE_URL=http://hub.34.66.94.12.nip.io`
 - `APP_DEBUG=false`
@@ -138,7 +138,7 @@ Edit `/opt/ulnovatech/env/docker.ulnovatech.env`:
 - `MOBILE_JWT_SECRET` — `openssl rand -hex 32`
 - Strong `DB_PASS` (must match `MYSQL_PASSWORD` in compose or `.env`)
 
-Edit `/opt/ulnovatech/env/docker.discovery.env`:
+Edit `/opt/sleeklybuilt/env/docker.discovery.env`:
 
 - `NEXT_PUBLIC_APP_URL=http://discovery.34.66.94.12.nip.io`
 - `ALLOW_DEV_AUTH=false` when Clerk keys are set
@@ -147,7 +147,7 @@ Edit `/opt/ulnovatech/env/docker.discovery.env`:
 Place GCP/Firebase credentials (optional):
 
 ```bash
-install -m 600 /path/to/service-account.json /opt/ulnovatech/secrets/service-account.json
+install -m 600 /path/to/service-account.json /opt/sleeklybuilt/secrets/service-account.json
 ```
 
 ## 5. First manual deploy (before CI)
@@ -162,16 +162,16 @@ npm run build:linux
 On the VM as `deploy`:
 
 ```bash
-rsync -avz public_html/ deploy@VM:/opt/ulnovatech/public_html/
+rsync -avz public_html/ deploy@VM:/opt/sleeklybuilt/public_html/
 
-cp /opt/ulnovatech/secrets/service-account.json \
-  /opt/ulnovatech/public_html/ulndash/backend/service-account.json
-chmod 600 /opt/ulnovatech/public_html/ulndash/backend/service-account.json
+cp /opt/sleeklybuilt/secrets/service-account.json \
+  /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
+chmod 600 /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
 
-cd /opt/ulnovatech/repo
-export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
-export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
-export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+cd /opt/sleeklybuilt/repo
+export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
 
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --build
 ```
@@ -181,7 +181,7 @@ Migrations:
 ```bash
 docker compose -f infra/docker-compose.full.yml run --rm discovery-migrate
 docker compose -f infra/docker-compose.full.yml exec php-fpm \
-  php /var/www/public_html/ulndash/backend/scripts/apply_admin_mobile_migrations.php
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 ```
 
 Import MySQL schema if this is a fresh database (add `02-schema.sql` under `infra/mysql/init/` before first `mysql` boot, or import manually).
@@ -191,8 +191,8 @@ Import MySQL schema if this is a fresh database (add `02-schema.sql` under `infr
 On the VM (HTTP):
 
 ```bash
-cd /opt/ulnovatech/repo
-SMOKE_HOST=hub.34.66.94.12.nip.io bash infra/scripts/smoke-ulnovatech.sh http://127.0.0.1
+cd /opt/sleeklybuilt/repo
+SMOKE_HOST=hub.34.66.94.12.nip.io bash infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1
 ```
 
 From your laptop:
@@ -222,20 +222,37 @@ These are configured on the GitHub repo. Workflow: [`.github/workflows/deploy.ym
 Push to `main` / `workflow_dispatch` triggers [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml):
 
 1. Build `public_html` (`npm run build:linux`)
-2. Verify Discovery builds (`pnpm build` in `discovery/`)
-3. Rsync `public_html/`, `infra/`, `discovery/` to `/opt/ulnovatech/`
+2. Verify Discovery builds (`pnpm build` in the Lead Discover tree — see [DISCOVERY_SOURCE.md](./DISCOVERY_SOURCE.md))
+3. Rsync `public_html/`, `infra/`, and the resolved Discovery source to `/opt/sleeklybuilt/` (deploy workflow sets `DISCOVERY_BUILD_CONTEXT=../discovery` on the VM)
 4. SSH: `docker compose … up -d --build`
 5. Run Discovery + CRM migrations
+
+### Daily cloud-first loop
+
+Local machine is used for code ownership and editing. Runtime validation happens in cloud.
+
+```powershell
+git add <paths>
+npm run ship:cloud -- -Message "describe change"
+```
+
+This command path performs:
+1. Commit current staged changes
+2. Push to current branch
+3. Watch latest `deploy.yml` run to completion
+4. Smoke check hub + discovery live URLs
+
+Avoid local DB/API bring-up unless cloud debugging is blocked.
 
 ## 8. Backups
 
 ### MySQL
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 docker compose -f infra/docker-compose.full.yml exec -T mysql \
-  mysqldump -u root -p"${MYSQL_ROOT_PASSWORD}" ulnovatech \
-  > ~/backup-ulnovatech-$(date +%F).sql
+  mysqldump -u root -p"${MYSQL_ROOT_PASSWORD}" sleeklybuilt \
+  > ~/backup-sleeklybuilt-$(date +%F).sql
 ```
 
 Schedule with `cron`; copy dumps off-box (GCS bucket optional).
@@ -254,7 +271,7 @@ Docker named volumes: `mysql_data`, `postgres_data`, `discovery_storage`. Snapsh
 
 ### Secrets
 
-Keep `/opt/ulnovatech/secrets/` and `/opt/ulnovatech/env/*.env` in a password manager or encrypted backup — not in git.
+Keep `/opt/sleeklybuilt/secrets/` and `/opt/sleeklybuilt/env/*.env` in a password manager or encrypted backup — not in git.
 
 ## 9. Operations cheat sheet
 
@@ -273,10 +290,10 @@ Env file paths must be exported on every manual compose invocation.
 | Symptom | Check |
 |---------|-------|
 | 502 on `/api/` or `/php/` | Stale nginx→php-fpm IP after recreate — `docker compose … up -d --force-recreate --no-deps nginx` |
-| `DB connection failed` (API) | Env file mode `600` unreadable by www-data — `chmod 644 /opt/ulnovatech/env/docker.ulnovatech.env`, recreate php-fpm |
+| `DB connection failed` (API) | Env file mode `600` unreadable by www-data — `chmod 644 /opt/sleeklybuilt/env/docker.sleeklybuilt.env`, recreate php-fpm |
 | Discovery 502 | `discovery-web` health, `DATABASE_URL`, migrate logs |
 | Mobile login fails | `DASH_ADMIN_PASS_HASH`, not plain `DASH_ADMIN_PASS` |
-| FCM push silent | `service-account.json` in `ulndash/backend/`, `FCM_PROJECT_ID` |
+| FCM push silent | `service-account.json` in `sleekly-dash/backend/`, `FCM_PROJECT_ID` |
 | Cloudflare 521/522 | GCE firewall + UFW allow 80; instance running |
 | Cloudflare SSL errors | Use **Flexible** while origin is HTTP-only (`listen 80`) — only after adding a real domain + Cloudflare |
 | Wrong vhost on bare IP | Hub must be `default_server`; Discovery only on `discovery.*.nip.io` |
@@ -285,14 +302,14 @@ Env file paths must be exported on every manual compose invocation.
 
 | Check | Status / action |
 |-------|-----------------|
-| GCE VM `ulnovatech-prod` running | `e2-standard-2` @ `34.66.94.12` |
+| GCE VM `sleeklybuilt-prod` running | `e2-standard-2` @ `34.66.94.12` |
 | Docker full stack up | nginx, php-fpm, mysql, postgres, discovery-web, discovery-worker |
 | Hub smoke on VM | `curl -H 'Host: hub.34.66.94.12.nip.io' http://127.0.0.1/health` → 200 |
 | Discovery API | `http://discovery.34.66.94.12.nip.io/api/health` → 200 |
 | GitHub secrets | `GCE_SSH_*` set; workflow [Deploy to GCE](../.github/workflows/deploy.yml) |
 | Public access | Temporary IP + nip.io ([`ACCESS.md`](./ACCESS.md)) — **no InfinityFree** |
 | Clerk | Optional: set keys in `docker.discovery.env`, then `ALLOW_DEV_AUTH=false` + `NODE_ENV=production` |
-| Backups | Daily cron `15 3 * * *` → `/usr/local/bin/ulnovatech-backup.sh` → `/opt/ulnovatech/backups/` (14-day retention); copy off-box (GCS) recommended |
+| Backups | Daily cron `15 3 * * *` → `/usr/local/bin/sleeklybuilt-backup.sh` → `/opt/sleeklybuilt/backups/` (14-day retention); copy off-box (GCS) recommended |
 | Budget | Trial ~$300 / 90 days; expect ~$50–110/mo after upgrade |
 | Spare VM | `instance-20260708-015724` stopped to free CPU quota — delete if unused |
 

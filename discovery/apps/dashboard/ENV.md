@@ -1,6 +1,6 @@
 # Environment variables
 
-Use the **single** `.env` file at the **repository root** (`lead discover - ulntech/.env`).
+Use the **single** `.env` file at the **repository root** (`lead discover - sleekly/.env`).
 
 Do not create `apps/dashboard/.env.local` — it is redundant. Next.js, the job worker, and migrations all load the root file automatically.
 

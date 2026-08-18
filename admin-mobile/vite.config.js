@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apacheBase = env.VITE_APACHE_BASE || 'http://localhost/ulnovatech'
+  const apacheBase = env.VITE_APACHE_BASE || 'http://localhost/sleeklybuilt'
 
   return {
     plugins: [react()],

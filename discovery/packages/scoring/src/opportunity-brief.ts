@@ -35,12 +35,14 @@ export const POSITIVE_FACTOR_LABELS: Record<string, string> = {
   hasEmail: 'Email on file',
   hasPhone: 'Phone on file',
   industryMatch: 'Industry match',
+  segmentOutcomes: 'Segment win record',
 };
 
 export const NEGATIVE_FACTOR_LABELS: Record<string, string> = {
   suppressed: 'Suppressed',
   alreadyContacted: 'Already contacted',
   noContactPath: 'No contact path',
+  segmentOutcomes: 'Segment loss record',
 };
 
 export const OPPORTUNITY_TYPE_LABELS: Record<OpportunityType, string> = {
@@ -184,6 +186,8 @@ export type WebsiteOpportunityBriefContext = OpportunityBriefInput & {
   demandSnippets?: DemandSnippet[];
   footprintChips?: string[];
   infrastructureGaps?: WebsiteGap[];
+  /** C8 evidence line when segment has enough closed outcomes. */
+  segmentEvidence?: string | null;
 };
 
 const CRAWL_STATUS_LABELS: Record<string, string> = {
@@ -291,5 +295,6 @@ export function buildWebsiteOpportunityBrief(ctx: WebsiteOpportunityBriefContext
     reachability: ctx.reachability ?? null,
     demandSnippets,
     outreachHook: core.pitchAngle,
+    segmentEvidence: ctx.segmentEvidence ?? null,
   };
 }

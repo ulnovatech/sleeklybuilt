@@ -4,7 +4,7 @@ require_once __DIR__ . '/../env.php';
 
 function uln_flutterwave_config(): array
 {
-    $baseUrl = getenv('BASE_URL') ?: 'https://ulnovatech.store';
+    $baseUrl = getenv('BASE_URL') ?: 'https://sleeklybuilt.pro';
     $defaultRedirect = rtrim($baseUrl, '/') . '/portfolio-app/order/success';
 
     return [
@@ -12,7 +12,7 @@ function uln_flutterwave_config(): array
         'secret_key' => getenv('FLUTTERWAVE_SECRET_KEY') ?: '',
         'secret_hash' => getenv('FLUTTERWAVE_SECRET_HASH') ?: '',
         'redirect_url' => getenv('FLUTTERWAVE_REDIRECT_URL') ?: $defaultRedirect,
-        'logo_url' => getenv('FLUTTERWAVE_LOGO_URL') ?: rtrim($baseUrl, '/') . '/assets/img/uln-logo.png',
+        'logo_url' => getenv('FLUTTERWAVE_LOGO_URL') ?: rtrim($baseUrl, '/') . '/assets/img/sleeklybuilt-logo.png',
     ];
 }
 

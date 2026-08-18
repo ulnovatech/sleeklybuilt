@@ -33,7 +33,7 @@ Do not copy this into `apps/dashboard/.env.local`.
 3. Run migrations:
 
 ```powershell
-cd "c:\xampp\htdocs\lead discover - ulntech"
+cd "c:\xampp\htdocs\lead discover - sleekly"
 pnpm db:migrate
 ```
 

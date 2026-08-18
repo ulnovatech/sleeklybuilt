@@ -45,7 +45,7 @@ function BrandMark({ tone }) {
   )
 }
 
-export default function Header() {
+export default function Header({ docked = false }) {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -94,6 +94,7 @@ export default function Header() {
         id="header"
         className={cn(
           'fixed inset-x-0 top-0 z-40 border-b transition-all duration-300',
+          docked && 'lg:right-[380px]',
           tone === 'hero'
             ? 'border-transparent bg-transparent'
             : 'border-cream-deep bg-cream/90 shadow-sm backdrop-blur-md',

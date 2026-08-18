@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { PageHeader } from '@/components/layout/page-header';
+import { Button, ErrorState, Skeleton } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
 
 type DuplicateAccount = {
@@ -29,11 +31,11 @@ type DuplicateGroup = {
 
 function AccountCard({ account }: { account: DuplicateAccount }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-2 min-w-0 flex-1">
-      <h3 className="font-semibold text-slate-900 truncate">{account.canonicalName}</h3>
-      <dl className="text-sm text-slate-600 space-y-1">
+    <div className="min-w-0 flex-1 space-y-2 rounded-lg border border-line bg-surface p-4 shadow-panel">
+      <h3 className="truncate font-semibold text-ink">{account.canonicalName}</h3>
+      <dl className="space-y-1 text-sm text-ink-muted">
         <div>
-          <span className="text-slate-500">City:</span> {account.city ?? '—'}
+          <span className="text-ink-faint">City:</span> {account.city ?? '—'}
         </div>
         <div>
           <span className="text-slate-500">Phone:</span> {account.phone ?? '—'}
@@ -112,20 +114,23 @@ export function DataQualityClient() {
   };
 
   return (
-    <div className="max-w-5xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Data quality</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          Find and merge duplicate accounts. Hard matches use shared phone or business domain.
-          Both accounts cannot have an active lead — close or resolve leads first.
-        </p>
+    <div className="space-y-4">
+      <PageHeader
+        compact
+        title="Data quality"
+        description="Find and merge duplicate accounts. Hard matches use shared phone or domain."
+      />
+
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="secondary" asChild>
+          <Link href="/leads">Pipeline</Link>
+        </Button>
+        <Button size="sm" variant="ghost" asChild>
+          <Link href="/review">Queue</Link>
+        </Button>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 text-red-800 text-sm p-3">
-          {error}
-        </div>
-      )}
+      {error && <ErrorState title="Data quality issue" description={error} onRetry={() => void load()} />}
 
       {focusAccountId && focusedCandidates.length > 0 && (
         <section className="space-y-4">
@@ -139,28 +144,26 @@ export function DataQualityClient() {
               >
                 <AccountCard account={candidate} />
                 <div className="flex lg:flex-col gap-2 justify-center shrink-0">
-                  <button
-                    type="button"
+                  <Button
+                    size="sm"
                     disabled={merging !== null}
                     onClick={() =>
                       merge(focusAccountId, candidate.accountId, [candidate.matchKind])
                     }
-                    className="px-3 py-2 text-sm rounded-md bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50"
+                    loading={merging === `${focusAccountId}:${candidate.accountId}`}
                   >
-                    {merging === `${focusAccountId}:${candidate.accountId}`
-                      ? 'Merging…'
-                      : 'Keep focused → merge other'}
-                  </button>
-                  <button
-                    type="button"
+                    Keep focused → merge other
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
                     disabled={merging !== null}
                     onClick={() =>
                       merge(candidate.accountId, focusAccountId, [candidate.matchKind])
                     }
-                    className="px-3 py-2 text-sm rounded-md border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50"
                   >
                     Keep other → merge focused
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -171,9 +174,9 @@ export function DataQualityClient() {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-slate-900">Duplicate groups</h2>
         {loading ? (
-          <p className="text-sm text-slate-500">Loading…</p>
+          <Skeleton className="h-32 w-full" />
         ) : groups.length === 0 ? (
-          <p className="text-sm text-slate-500">No duplicate groups detected.</p>
+          <p className="text-sm text-ink-muted">No duplicate groups detected.</p>
         ) : (
           <div className="space-y-6">
             {groups.map((group) => (

@@ -10,6 +10,10 @@ export type ReviewQueueFilters = {
   reachability?: Reachability;
   minReachability?: MinReachabilityLevel;
   verification?: VerificationFilter;
+  /** Server-side text search across business/account identity fields. */
+  q?: string;
+  /** Optional explicit account allow-list (work-queue page hydration). */
+  accountIds?: string[];
   page?: number;
   limit?: number;
 };
@@ -21,6 +25,7 @@ export type ReviewQueueRow = {
   businessEmail: string | null;
   businessPhone: string | null;
   businessCity: string | null;
+  businessCountry: string | null;
   accountId: string;
   accountEmail: string | null;
   accountPhone: string | null;
@@ -67,6 +72,28 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
   } else if (filters.verification === 'unverified') {
     conditions.push(sql`NOT ${prospectVerifiedSql}`);
   }
+  if (filters.accountIds?.length) {
+    conditions.push(
+      sql`a.id IN (${sql.join(
+        filters.accountIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})`,
+    );
+  }
+
+  const q = filters.q?.trim();
+  if (q) {
+    const pattern = `%${q.replace(/[%_\\]/g, '\\$&')}%`;
+    conditions.push(sql`(
+      b.name ILIKE ${pattern} ESCAPE '\\'
+      OR COALESCE(b.city, '') ILIKE ${pattern} ESCAPE '\\'
+      OR COALESCE(b.email, '') ILIKE ${pattern} ESCAPE '\\'
+      OR COALESCE(b.phone, '') ILIKE ${pattern} ESCAPE '\\'
+      OR COALESCE(a.email, '') ILIKE ${pattern} ESCAPE '\\'
+      OR COALESCE(a.phone, '') ILIKE ${pattern} ESCAPE '\\'
+      OR COALESCE(dr.industry, '') ILIKE ${pattern} ESCAPE '\\'
+    )`);
+  }
 
   const whereClause = sql.join(conditions, sql` AND `);
 
@@ -80,6 +107,7 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
         ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY COALESCE(ls.score, 0) DESC NULLS LAST) AS rn
       FROM businesses b
       INNER JOIN accounts a ON b.account_id = a.id
+      INNER JOIN discovery_runs dr ON b.discovery_run_id = dr.id
       LEFT JOIN lead_scores ls ON ls.business_id = b.id
       WHERE ${whereClause}
     )
@@ -97,6 +125,7 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
         b.email AS business_email,
         b.phone AS business_phone,
         b.city AS business_city,
+        b.country AS business_country,
         a.id AS account_id,
         a.email AS account_email,
         a.phone AS account_phone,
@@ -145,6 +174,7 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
       business_email AS "businessEmail",
       business_phone AS "businessPhone",
       business_city AS "businessCity",
+      business_country AS "businessCountry",
       account_id AS "accountId",
       account_email AS "accountEmail",
       account_phone AS "accountPhone",

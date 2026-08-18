@@ -1,4 +1,5 @@
 import { ALL_CITIES, CITIES_BY_COUNTRY, COUNTRIES } from '@agency/geo';
+import { buildGenericAgencyPreset } from './agency-presets';
 import type { PlatformSettings } from './types';
 
 export const DEFAULT_INDUSTRIES = [
@@ -77,6 +78,7 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
         custom_scrape: envInt('CUSTOM_SCRAPE_DAILY_CAP', 50),
         meta_graph: envInt('META_GRAPH_DAILY_CAP', 50),
         llm_narrative: envInt('LLM_NARRATIVE_DAILY_CAP', 50),
+        llm_draft: envInt('LLM_DRAFT_DAILY_CAP', 30),
       },
       searchLimits: {
         economy: 5,
@@ -94,6 +96,7 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
         boost: envInt('SOCIAL_SEARCH_BOOST_MAX', 5),
       },
       placesTtlDays: 90,
+      enrichmentStaleAfterDays: envInt('ENRICHMENT_STALE_AFTER_DAYS', 30),
       places: {
         standardVerifyMaxPerRun: 20,
         boostVerifyMaxPerRun: 50,
@@ -189,6 +192,12 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
       llmNarrativeEnabled: process.env.BOI_LLM_NARRATIVE_ENABLED?.trim().toLowerCase() === 'true',
       llmModel: process.env.BOI_LLM_MODEL?.trim() || 'gpt-4o-mini',
     },
+    drafts: {
+      enabled: process.env.LLM_DRAFT_ENABLED?.trim().toLowerCase() !== 'false',
+      provider: (process.env.LLM_DRAFT_PROVIDER?.trim() as 'openrouter' | 'openai' | 'anthropic') || 'openrouter',
+      model: process.env.LLM_DRAFT_MODEL?.trim() || 'google/gemini-2.5-pro',
+      maxOutputTokens: envInt('LLM_DRAFT_MAX_OUTPUT_TOKENS', 1600),
+    },
     marketHunter: {
       enabled: process.env.MARKET_HUNTER_ENABLED?.trim().toLowerCase() === 'true',
       maxSpendPerRunUsd: envFloat('MARKET_HUNTER_MAX_SPEND_PER_RUN_USD', 0.5),
@@ -218,6 +227,7 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
         process.env.MARKET_HUNTER_PAYMENT_PATH?.trim() ||
         'Payoneer → Binance P2P → MTN/Airtel Mobile Money',
     },
+    agency: buildGenericAgencyPreset(),
   };
 }
 

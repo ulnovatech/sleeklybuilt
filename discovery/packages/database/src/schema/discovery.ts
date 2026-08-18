@@ -10,6 +10,10 @@ export const discoveryRuns = pgTable('discovery_runs', {
   runProfile: varchar('run_profile', { length: 20 }).notNull().default('standard'),
   prospectFocus: boolean('prospect_focus').notNull().default(false),
   boiNarrative: boolean('boi_narrative').notNull().default(false),
+  /** Set when created by a Discovery Plan scheduler tick or Run now. */
+  planId: uuid('plan_id'),
+  planTargetId: uuid('plan_target_id'),
+  trigger: varchar('trigger', { length: 20 }).notNull().default('manual'),
   errorMessage: text('error_message'),
   startedAt: timestamp('started_at', { withTimezone: true }),
   completedAt: timestamp('completed_at', { withTimezone: true }),
@@ -39,5 +43,7 @@ export const businesses = pgTable('businesses', {
   rating: real('rating'),
   reviewCount: integer('review_count'),
   metadata: jsonb('metadata').$type<Record<string, unknown>>(),
+  /** Incremental discovery class: new | known_fresh | known_stale */
+  discoveryState: varchar('discovery_state', { length: 20 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });

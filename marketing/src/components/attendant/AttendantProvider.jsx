@@ -40,6 +40,7 @@ export function AttendantProvider({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [minimized, setMinimized] = useState(false)
   const [sessionToken, setSessionToken] = useState(() => sessionStorage.getItem(STORAGE_TOKEN) || '')
   const [conversationId, setConversationId] = useState(
     () => sessionStorage.getItem(STORAGE_CONV) || '',
@@ -156,16 +157,13 @@ export function AttendantProvider({ children }) {
 
   const openPanel = useCallback(() => {
     setOpen(true)
+    setMinimized(false)
     setError(null)
     ensureSession().catch(() => {})
   }, [ensureSession])
 
-  const closePanel = useCallback(() => {
-    setOpen(false)
-    if (abortRef.current) {
-      abortRef.current.abort()
-      abortRef.current = null
-    }
+  const minimizePanel = useCallback(() => {
+    setMinimized(true)
   }, [])
 
   const clearError = useCallback(() => setError(null), [])
@@ -540,8 +538,9 @@ export function AttendantProvider({ children }) {
   const value = useMemo(
     () => ({
       open,
+      minimized,
       openPanel,
-      closePanel,
+      minimizePanel,
       pageContext,
       sessionStatus,
       messages,
@@ -564,8 +563,9 @@ export function AttendantProvider({ children }) {
     }),
     [
       open,
+      minimized,
       openPanel,
-      closePanel,
+      minimizePanel,
       pageContext,
       sessionStatus,
       messages,

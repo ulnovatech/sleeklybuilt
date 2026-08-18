@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { CollapsibleSection } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
+import { BOI_COPY } from '@/lib/product-copy';
 import {
   OpportunityBriefPanel,
   type WebsiteOpportunityBrief,
@@ -13,13 +15,10 @@ export function OpportunityBriefExpand({ businessId }: { businessId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const toggle = async () => {
-    if (open) {
-      setOpen(false);
-      return;
-    }
-    setOpen(true);
-    if (brief) return;
+  const handleOpenChange = async (next: boolean) => {
+    setOpen(next);
+    if (!next) return;
+    if (brief || loading) return;
 
     setLoading(true);
     setError(null);
@@ -29,7 +28,7 @@ export function OpportunityBriefExpand({ businessId }: { businessId: string }) {
       );
       setBrief(res.brief);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load brief');
+      setError(e instanceof Error ? e.message : BOI_COPY.websiteBrief.errorLoad);
       setOpen(false);
     } finally {
       setLoading(false);
@@ -37,21 +36,17 @@ export function OpportunityBriefExpand({ businessId }: { businessId: string }) {
   };
 
   return (
-    <div className="pt-2 border-t border-slate-100">
-      <button
-        type="button"
-        onClick={toggle}
-        className="text-xs text-brand-700 hover:underline font-medium"
-      >
-        {open ? 'Hide website brief' : 'View website brief'}
-        {loading && '…'}
-      </button>
-      {error && <p className="text-xs text-red-700 mt-1">{error}</p>}
-      {open && brief && (
-        <div className="mt-3">
-          <OpportunityBriefPanel brief={brief} />
-        </div>
-      )}
-    </div>
+    <CollapsibleSection
+      id={`website-brief-${businessId}`}
+      className="border-t border-line pt-3"
+      title={open ? BOI_COPY.websiteBrief.hideBrief : BOI_COPY.websiteBrief.viewBrief}
+      defaultOpen={false}
+      open={open}
+      onOpenChange={(next) => void handleOpenChange(next)}
+      trailing={loading ? <span className="text-xs text-ink-faint">Loading…</span> : undefined}
+    >
+      {error && <p className="text-xs text-danger">{error}</p>}
+      {brief && <OpportunityBriefPanel brief={brief} />}
+    </CollapsibleSection>
   );
 }

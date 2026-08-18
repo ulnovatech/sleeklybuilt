@@ -10,6 +10,7 @@
   "dependencies": {
     "@agency/crm": "workspace:*",
     "@agency/database": "workspace:*",
+    "@agency/intent": "workspace:*",
     "@agency/settings": "workspace:*",
     "drizzle-orm": "^0.38.3"
   },

@@ -139,8 +139,16 @@ export class CrmService {
     return this.repo.listLeads(owner);
   }
 
+  listLeadsPaged(input: Parameters<CrmRepository['listLeadsPaged']>[0]) {
+    return this.repo.listLeadsPaged(input);
+  }
+
   listFollowUps(owner?: string) {
     return this.repo.listOverdueFollowUps(owner);
+  }
+
+  listFollowUpsPaged(input: Parameters<CrmRepository['listFollowUpsPaged']>[0]) {
+    return this.repo.listFollowUpsPaged(input);
   }
 
   addNote(leadId: string, content: string) {

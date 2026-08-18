@@ -177,6 +177,7 @@ class PushNotificationService
     private function buildTitle(string $type): string
     {
         $map = [
+            'attendant_escalation' => 'Attendant needs a human',
             'website_order' => 'New website order',
             'contactus' => 'New contact form',
             'appdev' => 'New app dev inquiry',
@@ -191,6 +192,17 @@ class PushNotificationService
 
     private function buildBody(string $type, array $payload): string
     {
+        if ($type === 'attendant_escalation') {
+            $summary = trim((string) ($payload['summary'] ?? ''));
+            if ($summary !== '') {
+                return mb_substr($summary, 0, 120);
+            }
+            $reason = trim((string) ($payload['reason_code'] ?? ''));
+            if ($reason !== '') {
+                return 'Reason: ' . $reason;
+            }
+        }
+
         $name = trim((string) ($payload['name'] ?? ''));
         if ($name !== '') {
             return $name;

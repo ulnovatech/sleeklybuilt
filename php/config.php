@@ -23,14 +23,14 @@ $ENV = ($isLocalHost || $isLocalBaseUrl) ? 'local' : 'production';
 $BRAND_NAME = getenv('BRAND_NAME') ?: 'SleeklyBuilt';
 
 // 2️⃣ Base URL
-$BASE_URL = getenv('BASE_URL') ?: ($ENV === 'local' ? 'http://localhost/ulnovatech' : 'https://ulnovatech.store');
+$BASE_URL = getenv('BASE_URL') ?: ($ENV === 'local' ? 'http://localhost/sleeklybuilt' : 'https://sleeklybuilt.pro');
 
 // 3️⃣ Database Settings
 $DB = [
     'host' => getenv('DB_HOST') ?: ($ENV === 'local' ? 'localhost' : ''),
     'user' => getenv('DB_USER') ?: ($ENV === 'local' ? 'root' : ''),
     'pass' => getenv('DB_PASS') ?: ($ENV === 'local' ? '' : ''),
-    'name' => getenv('DB_NAME') ?: ($ENV === 'local' ? 'ulnovatech' : ''),
+    'name' => getenv('DB_NAME') ?: ($ENV === 'local' ? 'sleeklybuilt' : ''),
     'port' => getenv('DB_PORT') ?: 3306,
 ];
 

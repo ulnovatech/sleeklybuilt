@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { BoIOpportunityBriefPayload } from '@agency/intelligence';
+import { CollapsibleSection } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
 import { BOI_COPY } from '@/lib/product-copy';
 import {
@@ -58,48 +59,36 @@ export function BoiBriefExpand({
 
   useEffect(() => {
     if (defaultOpen && !brief && !loading && !notFound && !error) {
-      load().catch(() => undefined);
+      void load();
       setOpen(true);
     }
   }, [defaultOpen, brief, loading, notFound, error, load]);
 
-  const toggle = async () => {
-    if (open) {
-      setOpen(false);
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
       onClose?.();
       return;
     }
-    setOpen(true);
-    if (!brief && !notFound) {
-      await load();
+    if (!brief && !notFound && !error) {
+      void load();
     }
   };
 
   return (
-    <div className={embedded ? '' : 'pt-2 border-t border-slate-100'}>
-      <button
-        type="button"
-        onClick={toggle}
-        className="text-xs text-violet-700 hover:text-violet-900 hover:underline font-medium inline-flex items-center gap-1"
-      >
-        {open ? BOI_COPY.hideBrief : BOI_COPY.viewBrief}
-        {loading && <span className="text-slate-400">…</span>}
-      </button>
-
-      {open && (
-        <div className="mt-3">
-          {loading && <OpportunityBriefPanelSkeleton />}
-          {!loading && error && (
-            <OpportunityBriefPanelError message={error} onRetry={() => load()} />
-          )}
-          {!loading && !error && notFound && (
-            <OpportunityBriefPanelEmpty pipelineRunning={pipelineRunning} />
-          )}
-          {!loading && !error && brief && (
-            <OpportunityBriefPanel brief={brief} compact={compact} />
-          )}
-        </div>
-      )}
-    </div>
+    <CollapsibleSection
+      id={`boi-brief-${businessId}`}
+      className={embedded ? '' : 'border-t border-line pt-3'}
+      title={open ? BOI_COPY.hideBrief : BOI_COPY.viewBrief}
+      defaultOpen={defaultOpen}
+      open={open}
+      onOpenChange={handleOpenChange}
+      trailing={loading ? <span className="text-xs text-ink-faint">Loading…</span> : undefined}
+    >
+      {loading && <OpportunityBriefPanelSkeleton />}
+      {!loading && error && <OpportunityBriefPanelError message={error} onRetry={() => void load()} />}
+      {!loading && !error && notFound && <OpportunityBriefPanelEmpty pipelineRunning={pipelineRunning} />}
+      {!loading && !error && brief && <OpportunityBriefPanel brief={brief} compact={compact} />}
+    </CollapsibleSection>
   );
 }

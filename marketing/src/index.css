@@ -251,7 +251,17 @@ body {
     outline: 2px solid var(--color-accent);
     outline-offset: 6px;
     border-radius: var(--radius-md);
-    transition: outline-color 200ms ease;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 28%, transparent);
+    transition: outline-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .attendant-section-highlight:focus {
+    outline: 2px solid var(--color-accent);
+  }
+
+  .attendant-section-highlight:focus:not(:focus-visible) {
+    /* Keep attendant outline when programmatic focus is not :focus-visible */
+    outline: 2px solid var(--color-accent);
   }
 
   @media (prefers-reduced-motion: reduce) {

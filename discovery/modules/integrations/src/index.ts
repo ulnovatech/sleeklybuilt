@@ -11,3 +11,6 @@ export {
 } from './gmail-client';
 export { matchLeadForInboundReply, parseEmailAddress, normalizeSubject } from './reply-matcher';
 export type { ReplyMatchLead } from './reply-matcher';
+export { SleeklyDashBridgeService, CRM_BRIDGE_WATERMARK_KEY } from './sleekly-dash/bridge-service';
+export type { CrmBridgeWatermarks, PushLeadResult } from './sleekly-dash/bridge-service';
+export { getSleeklyDashConfig, isSleeklyDashConfigured } from './sleekly-dash/config';

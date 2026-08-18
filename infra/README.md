@@ -1,4 +1,25 @@
-# UlnoVaTech infrastructure (GCE VM / Docker)
+# SleeklyBuilt infrastructure (GCE VM / Docker)
+
+## Cloud-first default workflow
+
+Primary daily workflow is cloud deploy and live validation. Local containers, local DBs, and local API/runtime are optional fallback only.
+
+From repo root:
+
+```powershell
+# stage explicitly (recommended)
+git add <paths>
+
+# one-command ship: commit -> push -> watch deploy -> smoke live URLs
+npm run ship:cloud -- -Message "your commit message"
+```
+
+Notes:
+- Add `-StageAll` only when you intentionally want all working-tree changes included.
+- Override defaults when needed:
+  - `-Workflow deploy.yml`
+  - `-HubUrl http://hub.34.66.94.12.nip.io/`
+  - `-DiscoveryUrl http://discovery.34.66.94.12.nip.io/api/health`
 
 ## Quick start (local)
 
@@ -9,7 +30,7 @@ From repo root:
 npm run build:linux
 
 # 2. (Optional) Copy env template and edit secrets
-cp infra/env/docker.ulnovatech.env.example infra/env/docker.ulnovatech.env
+cp infra/env/docker.sleeklybuilt.env.example infra/env/docker.sleeklybuilt.env
 
 # 3. Start stack
 docker compose -f infra/docker-compose.yml up -d --build
@@ -20,7 +41,7 @@ npm run docker:smoke
 
 Site: **http://localhost:8080** (override with `HTTP_PORT`).
 
-## Full stack (ulnovatech + Discovery)
+## Full stack (sleeklybuilt + Discovery)
 
 From repo root:
 
@@ -29,7 +50,7 @@ From repo root:
 npm run build:linux
 
 # 2. (Optional) Copy env templates and edit secrets
-cp infra/env/docker.ulnovatech.env.example infra/env/docker.ulnovatech.env
+cp infra/env/docker.sleeklybuilt.env.example infra/env/docker.sleeklybuilt.env
 cp infra/env/docker.discovery.env.example infra/env/docker.discovery.env
 
 # 3. Start everything (mysql + php-fpm + nginx + postgres + discovery-web + worker)
@@ -60,14 +81,14 @@ npm run docker:full:down
 Smoke tests:
 
 ```bash
-npm run docker:smoke              # ulnovatech only
+npm run docker:smoke              # sleeklybuilt only
 npm run docker:smoke:discovery    # discovery only
 npm run docker:smoke:full         # both
 ```
 
 ### Discovery-only overlay
 
-Add Discovery to an already-running ulnovatech stack:
+Add Discovery to an already-running sleeklybuilt stack:
 
 ```bash
 npm run docker:discovery
@@ -77,7 +98,7 @@ npm run docker:discovery
 
 | Step | Doc / script |
 |------|----------------|
-| Host bootstrap (Docker, UFW, `/opt/ulnovatech`) | [`gcloud/bootstrap.sh`](./gcloud/bootstrap.sh) |
+| Host bootstrap (Docker, UFW, `/opt/sleeklybuilt`) | [`gcloud/bootstrap.sh`](./gcloud/bootstrap.sh) |
 | Env templates + server layout | [`env/README.md`](./env/README.md) |
 | Cloudflare DNS | [`docs/CLOUDFLARE_DNS.md`](../docs/CLOUDFLARE_DNS.md) |
 | Operator runbook | [`docs/DEPLOY_GCLOUD.md`](../docs/DEPLOY_GCLOUD.md) |
@@ -87,14 +108,14 @@ npm run docker:discovery
 Production compose (full stack, port 80):
 
 ```bash
-export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
-export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
-export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
 
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --build
 ```
 
-Ulnovatech-only production:
+SleeklyBuilt-only production:
 
 ```bash
 docker compose -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -d
@@ -106,25 +127,26 @@ docker compose -f infra/docker-compose.yml -f infra/docker-compose.prod.yml up -
 |---------|-------|------|
 | `nginx` | nginx:1.27-alpine | Serves `public_html`, proxies PHP to FPM, proxies Discovery subdomain |
 | `php-fpm` | `infra/php/Dockerfile` | PHP 8.2 + mysqli, pdo_mysql, mbstring |
-| `mysql` | mysql:8.0 | Database `ulnovatech` |
+| `mysql` | mysql:8.0 | Database `sleeklybuilt` |
 | `postgres` | postgres:16-alpine | Discovery Intelligence database `agency_platform` |
-| `discovery-web` | `discovery/Dockerfile` (target `web`) | Next.js dashboard on port 3000 |
-| `discovery-worker` | `discovery/Dockerfile` (target `worker`) | Background job queue worker |
-| `discovery-migrate` | `discovery/Dockerfile` (target `worker`) | One-shot Drizzle migrations on startup |
+| `discovery-web` | Lead Discover `Dockerfile` (target `web`) — build context `DISCOVERY_BUILD_CONTEXT` | Next.js dashboard on port 3000 |
+| `discovery-worker` | same (target `worker`) | Background job queue worker |
+| `discovery-migrate` | same (target `worker`) | One-shot Drizzle migrations on startup |
 
 ## Environment
 
-See [`env/README.md`](./env/README.md) for production checklists and `/opt/ulnovatech` layout.
+See [`env/README.md`](./env/README.md) for production checklists and `/opt/sleeklybuilt` layout.
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `PUBLIC_HTML_PATH` | `../public_html` | Build output (relative to `infra/`) |
-| `ULNOVATECH_ENV_FILE` | `./env/docker.ulnovatech.env.example` | Mounted as `php/.env` + `ulndash/backend/.env` |
+| `SLEEKLYBUILT_ENV_FILE` | `./env/docker.sleeklybuilt.env.example` | Mounted as `php/.env` + `sleekly-dash/backend/.env` |
 | `DISCOVERY_ENV_FILE` | `./env/docker.discovery.env.example` | Env for discovery-web, worker, migrate |
+| `DISCOVERY_BUILD_CONTEXT` | `../../lead discover - sleekly` | Docker build context for Discovery (sibling source of truth). On GCE after rsync: `../discovery` |
 | `HTTP_PORT` | `8080` | Host port for nginx |
 | `DISCOVERY_HTTP_PORT` | `3000` | Host port for discovery-web (direct access) |
 | `MYSQL_ROOT_PASSWORD` | `root_dev_change_me` | MySQL root |
-| `MYSQL_PASSWORD` | `ulnovatech_dev_change_me` | App user password (must match `DB_PASS` in env file) |
+| `MYSQL_PASSWORD` | `sleeklybuilt_dev_change_me` | App user password (must match `DB_PASS` in env file) |
 | `POSTGRES_PASSWORD` | `discovery_dev_change_me` | Discovery Postgres (must match `DATABASE_URL`) |
 
 ## Database
@@ -133,7 +155,7 @@ First boot runs `infra/mysql/init/01-init.sql`. Import your schema dump as `02-s
 
 ```bash
 docker compose -f infra/docker-compose.yml exec php-fpm \
-  php /var/www/public_html/ulndash/backend/scripts/apply_admin_mobile_migrations.php
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 ```
 
 ## Layout
@@ -142,13 +164,13 @@ docker compose -f infra/docker-compose.yml exec php-fpm \
 infra/
 ├── docker-compose.yml            # nginx + php-fpm + mysql
 ├── docker-compose.discovery.yml  # postgres + discovery-web + worker (+ nginx discovery.conf)
-├── docker-compose.full.yml       # includes ulnovatech + discovery
+├── docker-compose.full.yml       # includes sleeklybuilt + discovery
 ├── docker-compose.prod.yml       # port 80, restart always
 ├── env/
 │   ├── README.md
-│   ├── docker.ulnovatech.env.example
+│   ├── docker.sleeklybuilt.env.example
 │   ├── docker.discovery.env.example
-│   └── ulnovatech.env.example    # naming alias doc
+│   └── sleeklybuilt.env.example    # naming alias doc
 ├── gcloud/
 │   └── bootstrap.sh              # Ubuntu AMD64 host prep (primary)
 ├── oracle/
@@ -157,11 +179,13 @@ infra/
 ├── nginx/                        # see nginx/README.md
 ├── php/Dockerfile
 └── scripts/
-    ├── smoke-ulnovatech.sh
+    ├── smoke-sleeklybuilt.sh
     ├── smoke-discovery.sh
     ├── smoke-full.sh
     └── wait-for-db.sh
 
-discovery/
-└── Dockerfile                    # multi-stage: web | worker (migrate uses worker)
+discovery/                        # junction → ../../lead discover - sleekly (local)
+# Docker default build context (from infra/):
+#   ../../lead discover - sleekly
+# Override on VM: DISCOVERY_BUILD_CONTEXT=../discovery
 ```

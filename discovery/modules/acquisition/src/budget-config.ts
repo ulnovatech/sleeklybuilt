@@ -9,6 +9,7 @@ const PROVIDER_PERIOD: Record<BudgetProvider, 'monthly' | 'daily'> = {
   custom_scrape: 'daily',
   meta_graph: 'daily',
   llm_narrative: 'daily',
+  llm_draft: 'daily',
 };
 
 const CAP_KEY: Record<BudgetProvider, keyof ReturnType<typeof platformSettings.getSync>['acquisition']['caps']> = {
@@ -19,6 +20,7 @@ const CAP_KEY: Record<BudgetProvider, keyof ReturnType<typeof platformSettings.g
   custom_scrape: 'custom_scrape',
   meta_graph: 'meta_graph',
   llm_narrative: 'llm_narrative',
+  llm_draft: 'llm_draft',
 };
 
 export function getBudgetCaps(): BudgetCapConfig[] {

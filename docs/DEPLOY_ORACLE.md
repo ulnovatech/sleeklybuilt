@@ -1,4 +1,4 @@
-# Deploy UlnoVaTech to Oracle Cloud (Docker)
+# Deploy SleeklyBuilt to Oracle Cloud (Docker)
 
 > **Legacy.** Primary production target is **Google Compute Engine** — see [`DEPLOY_GCLOUD.md`](./DEPLOY_GCLOUD.md). This Oracle runbook is kept for historical reference and ARM64 Always Free attempts.
 
@@ -36,7 +36,7 @@ Creates:
 - Docker Engine + Compose plugin
 - UFW rules: 22, 80, 443
 - User `deploy` in `docker` group
-- `/opt/ulnovatech/{secrets,env,public_html,repo}`
+- `/opt/sleeklybuilt/{secrets,env,public_html,repo}`
 
 Add your SSH key for GitHub Actions and operators:
 
@@ -54,33 +54,33 @@ Configure A/CNAME records per [`CLOUDFLARE_DNS.md`](./CLOUDFLARE_DNS.md) before 
 ## 4. Clone repo and environment
 
 ```bash
-sudo -u deploy git clone https://github.com/YOUR_ORG/ulnovatech.git /opt/ulnovatech/repo
-cd /opt/ulnovatech/repo
+sudo -u deploy git clone https://github.com/YOUR_ORG/sleeklybuilt.git /opt/sleeklybuilt/repo
+cd /opt/sleeklybuilt/repo
 
-cp infra/env/docker.ulnovatech.env.example /opt/ulnovatech/env/docker.ulnovatech.env
-cp infra/env/docker.discovery.env.example /opt/ulnovatech/env/docker.discovery.env
-chmod 600 /opt/ulnovatech/env/*.env
+cp infra/env/docker.sleeklybuilt.env.example /opt/sleeklybuilt/env/docker.sleeklybuilt.env
+cp infra/env/docker.discovery.env.example /opt/sleeklybuilt/env/docker.discovery.env
+chmod 600 /opt/sleeklybuilt/env/*.env
 ```
 
-Edit `/opt/ulnovatech/env/docker.ulnovatech.env`:
+Edit `/opt/sleeklybuilt/env/docker.sleeklybuilt.env`:
 
-- `BASE_URL=https://ulnovatech.store`
+- `BASE_URL=https://sleeklybuilt.pro`
 - `APP_DEBUG=false`
-- `ALLOWED_ORIGINS=https://ulnovatech.store,https://www.ulnovatech.store`
+- `ALLOWED_ORIGINS=https://sleeklybuilt.pro,https://www.sleeklybuilt.pro`
 - `DASH_ADMIN_PASS_HASH` (bcrypt) — unset `DASH_ADMIN_PASS`
 - `MOBILE_JWT_SECRET` — `openssl rand -hex 32`
 - Strong `DB_PASS` (must match `MYSQL_PASSWORD` in compose or `.env`)
 
-Edit `/opt/ulnovatech/env/docker.discovery.env`:
+Edit `/opt/sleeklybuilt/env/docker.discovery.env`:
 
-- `NEXT_PUBLIC_APP_URL=https://discovery.ulnovatech.store`
+- `NEXT_PUBLIC_APP_URL=https://discovery.sleeklybuilt.pro`
 - `ALLOW_DEV_AUTH=false`
 - Clerk keys, strong Postgres password, `CRON_SECRET`
 
 Place GCP/Firebase credentials:
 
 ```bash
-install -m 600 /path/to/service-account.json /opt/ulnovatech/secrets/service-account.json
+install -m 600 /path/to/service-account.json /opt/sleeklybuilt/secrets/service-account.json
 ```
 
 ## 5. First manual deploy (before CI)
@@ -96,17 +96,17 @@ On the VM as `deploy`:
 
 ```bash
 # Copy build output (from workstation — example)
-rsync -avz public_html/ deploy@VM:/opt/ulnovatech/public_html/
+rsync -avz public_html/ deploy@VM:/opt/sleeklybuilt/public_html/
 
-# Sync secrets into backend path (FCM/GA read relative to ulndash/backend)
-cp /opt/ulnovatech/secrets/service-account.json \
-   /opt/ulnovatech/public_html/ulndash/backend/service-account.json
-chmod 600 /opt/ulnovatech/public_html/ulndash/backend/service-account.json
+# Sync secrets into backend path (FCM/GA read relative to sleekly-dash/backend)
+cp /opt/sleeklybuilt/secrets/service-account.json \
+   /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
+chmod 600 /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
 
-cd /opt/ulnovatech/repo
-export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
-export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
-export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+cd /opt/sleeklybuilt/repo
+export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
 
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml up -d --build
 ```
@@ -116,7 +116,7 @@ Migrations run automatically via `discovery-migrate` on startup. Re-run if neede
 ```bash
 docker compose -f infra/docker-compose.full.yml run --rm discovery-migrate
 docker compose -f infra/docker-compose.full.yml exec php-fpm \
-  php /var/www/public_html/ulndash/backend/scripts/apply_admin_mobile_migrations.php
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 ```
 
 Import MySQL schema if this is a fresh database (add `02-schema.sql` under `infra/mysql/init/` before first `mysql` boot, or import manually).
@@ -126,15 +126,15 @@ Import MySQL schema if this is a fresh database (add `02-schema.sql` under `infr
 On the VM (HTTP, before Cloudflare strict TLS):
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 bash infra/scripts/smoke-full.sh http://localhost
 ```
 
 After DNS + HTTPS:
 
 ```bash
-DISCOVERY_URL=https://discovery.ulnovatech.store \
-  bash infra/scripts/smoke-full.sh https://ulnovatech.store
+DISCOVERY_URL=https://discovery.sleeklybuilt.pro \
+  bash infra/scripts/smoke-full.sh https://sleeklybuilt.pro
 ```
 
 From repo root via npm:
@@ -159,7 +159,7 @@ Push to `main` triggers [`.github/workflows/deploy.yml`](../.github/workflows/de
 
 1. Build `public_html` (`npm run build:linux`)
 2. Verify Discovery image builds (`pnpm build` in `discovery/`)
-3. Rsync `public_html/`, `infra/`, `discovery/` to `/opt/ulnovatech/`
+3. Rsync `public_html/`, `infra/`, `discovery/` to `/opt/sleeklybuilt/`
 4. SSH: `docker compose … up -d --build`
 5. Run Discovery + CRM migrations
 
@@ -170,10 +170,10 @@ Monitor: **Actions** tab in GitHub.
 ### MySQL
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 docker compose -f infra/docker-compose.full.yml exec -T mysql \
-  mysqldump -u root -p"${MYSQL_ROOT_PASSWORD}" ulnovatech \
-  > ~/backup-ulnovatech-$(date +%F).sql
+  mysqldump -u root -p"${MYSQL_ROOT_PASSWORD}" sleeklybuilt \
+  > ~/backup-sleeklybuilt-$(date +%F).sql
 ```
 
 Schedule with `cron` on the VM; copy dumps off-box (OCI Object Storage, S3, etc.).
@@ -192,7 +192,7 @@ Docker named volumes: `mysql_data`, `postgres_data`, `discovery_storage`. Snapsh
 
 ### Secrets
 
-Keep `/opt/ulnovatech/secrets/` and `/opt/ulnovatech/env/*.env` in a password manager or encrypted backup — not in git.
+Keep `/opt/sleeklybuilt/secrets/` and `/opt/sleeklybuilt/env/*.env` in a password manager or encrypted backup — not in git.
 
 ## 9. Operations cheat sheet
 
@@ -213,7 +213,7 @@ Env file paths must be exported on every manual compose invocation (or add a sma
 | 502 on `/api/` | `docker compose ps`, php-fpm logs, `DB_*` in env file |
 | Discovery 502 | `discovery-web` health, `DATABASE_URL`, migrate logs |
 | Mobile login fails | `DASH_ADMIN_PASS_HASH`, not plain `DASH_ADMIN_PASS` |
-| FCM push silent | `service-account.json` in `ulndash/backend/`, `FCM_PROJECT_ID` |
+| FCM push silent | `service-account.json` in `sleekly-dash/backend/`, `FCM_PROJECT_ID` |
 | Cloudflare 525 | Origin TLS — use Origin Certificate or temporarily Full (not strict) |
 
 ## Related docs

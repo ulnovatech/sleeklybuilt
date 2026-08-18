@@ -16,6 +16,7 @@ function parseVerification(value: string | null): VerificationFilter | undefined
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const q = searchParams.get('q')?.trim() || undefined;
     const filters: ReviewQueueFilters = {
       runId: searchParams.get('runId') ?? undefined,
       minScore: searchParams.get('minScore')
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
         : undefined,
       reachability: (searchParams.get('reachability') as Reachability) || undefined,
       verification: parseVerification(searchParams.get('verification')),
+      q,
       page: searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1,
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 20,
     };

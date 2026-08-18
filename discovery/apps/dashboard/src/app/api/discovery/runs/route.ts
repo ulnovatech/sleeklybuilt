@@ -1,15 +1,37 @@
 import { DiscoveryService } from '@agency/discovery';
-import { createDiscoveryRunSchema } from '@agency/validation';
+import { createDiscoveryRunSchema, listQuerySchema, parseListSearchParams } from '@agency/validation';
 import { requireOperator } from '@/lib/api-auth';
 import { enqueueRunPipeline, isInlinePipelineEnabled, resumeRunPipeline } from '@/lib/job-worker';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 const discovery = new DiscoveryService();
 
-export async function GET() {
+const discoveryRunsListSchema = listQuerySchema.extend({
+  status: z.string().max(30).optional(),
+  planId: z.string().uuid().optional(),
+  hasPlan: z
+    .enum(['1', '0', 'true', 'false'])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === '1' || v === 'true')),
+  sort: z.enum(['createdAt', 'status', 'country', 'industry']).default('createdAt'),
+});
+
+export async function GET(request: Request) {
   try {
-    const runs = await discovery.listRuns();
-    return NextResponse.json({ runs });
+    const { searchParams } = new URL(request.url);
+    const parsed = parseListSearchParams(discoveryRunsListSchema, searchParams);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+    const result = await discovery.listRunsPaged(parsed.data);
+    return NextResponse.json({
+      items: result.items,
+      runs: result.items,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
   }

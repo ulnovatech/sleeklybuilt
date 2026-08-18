@@ -1,0 +1,807 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" "http://www.w3.org/Math/DTD/mathml2/xhtml-math11-f.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<!--This file was converted to xhtml by LibreOffice - see https://cgit.freedesktop.org/libreoffice/core/tree/filter/source/xslt for the code.-->
+
+<head profile="http://dublincore.org/documents/dcmi-terms/">
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8"/>
+<title xml:lang="en-US">- no title specified</title>
+<meta name="DCTERMS.title" content="" xml:lang="en-US"/>
+
+<meta name="DCTERMS.language" content="en-US" scheme="DCTERMS.RFC4646"/>
+<meta name="DCTERMS.source" content="http://xml.openoffice.org/odf2xhtml"/>
+
+<meta name="DCTERMS.issued" content="2026-08-15T22:39:16.435000000" scheme="DCTERMS.W3CDTF"/>
+
+<meta name="DCTERMS.modified" content="2026-08-16T00:30:39.435000000" scheme="DCTERMS.W3CDTF"/>
+
+
+<meta name="xsl:vendor" content="libxslt"/>
+<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" hreflang="en"/>
+<link rel="schema.DCTERMS" href="http://purl.org/dc/terms/" hreflang="en"/>
+<link rel="schema.DCTYPE" href="http://purl.org/dc/dcmitype/" hreflang="en"/>
+<link rel="schema.DCAM" href="http://purl.org/dc/dcam/" hreflang="en"/>
+
+<style>
+    table { border-collapse:collapse; border-spacing:0; empty-cells:show }
+    td, th { vertical-align:top; font-size:12pt;}
+    h1, h2, h3, h4, h5, h6 { clear:both;}
+    ol, ul { margin:0; padding:0;}
+    li { list-style: none; margin:0; padding:0;}
+    span.footnodeNumber { padding-right:1em; }
+    span.annotation_style_by_filter { font-size:95%; font-family:Arial; background-color:#fff000;  margin:0; border:0; padding:0;  }
+    span.heading_numbering { margin-right: 0.8rem; }* { margin:0;}
+    .paragraph-Heading_20_1{ font-size:24pt; margin-bottom:0.0835in; margin-top:0.1665in; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;font-weight:bold; }
+    .paragraph-Heading_20_2{ font-size:18pt; margin-bottom:0.0835in; margin-top:0.139in; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;font-weight:bold; }
+    .paragraph-Heading_20_3{ font-size:14pt; margin-bottom:0.0835in; margin-top:0.0972in; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;font-weight:bold; }
+    .paragraph-Horizontal_20_Line{ font-size:6pt; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;margin-top:0in; margin-bottom:0.1965in; padding:0in; border-left-style:none; border-right-style:none; border-top-style:none; border-bottom-width:0.0399cm; border-bottom-style:double; border-bottom-color:#808080; }
+    .paragraph-P1{ font-size:10pt; margin-bottom:0.1965in; margin-top:0in; font-family:'Liberation Mono'; writing-mode:horizontal-tb; direction:ltr;}
+    .paragraph-P2{ font-size:12pt; line-height:115%; margin-bottom:0.0972in; margin-top:0in; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;}
+    .paragraph-P3{ font-size:12pt; line-height:115%; margin-bottom:0.0972in; margin-top:0in; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;}
+    .paragraph-P4{ font-size:12pt; line-height:115%; margin-bottom:0.0972in; margin-top:0in; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;}
+    .paragraph-Preformatted_20_Text{ font-size:10pt; font-family:'Liberation Mono'; writing-mode:horizontal-tb; direction:ltr;margin-top:0in; margin-bottom:0in; }
+    .paragraph-Quotations{ font-size:12pt; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;margin-left:0.3937in; margin-right:0.3937in; margin-top:0in; margin-bottom:0.1965in; text-indent:0in; }
+    .paragraph-Standard{ font-size:12pt; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;}
+    .paragraph-Text_20_body{ font-size:12pt; font-family:'Liberation Serif'; writing-mode:horizontal-tb; direction:ltr;margin-top:0in; margin-bottom:0.0972in; line-height:115%; }
+    .text-Bullet_20_Symbols{ font-family:OpenSymbol; }
+    .text-Source_20_Text{ font-family:'Liberation Mono'; }
+    .text-Strong_20_Emphasis{ font-weight:bold; }
+    /* ODF styles with no properties representable as CSS:
+    .dp1  { } */
+</style>
+</head>
+
+<body dir="ltr" style="max-width:8.2681in;margin-top:0.7874in; margin-bottom:0.7874in; margin-left:0.7874in; margin-right:0.7874in; ">
+
+<p class="paragraph-Text_20_body">Yes. <span class="text-Strong_20_Emphasis">Human handoff should be treated as an exceptional escalation state, not a customer-service escape hatch.</span></p>
+
+<p class="paragraph-Text_20_body">And the architecture you're describing is very feasible: the website visitor talks to the Attendant, while <span class="text-Strong_20_Emphasis">you receive and respond to conversations from a private mobile operator app</span>, essentially a Messenger/WhatsApp-like interface. The Attendant remains active in the middle, so you don't need to personally watch every conversation.</p>
+<h2 class="paragraph-Heading_20_2"><a id="a__1__First__define_the_handoff_properly"><span/></a>1. First: define the handoff properly</h2>
+
+<p class="paragraph-Text_20_body">I would make this a <span class="text-Strong_20_Emphasis">hard policy + state machine</span>, not something the model casually decides.</p>
+<h3 class="paragraph-Heading_20_3"><a id="a__Handoff_states"><span/></a>Handoff states</h3>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">NORMAL ATTENDANT</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ├── continues normally</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">ESCALATION CANDIDATE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ├── recoverable → Attendant continues</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       └── genuine handoff condition</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              HUMAN REQUIRED</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              HUMAN QUEUED</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              HUMAN ACTIVE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              HUMAN COMPLETE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ▼</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">              ATTENDANT RESUMES</span></p>
+
+<p class="paragraph-Text_20_body">The important part:</p>
+
+<p class="paragraph-Text_20_body"><span class="text-Strong_20_Emphasis">"I can connect you to a human" is not a normal response option.</span></p>
+
+<p class="paragraph-Text_20_body">It must be earned.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__2__Hard_handoff_conditions"><span/></a>2. Hard handoff conditions</h1>
+
+<p class="paragraph-Text_20_body">Your three are correct. I'd define the complete policy as follows.</p>
+<h3 class="paragraph-Heading_20_3"><a id="a__1__Explicit_human_request"><span/></a>1. Explicit human request</h3>
+
+<p class="paragraph-Text_20_body">The strongest trigger.</p>
+
+<p class="paragraph-Text_20_body">Examples:</p>
+
+<p class="paragraph-Quotations">"Let me speak to someone."</p>
+
+<p class="paragraph-Quotations">"Can I talk to a real person?"</p>
+
+<p class="paragraph-Quotations">"I want a human."</p>
+
+<p class="paragraph-Text_20_body">Don't make the Attendant argue.</p>
+
+<p class="paragraph-Text_20_body">Immediately initiate handoff.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h3 class="paragraph-Heading_20_3"><a id="a__2__Genuine_knowledge_failure"><span/></a>2. Genuine knowledge failure</h3>
+
+<p class="paragraph-Text_20_body">Not:</p>
+
+<p class="paragraph-Quotations">"I don't know what SEO means."</p>
+
+<p class="paragraph-Text_20_body">That's recoverable.</p>
+
+<p class="paragraph-Text_20_body">But:</p>
+
+<p class="paragraph-Quotations">The customer asks about a specific business arrangement that isn't in the knowledge base, and answering incorrectly could affect the sale.</p>
+
+<p class="paragraph-Text_20_body">Then:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">UNKNOWN + MATERIAL IMPORTANCE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">             ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">          HANDOFF</span></p>
+
+<p class="paragraph-Text_20_body">The Attendant should not bluff.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h3 class="paragraph-Heading_20_3"><a id="a__3__Material_business_decision_outside_its_authority"><span/></a>3. Material business decision outside its authority</h3>
+
+<p class="paragraph-Text_20_body">For example:</p>
+
+<p class="paragraph-Quotations">"Can you give us a 40% discount?"</p>
+
+<p class="paragraph-Text_20_body">or:</p>
+
+<p class="paragraph-Quotations">"Can you restructure the payment arrangement?"</p>
+
+<p class="paragraph-Text_20_body">or:</p>
+
+<p class="paragraph-Quotations">"Can you make an exception to your normal contract terms?"</p>
+
+<p class="paragraph-Text_20_body">The Attendant can explain normal policy.</p>
+
+<p class="paragraph-Text_20_body">But it cannot invent authority.</p>
+
+<p class="paragraph-Quotations">"That's something I'd need to have you discuss with us directly."</p>
+
+<p class="paragraph-Text_20_body">Then handoff.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h3 class="paragraph-Heading_20_3"><a id="a__4__High-value___high-consequence_situation"><span/></a>4. High-value / high-consequence situation</h3>
+
+<p class="paragraph-Text_20_body">I'd add this carefully.</p>
+
+<p class="paragraph-Text_20_body">Not:</p>
+
+<p class="paragraph-Quotations">customer wants to buy → human.</p>
+
+<p class="paragraph-Text_20_body">That's terrible automation.</p>
+
+<p class="paragraph-Text_20_body">Instead:</p>
+
+<p class="paragraph-Quotations"><span class="text-Strong_20_Emphasis">The customer is making a consequential decision where the system lacks authority or sufficient information.</span></p>
+
+<p class="paragraph-Text_20_body">Examples:</p>
+<ul><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>unusual custom project<span class="odfLiEnd"/> </p></li><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>substantial custom quotation<span class="odfLiEnd"/> </p></li><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>complex integration<span class="odfLiEnd"/> </p></li><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>unusual contractual requirement<span class="odfLiEnd"/> </p></li><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>major scope negotiation<span class="odfLiEnd"/> </p></li><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>enterprise arrangement<span class="odfLiEnd"/> </p></li><li><p class="P2" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>unusual payment arrangement<span class="odfLiEnd"/> </p></li></ul>
+<p class="paragraph-Text_20_body">The Attendant can qualify and prepare the case before handing over.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h3 class="paragraph-Heading_20_3"><a id="a__5__Repeated_failure"><span/></a>5. Repeated failure</h3>
+
+<p class="paragraph-Text_20_body">This is an important one.</p>
+
+<p class="paragraph-Text_20_body">If the Attendant has attempted to resolve something and repeatedly failed:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">attempt 1 → clarify</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">attempt 2 → retrieve / reason</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">attempt 3 → still unresolved</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">                 HANDOFF</span></p>
+
+<p class="paragraph-Text_20_body">Don't let it endlessly loop.</p>
+
+<p class="paragraph-Text_20_body">The customer should never have to fight the AI.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h3 class="paragraph-Heading_20_3"><a id="a__6__Customer_frustration"><span/></a>6. Customer frustration</h3>
+
+<p class="paragraph-Text_20_body">This needs to be handled carefully.</p>
+
+<p class="paragraph-Text_20_body">Frustration alone should <span class="text-Strong_20_Emphasis">not automatically summon you</span>.</p>
+
+<p class="paragraph-Text_20_body">But if the customer is clearly frustrated <span class="text-Strong_20_Emphasis">and the Attendant is failing to resolve the issue</span>, escalation becomes appropriate.</p>
+
+<p class="paragraph-Text_20_body">Example:</p>
+
+<p class="paragraph-Quotations">"I've already explained this three times."</p>
+
+<p class="paragraph-Text_20_body">That's a strong signal.</p>
+
+<p class="paragraph-Text_20_body">The system should stop trying to be clever.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h3 class="paragraph-Heading_20_3"><a id="a__7__Safety___sensitive_situations"><span/></a>7. Safety / sensitive situations</h3>
+
+<p class="paragraph-Text_20_body">Any business operation involving something the Attendant is explicitly not authorized to handle should escalate.</p>
+
+<p class="paragraph-Text_20_body">This is policy-driven rather than model-driven.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__3__What_should_NOT_trigger_handoff"><span/></a>3. What should NOT trigger handoff</h1>
+
+<p class="paragraph-Text_20_body">This is just as important.</p>
+
+<p class="paragraph-Text_20_body">Do <span class="text-Strong_20_Emphasis">not</span> hand off because:</p>
+<ul><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer asks a difficult question<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer asks about pricing<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer is considering packages<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer needs recommendations<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer asks technical questions<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer asks for clarification<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer disagrees with a recommendation<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the Attendant doesn't immediately know something but can retrieve it<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer asks about an existing supported order<span class="odfLiEnd"/> </p></li><li><p class="P3" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>the customer asks for a human "just in case"<span class="odfLiEnd"/> </p></li></ul>
+<p class="paragraph-Text_20_body">The system should be <span class="text-Strong_20_Emphasis">confidently autonomous</span>.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__4__The_best_handoff_isn't_simply_&quot;human_joined&quot;"><span/></a>4. The best handoff isn't simply "human joined"</h1>
+
+<p class="paragraph-Text_20_body">The Attendant should prepare the human.</p>
+
+<p class="paragraph-Text_20_body">Suppose the visitor says:</p>
+
+<p class="paragraph-Quotations">"I want to talk to someone about building a custom student portal."</p>
+
+<p class="paragraph-Text_20_body">Instead of dumping you into the conversation with no context:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">HANDOFF PACKAGE</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Customer:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">ABC College</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Objective:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Student portal</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Requirements discovered:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">- student login</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">- course access</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">- application workflow</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">- payment integration</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Current recommendation:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Custom system</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Reason for escalation:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Scope exceeds standard packages</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Conversation:</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">[full transcript]</span></p>
+
+<p class="paragraph-Text_20_body">Then you open your phone and immediately know:</p>
+
+<p class="paragraph-Quotations"><span class="text-Strong_20_Emphasis">What is happening.</span></p>
+
+<p class="paragraph-Text_20_body">This is extremely important.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__5__The_phone_app_you're_describing"><span/></a>5. The phone app you're describing</h1>
+
+<p class="paragraph-Text_20_body">Yes — I understand exactly what you mean.</p>
+
+<p class="paragraph-Text_20_body">You don't want:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Website</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">   ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">email notification</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">   ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">you open laptop</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">   ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">find conversation</span></p>
+
+<p class="paragraph-Text_20_body">You want:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                  CUSTOMER</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                     ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              SLEEKLYBUILT SITE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                     ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                ATTENDANT</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            ┌────────┴────────┐</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">        autonomous          escalation</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │          ATTENDANT SERVER</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │          realtime event</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │          YOUR PHONE APP</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │          you respond</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            │                 │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">            └──────────┬──────┘</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                       ▼</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">                   CUSTOMER</span></p>
+
+<p class="paragraph-Text_20_body">The phone app is essentially your <span class="text-Strong_20_Emphasis">human operator console</span>.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__6__It_should_feel_like_Messenger"><span/></a>6. It should feel like Messenger</h1>
+
+<p class="paragraph-Text_20_body">Your mobile operator app can have:</p>
+<h3 class="paragraph-Heading_20_3"><a id="a__Inbox"><span/></a>Inbox</h3>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">┌─────────────────────────┐</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ SleeklyBuilt            │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ 🔴 3 Need Attention     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ ABC College             │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Custom student portal   │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ 2m ago                  │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Jane — Restaurant       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Wants ordering system   │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ 8m ago                  │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ David                   │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Business Basic          │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ 21m ago                 │</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">└─────────────────────────┘</span></p>
+
+<p class="paragraph-Text_20_body">Tap conversation:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">┌─────────────────────────┐</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ ABC College             │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ AI                      │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ I think you're looking  │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ for a custom system...  │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Customer                │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Yes, but we also need   │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ student payments...     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ AI                      │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ This needs a custom     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ configuration. I'm      │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ bringing in someone     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ who can scope that...   │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ ─── YOU ─────────────── │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ You                     │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ Yes, we can handle      │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ that. Let's discuss...  │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│                         │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│ [ Type a message... ]   │</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">└─────────────────────────┘</span></p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__7__The_most_important_architectural_decision__realtime_transport"><span/></a>7. The most important architectural decision: realtime transport</h1>
+
+<p class="paragraph-Text_20_body">You mentioned <span class="text-Strong_20_Emphasis">webhooks</span>.</p>
+
+<p class="paragraph-Text_20_body">Webhooks are useful, but they aren't really the complete communication mechanism.</p>
+
+<p class="paragraph-Text_20_body">You need two things:</p>
+<h3 class="paragraph-Heading_20_3"><a id="a__Webhooks"><span/></a>Webhooks</h3>
+
+<p class="paragraph-Text_20_body">For backend events:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Attendant escalated</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Order created</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Lead created</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Payment event</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">System event</span></p>
+<h3 class="paragraph-Heading_20_3"><a id="a__Realtime_connection"><span/></a>Realtime connection</h3>
+
+<p class="paragraph-Text_20_body">For live conversation:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Customer message</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">server</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">phone operator</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">human reply</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">server</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">customer browser</span></p>
+
+<p class="paragraph-Text_20_body">For this, you'd typically use <span class="text-Strong_20_Emphasis">WebSockets or a managed realtime service</span>.</p>
+
+<p class="paragraph-Text_20_body">Since your existing architecture already uses web technologies, I would keep the communication model:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">REST/API</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">+</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">WebSocket/realtime</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">+</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">webhooks for asynchronous system events</span></p>
+
+<p class="paragraph-Text_20_body">Not try to force everything through webhooks.</p>
+
+<p class="paragraph-Horizontal_20_Line"/>
+<h1 class="paragraph-Heading_20_1"><a id="a__8__The_conversation_server_becomes_the_central_authority"><span/></a>8. The conversation server becomes the central authority</h1>
+
+<p class="paragraph-Text_20_body">This is important.</p>
+
+<p class="paragraph-Text_20_body">Don't let:</p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">website ↔ phone</span></p>
+
+<p class="paragraph-Text_20_body">communicate directly.</p>
+
+<p class="paragraph-Text_20_body">Use:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">             CONVERSATION SERVER</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              /              \</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">             /                \</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">        WEBSITE              PHONE</span></p>
+
+<p class="paragraph-Text_20_body">The server owns:</p>
+<ul><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>conversation<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>messages<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>participant state<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>Attendant state<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>human handoff state<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>unread state<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>tool actions<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>delivery status<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>presence<span class="odfLiEnd"/> </p></li><li><p class="P4" style="margin-left:0.7521cm;"><span class="Bullet_20_Symbols" style="display:block;float:left;min-width:0.4991cm;">•</span>audit history<span class="odfLiEnd"/> </p></li></ul>
+<p class="paragraph-Text_20_body">This means the Attendant and human are simply <span class="text-Strong_20_Emphasis">two participants in the same conversation</span>.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__9__Conversation_participants"><span/></a>9. Conversation participants</h1>
+
+<p class="paragraph-Text_20_body">I'd model this explicitly:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">conversation</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">├── customer</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">├── attendant</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">└── human_operator</span></p>
+
+<p class="paragraph-Text_20_body">Messages:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">message</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">├── sender_type</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│   ├── customer</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│   ├── attendant</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│   └── human</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">│</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">├── content</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">├── timestamp</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">├── delivery_state</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">└── metadata</span></p>
+
+<p class="paragraph-Text_20_body">That gives you a clean architecture.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__10__Human_takeover_needs_a_state"><span/></a>10. Human takeover needs a state</h1>
+
+<p class="paragraph-Text_20_body">Something like:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">AI_ACTIVE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">AI_ESCALATING</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">HUMAN_PENDING</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">HUMAN_ACTIVE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">HUMAN_IDLE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">AI_RESUMED</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">CLOSED</span></p>
+
+<p class="paragraph-Text_20_body">When you open the conversation:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">AI_ACTIVE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">     ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">HUMAN_ACTIVE</span></p>
+
+<p class="paragraph-Text_20_body">The Attendant stops sending customer-facing responses.</p>
+
+<p class="paragraph-Text_20_body">You reply.</p>
+
+<p class="paragraph-Text_20_body">When you finish:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">HUMAN_ACTIVE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">     ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">AI_RESUMED</span></p>
+
+<p class="paragraph-Text_20_body">The Attendant can take over again.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__11__But_don't_make_the_human_manually_&quot;release&quot;_every_time"><span/></a>11. But don't make the human manually "release" every time</h1>
+
+<p class="paragraph-Text_20_body">You could have:</p>
+
+<p class="paragraph-Text_20_body"><span class="text-Strong_20_Emphasis">Take over</span></p>
+
+<p class="paragraph-Text_20_body">and later:</p>
+
+<p class="paragraph-Text_20_body"><span class="text-Strong_20_Emphasis">Return to Attendant</span></p>
+
+<p class="paragraph-Text_20_body">But there should also be sensible automatic behavior.</p>
+
+<p class="paragraph-Text_20_body">For example, after you close the conversation:</p>
+
+<p class="paragraph-Quotations">"I'll let you know if you need anything else."</p>
+
+<p class="paragraph-Text_20_body">Then the Attendant resumes.</p>
+
+<p class="paragraph-Text_20_body">However, <span class="text-Strong_20_Emphasis">never resume automatically while the human is actively typing or clearly engaged</span>.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__12__The_phone_app_can_eventually_become_much_more_powerful"><span/></a>12. The phone app can eventually become much more powerful</h1>
+
+<p class="paragraph-Text_20_body">Because it has the entire case context, your phone shouldn't just show messages.</p>
+
+<p class="paragraph-Text_20_body">At the top:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">ABC COLLEGE</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text"> High-intent lead</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Need:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Custom student portal</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Budget:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Unknown</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Current opportunity:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Custom system</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Attendant summary:</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Client needs student accounts,</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">applications and payments.</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Standard packages unsuitable.</span></p>
+<p class="paragraph-Preformatted_20_Text"> </p>
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">[Customer profile]</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">[Conversation]</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">[Research]</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">[Website]</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">[Order]</span></p>
+
+<p class="paragraph-Text_20_body">Now your phone becomes a <span class="text-Strong_20_Emphasis">mobile control centre for the Attendant</span>, not merely a chat app.</p>
+
+<p class="paragraph-Text_20_body">And this connects beautifully with your existing <span class="text-Strong_20_Emphasis">Ulndash</span> architecture.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__13__The_really_interesting_part"><span/></a>13. The really interesting part</h1>
+
+<p class="paragraph-Text_20_body">The Attendant should be able to tell you <span class="text-Strong_20_Emphasis">why it escalated</span>.</p>
+
+<p class="paragraph-Text_20_body">Not merely:</p>
+
+<p class="paragraph-Quotations">"Human requested."</p>
+
+<p class="paragraph-Text_20_body">But:</p>
+
+<p class="paragraph-Quotations"><span class="text-Strong_20_Emphasis">Escalation reason:</span> Custom scope<br/><span class="text-Strong_20_Emphasis">Confidence:</span> High<br/><span class="text-Strong_20_Emphasis">What I established:</span> Student login + applications + payments<br/><span class="text-Strong_20_Emphasis">What remains unresolved:</span> Payment integration requirements<br/><span class="text-Strong_20_Emphasis">Recommended human action:</span> Scope custom build</p>
+
+<p class="paragraph-Text_20_body">That means when you pick up the phone, you're already <span class="text-Strong_20_Emphasis">briefed</span>.</p>
+
+<p class="paragraph-Text_20_body">That's exactly how a good junior employee would hand a customer to a senior colleague.</p>
+<p class="paragraph-Horizontal_20_Line"> </p><h1 class="paragraph-Heading_20_1"><a id="a__14__Architectural_glimpse"><span/></a>14. Architectural glimpse</h1>
+
+<p class="paragraph-Text_20_body">I'd ultimately have:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                         CUSTOMER WEB</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                              │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                              ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                     ATTENDANT WIDGET</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                              │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                              ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ┌─────────────────┐</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │ CONVERSATION API│</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    └────────┬────────┘</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                             │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              ┌──────────────┼──────────────┐</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              │              │              │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              ▼              ▼              ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">          GEMINI         TOOLS          STATE</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">       FLASH-LITE       / ACTIONS      / CONTEXT</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              │              │              │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              └──────────────┼──────────────┘</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                             │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    ┌────────┴─────────┐</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                    │                  │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">              AI ACTIVE          HUMAN HANDOFF</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                              REALTIME CHANNEL</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                              MOBILE OPERATOR</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                   APP</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       ▼</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                  HUMAN</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       │</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">                                       ▼</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">                                CUSTOMER</span></p>
+
+<p class="paragraph-Text_20_body">And separately:</p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Discovery Intelligence</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">        ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Company intelligence</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">        ↓</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">Conversation context</span></p>
+
+<p class="paragraph-Preformatted_20_Text"><span class="text-Source_20_Text">        ↓</span></p>
+
+<p class="paragraph-P1"><span class="text-Source_20_Text">Attendant</span></p>
+<p class="paragraph-Horizontal_20_Line"> </p><h2 class="paragraph-Heading_20_2"><a id="a__One_architectural_principle_I'd_lock"><span/></a>One architectural principle I'd lock</h2>
+
+<p class="paragraph-Text_20_body"><span class="text-Strong_20_Emphasis">The customer should never know whether the next useful message came from AI or you unless there is a reason to tell them.</span></p>
+
+<p class="paragraph-Text_20_body">Not because we're trying to deceive them — but because the experience should feel continuous.</p>
+
+<p class="paragraph-Text_20_body">If the Attendant says:</p>
+
+<p class="paragraph-Quotations">"I'm bringing someone in to help with the custom scope."</p>
+
+<p class="paragraph-Text_20_body">Then you enter naturally.</p>
+
+<p class="paragraph-Text_20_body">No:</p>
+
+<p class="paragraph-Quotations"><span class="text-Strong_20_Emphasis">HUMAN AGENT HAS JOINED THE CHAT 🤖➡️👨</span></p>
+
+<p class="paragraph-Text_20_body">Just:</p>
+
+<p class="paragraph-Quotations"><span class="text-Strong_20_Emphasis">"Yes, we can handle that. The student payments part is the piece I'd like to understand properly before I quote you."</span></p>
+
+<p class="paragraph-Text_20_body">That's the <span class="text-Strong_20_Emphasis">across-the-desk experience</span> we're building.</p>
+
+<p class="paragraph-Text_20_body">And your handoff policy should be <span class="text-Strong_20_Emphasis">hard enough that you rarely see it</span>. The success metric isn't "how many conversations reach a human"; it's <span class="text-Strong_20_Emphasis">how many conversations the Attendant resolves correctly without needing you, while making the few escalations genuinely worth your attention.</span></p>
+<p class="paragraph-Standard"> </p></body>
+
+</html>

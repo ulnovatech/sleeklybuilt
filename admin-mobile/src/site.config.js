@@ -1,5 +1,5 @@
 export const SITE = {
-  name: 'Ulnova Admin',
+  name: 'Sleekly Admin',
   tagline: 'Lead inbox on the go',
   brandColor: '#ff4a17',
 }

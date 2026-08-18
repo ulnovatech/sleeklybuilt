@@ -5,7 +5,7 @@
   "main": "./src/index.ts",
   "exports": { ".": "./src/index.ts" },
   "scripts": {
-    "test": "tsx src/__tests__/state-machine.test.ts"
+    "test": "tsx src/__tests__/state-machine.test.ts && tsx src/__tests__/follow-up-stages.test.ts"
   },
   "dependencies": {
     "@agency/accounts": "workspace:*",
@@ -13,6 +13,7 @@
     "@agency/discovery": "workspace:*",
     "@agency/settings": "workspace:*",
     "@agency/types": "workspace:*",
+    "@agency/validation": "workspace:*",
     "drizzle-orm": "^0.38.3"
   },
   "devDependencies": {

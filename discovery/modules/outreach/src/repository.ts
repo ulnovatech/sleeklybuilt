@@ -4,12 +4,46 @@ import {
   businesses,
   leadScores,
   leads,
+  outreachDrafts,
   outreachMessages,
   outreachTemplates,
 } from '@agency/database';
 import type { OpportunityType } from '@agency/scoring';
-import { and, desc, eq, gte, inArray, notInArray, sql } from 'drizzle-orm';
+import type { OutreachDraftChannel } from './draft-channel';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  isNotNull,
+  lte,
+  notInArray,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { DEFAULT_OUTREACH_TEMPLATES } from './default-templates';
+
+const TERMINAL_LEAD_STATUSES = ['CLOSED_WON', 'CLOSED_LOST', 'ARCHIVED'] as const;
+
+export type OutreachQueueLeadRow = {
+  lead: typeof leads.$inferSelect;
+  business: typeof businesses.$inferSelect;
+  account: typeof accounts.$inferSelect;
+  leadScore: typeof leadScores.$inferSelect | null;
+};
+
+export type OutreachQueuePagedResult = {
+  items: OutreachQueueLeadRow[];
+  total: number;
+  page: number;
+  limit: number;
+};
 
 export class OutreachRepository {
   async createTemplate(data: {
@@ -152,5 +186,163 @@ export class OutreachRepository {
         .orderBy(desc(outreachMessages.createdAt));
     }
     return db.select().from(outreachMessages).orderBy(desc(outreachMessages.createdAt));
+  }
+
+  async listMessagesForLeads(leadIds: string[]) {
+    if (leadIds.length === 0) return [];
+    const db = getDb();
+    return db
+      .select()
+      .from(outreachMessages)
+      .where(inArray(outreachMessages.leadId, leadIds))
+      .orderBy(desc(outreachMessages.sentAt), desc(outreachMessages.createdAt));
+  }
+
+  async listDraftsForLeads(leadIds: string[]) {
+    if (leadIds.length === 0) return [];
+    const db = getDb();
+    return db
+      .select()
+      .from(outreachDrafts)
+      .where(inArray(outreachDrafts.leadId, leadIds));
+  }
+
+  async getDraftForLead(leadId: string, channel: OutreachDraftChannel) {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(outreachDrafts)
+      .where(and(eq(outreachDrafts.leadId, leadId), eq(outreachDrafts.channel, channel)))
+      .limit(1);
+    return row ?? null;
+  }
+
+  private buildOutreachQueueConditions(input: {
+    statuses: string[];
+    owner?: string;
+    channel?: 'email' | 'whatsapp' | 'phone' | 'any';
+    followUpDue?: 'overdue' | 'upcoming' | 'any';
+    q?: string;
+  }): SQL[] {
+    const conditions: SQL[] = [
+      inArray(leads.status, input.statuses),
+      notInArray(leads.status, [...TERMINAL_LEAD_STATUSES]),
+    ];
+    if (input.owner) conditions.push(eq(leads.owner, input.owner));
+
+    const now = new Date();
+    if (input.followUpDue === 'overdue') {
+      conditions.push(isNotNull(leads.nextFollowUpAt), lte(leads.nextFollowUpAt, now));
+    } else if (input.followUpDue === 'upcoming') {
+      conditions.push(isNotNull(leads.nextFollowUpAt), gt(leads.nextFollowUpAt, now));
+    }
+
+    if (input.channel === 'email') {
+      conditions.push(
+        or(
+          sql`trim(coalesce(${accounts.email}, '')) <> ''`,
+          sql`trim(coalesce(${businesses.email}, '')) <> ''`,
+        )!,
+      );
+    } else if (input.channel === 'phone' || input.channel === 'whatsapp') {
+      conditions.push(
+        or(
+          sql`trim(coalesce(${accounts.phone}, '')) <> ''`,
+          sql`trim(coalesce(${businesses.phone}, '')) <> ''`,
+        )!,
+      );
+    }
+
+    const q = input.q?.trim();
+    if (q) {
+      const pattern = `%${q.replace(/[%_]/g, '\\$&')}%`;
+      const textMatch = or(
+        ilike(businesses.name, pattern),
+        ilike(businesses.city, pattern),
+        ilike(businesses.email, pattern),
+        ilike(businesses.phone, pattern),
+      );
+      if (textMatch) conditions.push(textMatch);
+    }
+
+    return conditions;
+  }
+
+  private buildOutreachQueueOrder(
+    sort: 'follow_up' | 'priority' | 'score' | 'updatedAt' | 'name',
+    direction: 'asc' | 'desc',
+  ) {
+    const dir = direction === 'asc' ? asc : desc;
+    const priorityOrder = sql`CASE ${leads.priority}
+      WHEN 'urgent' THEN 1
+      WHEN 'high' THEN 2
+      WHEN 'medium' THEN 3
+      WHEN 'low' THEN 4
+      ELSE 5 END`;
+
+    switch (sort) {
+      case 'priority':
+        return [dir(priorityOrder), desc(leads.updatedAt), desc(leads.id)];
+      case 'score':
+        return [dir(leadScores.score), desc(leads.updatedAt), desc(leads.id)];
+      case 'updatedAt':
+        return [dir(leads.updatedAt), desc(leads.id)];
+      case 'name':
+        return [dir(businesses.name), desc(leads.updatedAt), desc(leads.id)];
+      case 'follow_up':
+      default:
+        return [dir(leads.nextFollowUpAt), dir(priorityOrder), desc(leadScores.score), desc(leads.id)];
+    }
+  }
+
+  async listLeadsForOutreachQueuePaged(input: {
+    statuses: string[];
+    owner?: string;
+    channel?: 'email' | 'whatsapp' | 'phone' | 'any';
+    followUpDue?: 'overdue' | 'upcoming' | 'any';
+    sort: 'follow_up' | 'priority' | 'score' | 'updatedAt' | 'name';
+    direction: 'asc' | 'desc';
+    page: number;
+    limit: number;
+    q?: string;
+  }): Promise<OutreachQueuePagedResult> {
+    const db = getDb();
+    const page = Math.max(1, input.page);
+    const limit = Math.min(100, Math.max(1, input.limit));
+    const offset = (page - 1) * limit;
+    const conditions = this.buildOutreachQueueConditions(input);
+    const where = and(...conditions);
+    const orderBy = this.buildOutreachQueueOrder(input.sort, input.direction);
+
+    const [totalRow] = await db
+      .select({ value: count() })
+      .from(leads)
+      .innerJoin(businesses, eq(leads.businessId, businesses.id))
+      .innerJoin(accounts, eq(leads.accountId, accounts.id))
+      .leftJoin(leadScores, eq(leadScores.businessId, businesses.id))
+      .where(where);
+
+    const items = await db
+      .select({
+        lead: leads,
+        business: businesses,
+        account: accounts,
+        leadScore: leadScores,
+      })
+      .from(leads)
+      .innerJoin(businesses, eq(leads.businessId, businesses.id))
+      .innerJoin(accounts, eq(leads.accountId, accounts.id))
+      .leftJoin(leadScores, eq(leadScores.businessId, businesses.id))
+      .where(where)
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      items,
+      total: Number(totalRow?.value ?? 0),
+      page,
+      limit,
+    };
   }
 }

@@ -33,10 +33,10 @@ C:.
 |   |   |   services-3.jpg
 |   |   |   services.jpg
 |   |   |   testimonials-bg.jpg
-|   |   |   uln-logo.png
-|   |   |   ulnova.jpg
-|   |   |   ulnova2.jpg
-|   |   |   ulnova3.jpg
+|   |   |   sleeklybuilt-logo.png
+|   |   |   sleeklybuilt.jpg
+|   |   |   sleeklybuilt2.jpg
+|   |   |   sleeklybuilt3.jpg
 |   |   |   working-1.jpg
 |   |   |   working-2.jpg
 |   |   |   working-3.jpg

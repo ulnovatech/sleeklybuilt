@@ -39,13 +39,18 @@ assert(parts.includes("missing_api_key"), 'missing_api_key handled in UI')
 const header = read('src/components/attendant/AttendantHeader.jsx')
 assert(header.includes('whatsapp') || header.includes('WhatsApp'), 'header has WhatsApp')
 assert(header.includes('tel:'), 'header has call')
+assert(header.includes('Minimize attendant'), 'header minimizes instead of close')
+assert(header.includes('ChevronDown') || header.includes('FiChevronDown'), 'header uses chevron down')
+assert(!header.includes('FiX'), 'header has no close X')
 
 const provider = read('src/components/attendant/AttendantProvider.jsx')
 assert(provider.includes('confirmation_required'), 'provider handles confirmation_required')
 assert(provider.includes("event === 'choices'") || provider.includes('event === "choices"') || provider.includes("=== 'choices'"), 'provider handles choices SSE')
 assert(provider.includes('pendingChoices') || provider.includes('setPendingChoices'), 'provider tracks pendingChoices')
 assert(provider.includes('message_delta'), 'provider handles streaming deltas')
-assert(provider.includes('status: \'streaming\''), 'streaming status until complete')
+assert(provider.includes("status: 'streaming'"), 'streaming status until complete')
+assert(provider.includes('minimizePanel'), 'provider exposes minimizePanel')
+assert(provider.includes('minimized'), 'provider tracks minimized')
 
 const api = read('src/components/attendant/api.js')
 assert(api.includes('choice.php'), 'api posts to choice.php')
@@ -53,6 +58,8 @@ assert(api.includes('selectChoice'), 'selectChoice client helper')
 
 const layout = read('src/components/layout/Layout.jsx')
 assert(layout.includes('AttendantRoot'), 'Layout mounts AttendantRoot')
+assert(layout.includes('AttendantProvider'), 'Layout wraps AttendantProvider for dock reflow')
+assert(layout.includes('lg:pr-[380px]') || layout.includes('pr-[380px]'), 'Layout reserves dock width on large screens')
 assert(!layout.includes('FloatingContact'), 'FloatingContact removed from Layout')
 
 const confirmHonesty = read('src/components/attendant/AttendantProvider.jsx')
@@ -69,10 +76,14 @@ assert(partsEsc.includes("role === 'human'") || partsEsc.includes('isHuman'), 'h
 
 const panelEsc = read('src/components/attendant/AttendantPanel.jsx')
 assert(panelEsc.includes('Connecting you with the team') || panelEsc.includes('escalationState'), 'panel shows escalation connecting state')
+assert(panelEsc.includes('lg:w-[380px]') || panelEsc.includes('w-[380px]'), 'panel docks at 380px on large screens')
+assert(panelEsc.includes('minimizePanel'), 'panel backdrop/escape minimizes')
 
 const launcher = read('src/components/attendant/AttendantLauncher.jsx')
 assert(launcher.includes('h-12 w-12') || launcher.includes('h-12') && launcher.includes('w-12'), 'launcher 48×48')
 assert(launcher.includes('bg-accent'), 'launcher uses gold accent')
+assert(launcher.includes('Expand attendant'), 'minimized launcher expands')
+assert(launcher.includes('ChevronUp') || launcher.includes('FiChevronUp'), 'minimized launcher uses chevron up')
 
 const clientActions = read('src/components/attendant/clientActions.js')
 assert(clientActions.includes('section_id'), 'clientActions focuses section_id when hash null')

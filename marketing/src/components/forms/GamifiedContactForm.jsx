@@ -186,7 +186,6 @@ export default function GamifiedContactForm() {
   const prompts = useMemo(() => activePrompts(form), [form])
   const safeIndex = Math.min(promptIndex, prompts.length - 1)
   const current = prompts[safeIndex]
-  const progress = Math.round(((safeIndex + 1) / prompts.length) * 100)
   const isLast = current?.id === 'send'
 
   useEffect(() => {
@@ -348,49 +347,45 @@ export default function GamifiedContactForm() {
 
   return (
     <div className="rounded-xl border border-subtle bg-surface-raised p-5 shadow-sm sm:p-6">
-      <div className="flex items-center justify-between gap-3" aria-live="polite">
-        <p id={statusId} className="text-meta text-content-muted">
-          <span className="font-semibold text-emerald-deep">
+      <div
+        className="flex items-center justify-between gap-3"
+        aria-live="polite"
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={prompts.length}
+        aria-valuenow={safeIndex + 1}
+        aria-labelledby={statusId}
+      >
+        <p id={statusId} className="shrink-0 text-meta text-content-muted">
+          <span className="font-semibold tabular-nums text-emerald-deep">
             {safeIndex + 1}/{prompts.length}
           </span>
         </p>
-        <div
-          className="h-1 flex-1 overflow-hidden rounded-full bg-surface-sunken"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={progress}
-          aria-labelledby={statusId}
-        >
-          <div
-            className={cn(
-              'h-full rounded-full bg-action-primary-hover',
-              !reducedMotion && 'transition-[width] duration-normal ease-dos',
-            )}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+        <ol className="flex min-w-0 flex-1 items-center justify-end" aria-label="Progress">
+          {prompts.map((p, index) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                disabled={index > safeIndex}
+                onClick={() => goToPrompt(index)}
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:cursor-default"
+                aria-label={`${p.question}${index < safeIndex ? ' (done)' : index === safeIndex ? ' (current)' : ''}`}
+                aria-current={index === safeIndex ? 'step' : undefined}
+              >
+                <span
+                  className={cn(
+                    'block rounded-full',
+                    index === safeIndex ? 'h-2.5 w-2.5 bg-action-primary' : 'h-2 w-2',
+                    index < safeIndex && 'bg-action-primary-hover',
+                    index > safeIndex && 'bg-surface-sunken',
+                  )}
+                  aria-hidden="true"
+                />
+              </button>
+            </li>
+          ))}
+        </ol>
       </div>
-
-      <ol className="mt-3 flex gap-1.5" aria-label="Progress">
-        {prompts.map((p, index) => (
-          <li key={p.id} className="flex-1">
-            <button
-              type="button"
-              disabled={index > safeIndex}
-              onClick={() => goToPrompt(index)}
-              className={cn(
-                'block h-1.5 w-full rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:cursor-default',
-                index < safeIndex && 'bg-action-primary-hover',
-                index === safeIndex && 'bg-action-primary',
-                index > safeIndex && 'bg-surface-sunken',
-              )}
-              aria-label={`${p.question}${index < safeIndex ? ' (done)' : index === safeIndex ? ' (current)' : ''}`}
-              aria-current={index === safeIndex ? 'step' : undefined}
-            />
-          </li>
-        ))}
-      </ol>
 
       <div className="mt-6">
         <h2

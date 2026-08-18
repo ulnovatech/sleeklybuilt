@@ -1,3 +1,4 @@
+import type { AgencyService } from '@agency/settings';
 import type { BoIDigitalGap, BoISolution, BoISolutionBenefit, BoIStructuredPain } from './types';
 
 type SolutionRule = {
@@ -102,12 +103,20 @@ const SOLUTION_RULES: SolutionRule[] = [
   },
 ];
 
+function resolveServiceLabel(ruleId: string, fallback: string, services?: AgencyService[]): string {
+  if (!services?.length) return fallback;
+  const mapped = services.find((s) => s.mapsToSolutionId === ruleId);
+  return mapped?.name?.trim() || fallback;
+}
+
 /**
  * Maps structured pains and digital gaps to recommended agency services.
+ * When agency.services is non-empty, remaps labels via mapsToSolutionId.
  */
 export function mapPainsToSolutions(input: {
   pains: BoIStructuredPain[];
   digitalGaps: BoIDigitalGap[];
+  agencyServices?: AgencyService[];
 }): BoISolution[] {
   const gapIds = new Set(input.digitalGaps.map((g) => g.id));
   const solutions: BoISolution[] = [];
@@ -127,7 +136,7 @@ export function mapPainsToSolutions(input: {
 
     solutions.push({
       id: rule.id,
-      service: rule.service,
+      service: resolveServiceLabel(rule.id, rule.service, input.agencyServices),
       painIds: [...new Set(painIds)],
       benefits: rule.benefits,
     });

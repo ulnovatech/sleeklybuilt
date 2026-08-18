@@ -21,18 +21,23 @@ const ctx = buildMergeContext({
   email: 'joe@example.com',
   phone: '+256700',
   googleMapsUrl: 'https://maps.google.com/joes',
+  agencyBrand: 'SleeklyBuilt',
+  agencySender: 'SleeklyBuilt',
+  agencySignature: '—\nSleeklyBuilt',
 });
 
 assert(ctx.name === "Joe's", 'name is first token of business');
 assert(ctx.business === "Joe's Pizza", 'business uses canonical name');
+assert(ctx.agency === 'SleeklyBuilt', 'agency brand token');
 
 const body = mergeTemplate(
-  'Hi {{name}}, I saw {{business}} in {{city}}. Site: {{website}}',
+  'Hi {{name}}, I saw {{business}} in {{city}}. Site: {{website}}\n{{agency}}\n{{signature}}',
   ctx,
 );
 assert(body.includes("Hi Joe's,"), 'substitutes name');
 assert(body.includes("Joe's Pizza in Kampala"), 'substitutes business and city');
 assert(body.includes('https://joes.example'), 'substitutes website');
+assert(body.includes('SleeklyBuilt'), 'substitutes agency');
 
 const subject = mergeTemplate('Quick idea for {{business}}', ctx);
 assert(subject === "Quick idea for Joe's Pizza", 'substitutes subject');

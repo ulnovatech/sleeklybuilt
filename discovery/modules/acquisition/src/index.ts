@@ -17,7 +17,7 @@ export {
   type IJobQueue,
 } from './contracts';
 export { PIPELINE_JOB_STAGES } from './types';
-export { getPipelineStagesForRun, type RunProfile } from './pipeline-stages';
+export { getPipelineStagesForRun, MONITOR_PIPELINE_STAGES, type RunProfile } from './pipeline-stages';
 export {
   getNextPipelineStage,
   getPipelinePlanForProfile,

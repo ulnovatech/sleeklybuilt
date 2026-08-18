@@ -4,7 +4,7 @@
 #
 # Order:
 #   1) DISCOVERY_SRC env (explicit)
-#   2) Sibling ../lead discover - ulntech (local htdocs layout)
+#   2) Sibling ../lead discover - sleekly (local htdocs layout)
 #   3) ./discovery (junction locally, or rsynced tree on GCE / in-repo checkout)
 set -euo pipefail
 
@@ -20,7 +20,7 @@ if [[ -n "${DISCOVERY_SRC:-}" ]]; then
   exit 1
 fi
 
-SIBLING="$(cd "$ROOT/.." && pwd)/lead discover - ulntech"
+SIBLING="$(cd "$ROOT/.." && pwd)/lead discover - sleekly"
 if [[ -d "$SIBLING" && -f "$SIBLING/package.json" ]]; then
   cd "$SIBLING" && pwd
   exit 0

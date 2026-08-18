@@ -59,6 +59,8 @@ type OpportunityCardProps = {
   promoteBlocked?: string;
   promoteAllowed: boolean;
   loading: boolean;
+  selected?: boolean;
+  onSelectedChange?: (selected: boolean) => void;
   onStartPursuit: () => void;
   onDismiss: () => void;
   onReject: () => void;
@@ -71,6 +73,8 @@ export function OpportunityCard({
   promoteBlocked,
   promoteAllowed,
   loading,
+  selected,
+  onSelectedChange,
   onStartPursuit,
   onDismiss,
   onReject,
@@ -80,10 +84,21 @@ export function OpportunityCard({
   else if (item.business.phone) contactParts.push(item.business.phone);
 
   return (
-    <article className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+    <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="flex flex-col lg:flex-row lg:items-stretch">
-        <div className="flex-1 min-w-0 p-4 space-y-3">
+        <div className="min-w-0 flex-1 space-y-3 p-4">
           <div className="flex flex-wrap items-center gap-2">
+            {onSelectedChange && (
+              <label className="mr-1 inline-flex items-center gap-2 text-xs text-slate-600">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-slate-300"
+                  checked={Boolean(selected)}
+                  onChange={(event) => onSelectedChange(event.target.checked)}
+                  aria-label={`Select ${item.business.name}`}
+                />
+              </label>
+            )}
             <h3 className="font-semibold text-slate-900">{item.business.name}</h3>
             {tierLabel && (
               <span className="text-xs font-medium px-2 py-0.5 rounded border bg-slate-100 text-slate-700 border-slate-200">

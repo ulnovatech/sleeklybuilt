@@ -117,3 +117,32 @@ export {
   buildOpportunityBriefPayload,
   type BoIOpportunityBriefPayload,
 } from './boi/boi-repository';
+export { buildPitchPack, type PitchPack } from './pitch-pack';
+export {
+  buildCaseFile,
+  type CaseFile,
+  type CaseFileWebsiteBrief,
+  type PursuitContext,
+} from './case-file';
+export {
+  normalizePhoneE164,
+  screenWhatsAppNumber,
+  type WhatsAppReadiness,
+  type WhatsAppScreening,
+} from './contact-screening';
+export {
+  buildDraftFactPack,
+  buildDraftPrompt,
+  generateOutreachDraft,
+  getCachedDraft,
+  getDraftBudgetStatus,
+  hashFactPack,
+  parseDraftResponse,
+  DraftGenerationError,
+  type DraftChannel,
+  type DraftFactPack,
+  type DraftSource,
+  type OutreachDraftRecord,
+  type ParsedDraft,
+  type PhoneDraftSections,
+} from './controlled-drafts';

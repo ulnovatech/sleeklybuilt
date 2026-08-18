@@ -3,11 +3,24 @@ import { PIPELINE_JOB_STAGES, type AcquisitionJobStage } from './types';
 
 export type RunProfile = 'micro' | 'standard' | 'boost';
 
+/** Monitor plans: re-check known accounts — no discover / places. */
+export const MONITOR_PIPELINE_STAGES: AcquisitionJobStage[] = [
+  'crawl',
+  'bi_enrich',
+  'derive_signals',
+  'score',
+];
+
 /** Base pipeline (all run profiles). Browser enrich is boost-only when enabled. */
 export function getPipelineStagesForRun(
   runProfile: RunProfile,
   browserEnabled = isBrowserAutomationEnabled(),
+  options?: { planType?: 'discovery' | 'monitor' | string | null },
 ): AcquisitionJobStage[] {
+  if (options?.planType === 'monitor') {
+    return [...MONITOR_PIPELINE_STAGES];
+  }
+
   const stages: AcquisitionJobStage[] = [...PIPELINE_JOB_STAGES];
   if (runProfile === 'boost' && browserEnabled) {
     const scoreIdx = stages.indexOf('score');

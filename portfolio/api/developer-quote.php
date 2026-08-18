@@ -19,7 +19,7 @@ if (!$input || empty($input['email']) || empty($input['name']) || empty($input['
 }
 
 // Process the form data
-$to = 'ulnovatech@gmail.com';
+$to = 'sales@sleeklybuilt.pro';
 $subject = 'New Developer Quote Request - ' . $input['name'];
 $headers = [
     'From: ' . $input['name'] . ' <' . $input['email'] . '>',

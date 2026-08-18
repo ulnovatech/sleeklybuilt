@@ -4,7 +4,7 @@ set -euo pipefail
 echo "== container env =="
 docker exec infra-discovery-web-1 sh -c 'env | grep -E "^(GOOGLE_PLACES|GOOGLE_CSE|ACQUISITION)" | sed -E "s/(KEY|KEYS)=.*/\1=SET/"'
 
-PLACES_KEY=$(grep '^GOOGLE_PLACES_API_KEY=' /opt/ulnovatech/env/docker.discovery.env | cut -d= -f2-)
+PLACES_KEY=$(grep '^GOOGLE_PLACES_API_KEY=' /opt/sleeklybuilt/env/docker.discovery.env | cut -d= -f2-)
 
 echo "== places api live test =="
 CODE=$(curl -s -o /tmp/places_test.json -w '%{http_code}' \
@@ -16,7 +16,7 @@ CODE=$(curl -s -o /tmp/places_test.json -w '%{http_code}' \
 echo "HTTP $CODE"
 head -c 500 /tmp/places_test.json; echo
 
-CSE_KEY=$(grep '^GOOGLE_CSE_API_KEY=' /opt/ulnovatech/env/docker.discovery.env | cut -d= -f2-)
+CSE_KEY=$(grep '^GOOGLE_CSE_API_KEY=' /opt/sleeklybuilt/env/docker.discovery.env | cut -d= -f2-)
 echo "== cse api live test (expects CX; may 400 without) =="
 CODE2=$(curl -s -o /tmp/cse_test.json -w '%{http_code}' \
   "https://www.googleapis.com/customsearch/v1?key=${CSE_KEY}&q=test")

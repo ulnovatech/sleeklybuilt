@@ -1,6 +1,11 @@
 export { OpsMetricsService } from './metrics-service';
-export type { OpsMetrics, OpsKpiRow } from './metrics-service';
+export type { OpsMetrics, OpsKpiRow, MorningInbox, MorningInboxItem } from './metrics-service';
 export type { RevenueOpsMetrics } from './revenue-metrics';
+export type {
+  LearningOpsMetrics,
+  SegmentConversionRow,
+  RevenueByPlanRow,
+} from './learning-metrics';
 export {
   FailedJobsService,
   clampFailedJobsDays,

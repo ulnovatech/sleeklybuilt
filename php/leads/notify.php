@@ -5,7 +5,7 @@
  */
 function uln_notify_lead(string $type, array $payload): void
 {
-    $to = getenv('LEAD_NOTIFY_EMAIL') ?: 'ulnovatech@gmail.com';
+    $to = getenv('LEAD_NOTIFY_EMAIL') ?: 'sales@sleeklybuilt.pro';
     $brand = getenv('BRAND_NAME') ?: 'SleeklyBuilt';
     $subject = '[' . $brand . '] New lead: ' . $type;
 
@@ -25,7 +25,7 @@ function uln_notify_lead(string $type, array $payload): void
     $message = implode("\n", $lines);
     error_log($message);
 
-    $headers = 'From: noreply@ulnovatech.store' . "\r\n" .
+    $headers = 'From: noreply@sleeklybuilt.pro' . "\r\n" .
         'Content-Type: text/plain; charset=UTF-8';
 
     @mail($to, $subject, $message, $headers);

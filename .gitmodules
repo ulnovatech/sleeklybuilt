@@ -1,3 +1,3 @@
-[submodule "uln-blog"]
+[submodule "sleekly-blog"]
 	path = sleekly-blog
-	url = https://github.com/ulnovatech/uln-blog.git
+	url = https://github.com/ulnovatech/sleekly-blog.git

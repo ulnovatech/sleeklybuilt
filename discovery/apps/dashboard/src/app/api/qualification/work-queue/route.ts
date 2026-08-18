@@ -3,7 +3,7 @@ import {
   type VerificationFilter,
   type WorkQueueFilters,
 } from '@agency/qualification';
-import type { OpportunityType, Reachability } from '@agency/scoring';
+import type { AcquisitionLane, OpportunityType, Reachability } from '@agency/scoring';
 import { NextResponse } from 'next/server';
 
 const qualification = new QualificationService();
@@ -15,6 +15,11 @@ function parseVerification(value: string | null): VerificationFilter | undefined
 
 function parseKind(value: string | null): WorkQueueFilters['kind'] | undefined {
   if (value === 'all' || value === 'demand' || value === 'opportunity') return value;
+  return undefined;
+}
+
+function parseAcquisitionLane(value: string | null): AcquisitionLane | 'all' | undefined {
+  if (value === 'greenfield' || value === 'redesign' || value === 'all') return value;
   return undefined;
 }
 
@@ -42,6 +47,13 @@ export async function GET(request: Request) {
         oppType && OPPORTUNITY_TYPES.includes(oppType as OpportunityType)
           ? (oppType as OpportunityType)
           : undefined,
+      acquisitionLane: parseAcquisitionLane(searchParams.get('acquisitionLane')),
+      hasPhone:
+        searchParams.get('hasPhone') === '1' || searchParams.get('hasPhone') === 'true'
+          ? true
+          : undefined,
+      q: searchParams.get('q')?.trim() || undefined,
+      cursor: searchParams.get('cursor') ?? undefined,
       page: searchParams.get('page') ? parseInt(searchParams.get('page')!, 10) : 1,
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : 20,
     };

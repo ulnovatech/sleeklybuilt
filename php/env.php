@@ -36,4 +36,4 @@ function uln_load_env(string $path): void
 $envRoot = dirname(__DIR__);
 uln_load_env($envRoot . '/.env');
 uln_load_env($envRoot . '/php/.env');
-uln_load_env($envRoot . '/ulndash/backend/.env');
+uln_load_env($envRoot . '/sleekly-dash/backend/.env');

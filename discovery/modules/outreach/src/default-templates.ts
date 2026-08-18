@@ -18,7 +18,9 @@ export const DEFAULT_OUTREACH_TEMPLATES: DefaultOutreachTemplate[] = [
 
 I saw your recent request for web help and wanted to reach out directly about {{business}}. We help local businesses in {{city}} launch and improve sites that bring in real enquiries.
 
-Would a 15-minute call this week work to understand what you need?`,
+Would a 15-minute call this week work to understand what you need?
+
+{{signature}}`,
     channel: 'email',
   },
   {
@@ -29,7 +31,9 @@ Would a 15-minute call this week work to understand what you need?`,
 
 I noticed {{business}} in {{city}} doesn't have a website yet — many customers search online before they call or visit.
 
-We build starter sites for local businesses. Open to a quick call to see if a simple launch package fits?`,
+{{agency}} builds starter sites for local businesses. Open to a quick call to see if a simple launch package fits?
+
+{{signature}}`,
     channel: 'email',
   },
   {
@@ -40,7 +44,9 @@ We build starter sites for local businesses. Open to a quick call to see if a si
 
 I took a look at {{business}}'s site{{website}} and think a focused refresh could improve trust and mobile conversions without a full rebuild.
 
-We do fixed-scope redesigns for local businesses. Worth a short call to share one concrete improvement idea?`,
+{{agency}} does fixed-scope redesigns for local businesses. Worth a short call to share one concrete improvement idea?
+
+{{signature}}`,
     channel: 'email',
   },
   {
@@ -51,7 +57,9 @@ We do fixed-scope redesigns for local businesses. Worth a short call to share on
 
 {{business}}'s website could benefit from a credibility upgrade — HTTPS, mobile polish, and clearer calls-to-action often lift enquiries with minimal disruption.
 
-We help local businesses modernize incrementally. Open to a 10-minute chat?`,
+{{agency}} helps local businesses modernize incrementally. Open to a 10-minute chat?
+
+{{signature}}`,
     channel: 'email',
   },
   {
@@ -60,9 +68,11 @@ We help local businesses modernize incrementally. Open to a 10-minute chat?`,
     subject: 'Quick idea for {{business}}',
     body: `Hi {{name}},
 
-I work with local businesses in {{city}} on websites that turn visitors into leads. I thought {{business}} might be a fit.
+I work with local businesses in {{city}} on websites that turn visitors into leads. I thought {{business}} might be a fit for {{agency}}.
 
-Would you be open to a short call this week?`,
+Would you be open to a short call this week?
+
+{{signature}}`,
     channel: 'email',
   },
 ];

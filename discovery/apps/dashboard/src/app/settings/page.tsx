@@ -4,15 +4,25 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { V1CharterPanel } from '@/components/settings/v1-charter-panel';
 import { KpiTargetsPanel } from '@/components/settings/kpi-targets-panel';
+import {
+  AgencyProfilePanel,
+  useAgencyPresets,
+  type AgencySettings,
+} from '@/components/settings/agency-profile-panel';
 import { PageHeader } from '@/components/layout/page-header';
 import { PAGE_COPY } from '@/lib/product-copy';
 import { GmailIntegrationsPanel } from '@/components/settings/gmail-integrations-panel';
+import { SleeklyDashBridgePanel } from '@/components/settings/sleekly-dash-bridge-panel';
 import { MarketHunterSettingsPanel } from '@/components/settings/market-hunter-settings-panel';
 import { SuppressionListPanel } from '@/components/settings/suppression-list-panel';
 import {
   LocalePacksEditor,
   type LocaleSettings,
 } from '@/components/settings/locale-packs-editor';
+import {
+  OutreachDraftsSettingsPanel,
+  type DraftBudgetStatus,
+} from '@/components/settings/outreach-drafts-settings-panel';
 
 type AcquisitionSettings = {
   mode: 'economy' | 'standard' | 'boost';
@@ -21,6 +31,8 @@ type AcquisitionSettings = {
   metaGraphLimits: { economy: number; standard: number; boost: number };
   socialSearchLimits: { economy: number; standard: number; boost: number };
   placesTtlDays: number;
+  /** Days before known accounts are re-crawled / BI-enriched. */
+  enrichmentStaleAfterDays: number;
   places: {
     standardVerifyMaxPerRun: number;
     boostVerifyMaxPerRun: number;
@@ -76,6 +88,13 @@ type CrmSettings = {
   followUpDaysAfterContact: number;
 };
 
+type DraftSettings = {
+  enabled: boolean;
+  provider: 'openrouter' | 'openai' | 'anthropic';
+  model: string;
+  maxOutputTokens: number;
+};
+
 type SettingsResponse = {
   acquisition: AcquisitionSettings;
   discovery: DiscoverySettings;
@@ -83,6 +102,9 @@ type SettingsResponse = {
   locales: LocaleSettings;
   qualification: QualificationSettings;
   crm: CrmSettings;
+  drafts?: DraftSettings;
+  draftBudget?: DraftBudgetStatus;
+  agency?: AgencySettings;
   credentials: CredentialField[];
 };
 
@@ -109,6 +131,10 @@ export default function SettingsPage() {
   const [locales, setLocales] = useState<LocaleSettings | null>(null);
   const [qualification, setQualification] = useState<QualificationSettings | null>(null);
   const [crm, setCrm] = useState<CrmSettings | null>(null);
+  const [drafts, setDrafts] = useState<DraftSettings | null>(null);
+  const [draftBudget, setDraftBudget] = useState<DraftBudgetStatus | null>(null);
+  const [agency, setAgency] = useState<AgencySettings | null>(null);
+  const agencyPresets = useAgencyPresets();
   const [extraPathsText, setExtraPathsText] = useState('');
   const [contactKeywordsText, setContactKeywordsText] = useState('');
   const [aboutKeywordsText, setAboutKeywordsText] = useState('');
@@ -140,6 +166,31 @@ export default function SettingsPage() {
       },
     );
     setCrm(data.crm ?? { followUpDaysAfterContact: 3 });
+    setDrafts(
+      data.drafts ?? {
+        enabled: true,
+        provider: 'openrouter',
+        model: 'google/gemini-2.5-pro',
+        maxOutputTokens: 900,
+      },
+    );
+    setDraftBudget(data.draftBudget ?? null);
+    setAgency(
+      data.agency ?? {
+        presetId: 'generic',
+        brandName: '',
+        legalName: '',
+        tagline: '',
+        currency: 'UGX',
+        email: '',
+        phone: '',
+        location: '',
+        senderName: '',
+        signature: '',
+        packages: [],
+        services: [],
+      },
+    );
     setExtraPathsText(listToLines(data.crawl.extraPaths));
     setContactKeywordsText(listToLines(data.crawl.contactLinkKeywords ?? []));
     setAboutKeywordsText(listToLines(data.crawl.aboutLinkKeywords ?? []));
@@ -169,7 +220,7 @@ export default function SettingsPage() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!acquisition || !discovery || !crawl || !locales || !qualification || !crm) return;
+    if (!acquisition || !discovery || !crawl || !locales || !qualification || !crm || !drafts || !agency) return;
     setSaving(true);
     setError(null);
     setSaved(false);
@@ -204,6 +255,8 @@ export default function SettingsPage() {
           locales,
           qualification,
           crm,
+          drafts,
+          agency,
           credentials: Object.keys(credPatch).length > 0 ? credPatch : undefined,
         }),
       });
@@ -220,30 +273,57 @@ export default function SettingsPage() {
     return <p className="text-slate-600">Loading settings…</p>;
   }
 
-  if (!acquisition || !discovery || !crawl || !locales || !qualification || !crm) {
+  if (!acquisition || !discovery || !crawl || !locales || !qualification || !crm || !drafts || !agency) {
     return <p className="text-red-700">Settings could not be loaded.</p>;
   }
 
   return (
-    <div className="max-w-3xl">
-      <PageHeader title={PAGE_COPY.settings.title} description={PAGE_COPY.settings.description} />
-      <p className="text-slate-600 text-sm mb-6 -mt-2">
-        API keys are saved here (database). Use the single project <code className="text-xs">.env</code>{' '}
-        at the repo root only for infrastructure (database URL, auth, caps) — not for discovery keys.
+    <div className="mx-auto max-w-5xl">
+      <PageHeader compact title={PAGE_COPY.settings.title} description={PAGE_COPY.settings.description} />
+      <p className="-mt-2 mb-4 text-sm text-ink-muted">
+        API keys are saved in the database. Use the project <code className="text-xs">.env</code> at the
+        repo root for infrastructure only — not discovery keys.
       </p>
 
+      <div className="lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-8">
+        <nav
+          aria-label="Settings sections"
+          className="sticky-below-header mb-6 flex flex-wrap gap-1 rounded-lg border border-line bg-surface p-2 shadow-panel lg:mb-0 lg:flex lg:max-h-[calc(100vh-var(--header-height)-2rem)] lg:flex-col lg:overflow-y-auto lg:self-start"
+        >
+          {[
+            { href: '#settings-integrations', label: 'Integrations' },
+            { href: '#settings-agency', label: 'Agency' },
+            { href: '#settings-qualification', label: 'Qualification' },
+            { href: '#settings-crm', label: 'CRM' },
+            { href: '#settings-acquisition', label: 'Acquisition' },
+            { href: '#settings-drafts', label: 'Channel pitches' },
+            { href: '#settings-crawl', label: 'Crawl' },
+            { href: '#settings-credentials', label: 'Credentials' },
+            { href: '#settings-discovery', label: 'Discovery' },
+          ].map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-ink-muted hover:bg-surface-raised hover:text-ink lg:w-full"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="min-w-0">
       {error && (
-        <p className="mb-4 text-red-700 text-sm bg-red-50 border border-red-200 rounded p-3">{error}</p>
+        <p className="mb-4 rounded-lg border border-danger/20 bg-danger-muted p-3 text-sm text-danger-foreground">{error}</p>
       )}
       {saved && (
-        <p className="mb-4 text-green-800 text-sm bg-green-50 border border-green-200 rounded p-3">
+        <p className="mb-4 rounded-lg border border-success/20 bg-success-muted p-3 text-sm text-success-foreground">
           Settings saved.
         </p>
       )}
 
       <V1CharterPanel />
 
-      <div className="mb-8">
+      <div id="settings-integrations" className="mb-8 scroll-mt-[calc(var(--header-height)+1rem)]">
         <KpiTargetsPanel />
         <GmailIntegrationsPanel
           hasClientCredentials={
@@ -251,6 +331,7 @@ export default function SettingsPage() {
             credentials.some((c) => c.key === 'gmail_oauth_client_secret' && c.configured)
           }
         />
+        <SleeklyDashBridgePanel />
         <div className="mt-4">
           <MarketHunterSettingsPanel />
         </div>
@@ -258,7 +339,9 @@ export default function SettingsPage() {
       </div>
 
       <form onSubmit={save} className="space-y-8">
-        <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
+        <AgencyProfilePanel value={agency} presets={agencyPresets} onChange={setAgency} />
+
+        <section id="settings-qualification" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">Qualification &amp; review queue</h3>
           <p className="text-sm text-slate-600">
             Verified means email, phone, or Google Places confirmation. When enabled, the review
@@ -367,7 +450,7 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
+        <section id="settings-crm" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">CRM &amp; follow-ups</h3>
           <label className="block text-sm">
             <span className="text-slate-700 font-medium">Follow-up days after contacted</span>
@@ -387,7 +470,7 @@ export default function SettingsPage() {
           </label>
         </section>
 
-        <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
+        <section id="settings-acquisition" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">Acquisition &amp; budget</h3>
 
           <label className="block text-sm">
@@ -417,6 +500,8 @@ export default function SettingsPage() {
                 ['browser_automation', 'Browser automation (daily)'],
                 ['custom_scrape', 'Custom scrape (daily)'],
                 ['meta_graph', 'Meta Graph (daily)'],
+                ['llm_narrative', 'BOI LLM narrative (daily)'],
+                ['llm_draft', 'Channel pitches (daily)'],
               ] as const
             ).map(([key, label]) => (
               <label key={key} className="block">
@@ -436,6 +521,13 @@ export default function SettingsPage() {
               </label>
             ))}
           </div>
+          <p className="text-xs text-ink-muted">
+            Pitch provider, model, and key live in{' '}
+            <a href="#settings-drafts" className="font-medium text-accent hover:underline">
+              Channel pitches
+            </a>
+            . The daily cap here is the same <code className="text-[11px]">llm_draft</code> budget.
+          </p>
 
           <div className="grid grid-cols-3 gap-3 text-sm">
             {(['economy', 'standard', 'boost'] as const).map((mode) => (
@@ -506,21 +598,45 @@ export default function SettingsPage() {
             ))}
           </div>
 
-          <label className="block text-sm">
-            <span className="text-slate-700 font-medium">Places cache TTL (days)</span>
-            <input
-              type="number"
-              min={1}
-              className="mt-1 w-32 border border-slate-300 rounded-md px-3 py-2"
-              value={acquisition.placesTtlDays}
-              onChange={(e) =>
-                setAcquisition({
-                  ...acquisition,
-                  placesTtlDays: parseInt(e.target.value, 10) || 90,
-                })
-              }
-            />
-          </label>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <label className="block">
+              <span className="text-slate-700 font-medium">Places cache TTL (days)</span>
+              <input
+                type="number"
+                min={1}
+                className="mt-1 w-full border border-slate-300 rounded-md px-3 py-2"
+                value={acquisition.placesTtlDays}
+                onChange={(e) =>
+                  setAcquisition({
+                    ...acquisition,
+                    placesTtlDays: parseInt(e.target.value, 10) || 90,
+                  })
+                }
+              />
+            </label>
+            <label className="block">
+              <span className="text-slate-700 font-medium">Enrichment stale after (days)</span>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                className="mt-1 w-full border border-slate-300 rounded-md px-3 py-2"
+                value={acquisition.enrichmentStaleAfterDays ?? 30}
+                onChange={(e) =>
+                  setAcquisition({
+                    ...acquisition,
+                    enrichmentStaleAfterDays: Math.min(
+                      365,
+                      Math.max(1, parseInt(e.target.value, 10) || 30),
+                    ),
+                  })
+                }
+              />
+              <span className="mt-1 block text-xs text-slate-500">
+                Known accounts crawled/enriched within this window skip crawl and BI on re-runs.
+              </span>
+            </label>
+          </div>
 
           <div className="pt-3 border-t border-slate-200">
             <p className="text-sm font-medium text-slate-800 mb-3">Places verify &amp; details (per run)</p>
@@ -601,9 +717,27 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        <OutreachDraftsSettingsPanel
+          drafts={drafts}
+          onDraftsChange={setDrafts}
+          dailyCap={acquisition.caps.llm_draft ?? 30}
+          onDailyCapChange={(next) =>
+            setAcquisition({
+              ...acquisition,
+              caps: { ...acquisition.caps, llm_draft: next },
+            })
+          }
+          credentials={credentials}
+          credentialValues={credentialValues}
+          onCredentialValueChange={(key, value) =>
+            setCredentialValues({ ...credentialValues, [key]: value })
+          }
+          budget={draftBudget}
+        />
+
         <LocalePacksEditor locales={locales} onChange={setLocales} />
 
-        <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
+        <section id="settings-crawl" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">Website crawl (Tier 3)</h3>
           <p className="text-sm text-slate-600">
             Link discovery uses intent scoring (nav/footer links, multilingual tokens, anchor text) —
@@ -707,17 +841,17 @@ export default function SettingsPage() {
           </label>
         </section>
 
-        <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
+        <section id="settings-credentials" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">API credentials</h3>
           <p className="text-sm text-slate-600">
             Leave blank to keep existing stored values. Set env vars to override without storing in
-            the database. Market Hunter keys (OpenRouter, xAI, Anthropic) are configured in the Live
-            Market Hunter panel above.
+            the database. Pitch keys (OpenRouter, OpenAI, Anthropic) are also on Channel pitches.
+            Market Hunter keys (OpenRouter, xAI, Anthropic) are configured in Live Market Hunter.
           </p>
           {credentials
             .filter(
               (c) =>
-                !['openrouter_api_key', 'xai_grok_api_key', 'anthropic_api_key'].includes(c.key),
+                !['xai_grok_api_key'].includes(c.key),
             )
             .map((c) => (
             <label key={c.key} className="block text-sm">
@@ -730,7 +864,7 @@ export default function SettingsPage() {
                   : '(not configured)'}
               </span>
               <input
-                type="password"
+                type={c.key === 'sleekly_dash_base_url' ? 'url' : 'password'}
                 autoComplete="off"
                 placeholder={c.hasStoredValue ? '••••••••  (leave blank to keep)' : `Enter ${c.envVar}`}
                 className="mt-1 w-full border border-slate-300 rounded-md px-3 py-2 font-mono text-sm"
@@ -743,7 +877,7 @@ export default function SettingsPage() {
           ))}
         </section>
 
-        <section className="bg-white border border-slate-200 rounded-lg p-4 space-y-4">
+        <section id="settings-discovery" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">Discovery form options</h3>
 
           <label className="block text-sm">
@@ -893,6 +1027,8 @@ export default function SettingsPage() {
           {saving ? 'Saving…' : 'Save settings'}
         </button>
       </form>
+        </div>
+      </div>
     </div>
   );
 }

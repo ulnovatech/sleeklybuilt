@@ -4,8 +4,6 @@ import { IntentService } from '@agency/intent';
 import { platformSettings } from '@agency/settings';
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
-
 const governor = new BudgetGovernor();
 
 export async function GET() {

@@ -1,4 +1,5 @@
 import { platformSettings } from '@agency/settings';
+import { isLinkInBioWebsite } from '@agency/scoring';
 import type { DiscoveredBusiness, DiscoverySearchParams } from '../types';
 import type { PlacesTextSearchResult } from './places-types';
 
@@ -34,13 +35,15 @@ export function placeSearchResultToDiscoveredBusiness(
   const city =
     parseCityFromAddressComponents(place.addressComponents) ??
     (platformSettings.isAllCities(params.city) ? undefined : params.city);
+  const website = place.websiteUri || undefined;
+  const websiteClass = !website ? 'none' : isLinkInBioWebsite(website) ? 'link_in_bio' : 'real';
 
   return {
     name,
     industry: params.industry,
     country: params.country,
     city,
-    website: place.websiteUri || undefined,
+    website,
     phone: place.nationalPhoneNumber || undefined,
     source: 'google_maps',
     googleMapsUrl: place.googleMapsUri,
@@ -53,6 +56,7 @@ export function placeSearchResultToDiscoveredBusiness(
       placesId,
       placesVerified: true,
       discoverSource: 'places_text_search',
+      websiteClass,
     },
   };
 }

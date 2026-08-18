@@ -14,7 +14,7 @@ const hasJava =
 
 if (!hasJava) {
   console.error(`
-Ulnova Admin APK build requires Java (JDK 17+).
+Sleekly Admin APK build requires Java (JDK 17+).
 
 1. Install Android Studio (includes JDK) or Temurin JDK 17.
 2. Set JAVA_HOME, e.g.:
@@ -27,10 +27,10 @@ Debug APK output:
 
 For a physical device on local XAMPP, set before build:
   admin-mobile/.env.production
-  VITE_API_URL=http://<your-LAN-IP>/ulnovatech/api
+  VITE_API_URL=http://<your-LAN-IP>/sleeklybuilt/api
 
 Production API (default):
-  VITE_API_URL=https://ulnovatech.store/api
+  VITE_API_URL=https://sleeklybuilt.pro/api
 `)
   process.exit(1)
 }
@@ -38,10 +38,10 @@ Production API (default):
 if (!fs.existsSync(googleServices)) {
   console.warn(`
 Push notifications require Firebase:
-  1. Create a Firebase project for store.ulnovatech.admin
-  2. Add an Android app with package store.ulnovatech.admin
+  1. Create a Firebase project for pro.sleeklybuilt.admin
+  2. Add an Android app with package pro.sleeklybuilt.admin
   3. Download google-services.json → admin-mobile/android/app/google-services.json
-  4. Set FCM_PROJECT_ID in ulndash/backend/.env
+  4. Set FCM_PROJECT_ID in sleekly-dash/backend/.env
   5. Use a service account JSON with Firebase Cloud Messaging API enabled
 `)
 } else {

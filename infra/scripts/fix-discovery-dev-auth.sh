@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Patch isDevAuthEnabled on the VM source tree (same fix as repo)
-FILE=/opt/ulnovatech/repo/discovery/packages/config/src/env.ts
+FILE=/opt/sleeklybuilt/repo/discovery/packages/config/src/env.ts
 if [[ ! -f "$FILE" ]]; then
   echo "missing $FILE" >&2
   exit 1
@@ -10,7 +10,7 @@ fi
 
 python3 - <<'PY'
 from pathlib import Path
-p = Path('/opt/ulnovatech/repo/discovery/packages/config/src/env.ts')
+p = Path('/opt/sleeklybuilt/repo/discovery/packages/config/src/env.ts')
 text = p.read_text()
 old = """export function isDevAuthEnabled(): boolean {
   return process.env.ALLOW_DEV_AUTH === 'true' && process.env.NODE_ENV !== 'production';
@@ -30,10 +30,10 @@ else:
     print('patched env.ts')
 PY
 
-cd /opt/ulnovatech/repo
-export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
-export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
-export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+cd /opt/sleeklybuilt/repo
+export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
 
 # Bake NEXT_PUBLIC_* from env file into image build args
 set -a

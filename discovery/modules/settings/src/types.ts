@@ -13,7 +13,9 @@ export type CredentialKey =
   | 'openai_api_key'
   | 'openrouter_api_key'
   | 'xai_grok_api_key'
-  | 'anthropic_api_key';
+  | 'anthropic_api_key'
+  | 'sleekly_dash_base_url'
+  | 'sleekly_dash_service_token';
 
 export interface PlacesRunSettings {
   /** Max Text Search calls per run in standard mode (verify pass for non-Places candidates) */
@@ -42,6 +44,8 @@ export interface AcquisitionSettings {
     custom_scrape: number;
     meta_graph: number;
     llm_narrative: number;
+    /** Daily cap for on-demand single-lead outreach drafts (separate from BOI narrative). */
+    llm_draft: number;
   };
   searchLimits: {
     economy: number;
@@ -59,6 +63,8 @@ export interface AcquisitionSettings {
     boost: number;
   };
   placesTtlDays: number;
+  /** Days after last crawl/enrich before a known account is treated as stale and re-enriched. */
+  enrichmentStaleAfterDays: number;
   places: PlacesRunSettings;
 }
 
@@ -154,6 +160,18 @@ export interface BoiSettings {
   llmModel: string;
 }
 
+/** On-demand outreach draft generation (Pitch Pack only — never bulk). */
+export type DraftProvider = 'openrouter' | 'openai' | 'anthropic';
+
+export interface DraftSettings {
+  enabled: boolean;
+  provider: DraftProvider;
+  /** Provider model id (OpenRouter slug by default, e.g. google/gemini-2.5-pro). */
+  model: string;
+  /** Max completion tokens for a single draft. */
+  maxOutputTokens: number;
+}
+
 export type MarketHunterPlatformToggles = {
   codecanyon: boolean;
   getly: boolean;
@@ -204,6 +222,43 @@ export interface MarketHunterSettings {
   paymentPath: string;
 }
 
+/** Sellable package for proposals and value bands (UGX). */
+export type AgencyPackage = {
+  id: string;
+  title: string;
+  priceUgx: number;
+  depositUgx?: number;
+  badge?: string | null;
+  band?: 'starter' | 'growth' | 'premium';
+  description?: string;
+};
+
+/** Catalog service; optional mapsToSolutionId remaps BOI recommended service labels. */
+export type AgencyService = {
+  id: string;
+  name: string;
+  mapsToSolutionId?: string;
+  description?: string;
+};
+
+export type AgencyPresetId = 'generic' | 'sleeklybuilt' | 'custom';
+
+/** Single-deploy agency identity + sellable catalog (not multi-tenant). */
+export interface AgencySettings {
+  presetId: AgencyPresetId;
+  brandName: string;
+  legalName: string;
+  tagline: string;
+  currency: 'UGX';
+  email: string;
+  phone: string;
+  location: string;
+  senderName: string;
+  signature: string;
+  packages: AgencyPackage[];
+  services: AgencyService[];
+}
+
 export interface PlatformSettings {
   acquisition: AcquisitionSettings;
   credentials: Partial<Record<CredentialKey, string>>;
@@ -214,7 +269,9 @@ export interface PlatformSettings {
   qualification: QualificationSettings;
   crm: CrmSettings;
   boi: BoiSettings;
+  drafts: DraftSettings;
   marketHunter: MarketHunterSettings;
+  agency: AgencySettings;
 }
 
 export type CredentialStatus = {
@@ -238,6 +295,8 @@ export const CREDENTIAL_ENV_MAP: Record<CredentialKey, string> = {
   openrouter_api_key: 'OPENROUTER_API_KEY',
   xai_grok_api_key: 'XAI_GROK_API_KEY',
   anthropic_api_key: 'ANTHROPIC_API_KEY',
+  sleekly_dash_base_url: 'SLEEKLY_DASH_BASE_URL',
+  sleekly_dash_service_token: 'SLEEKLY_DASH_SERVICE_TOKEN',
 };
 
 export const SETTINGS_KEYS = {
@@ -250,5 +309,7 @@ export const SETTINGS_KEYS = {
   qualification: 'platform.qualification',
   crm: 'platform.crm',
   boi: 'platform.boi',
+  drafts: 'platform.drafts',
   marketHunter: 'platform.marketHunter',
+  agency: 'platform.agency',
 } as const;

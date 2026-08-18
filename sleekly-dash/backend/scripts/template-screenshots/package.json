@@ -1,0 +1,14 @@
+{
+  "name": "sleeklybuilt-template-screenshots",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Capture main-page gallery screenshots for published templates",
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "dependencies": {
+    "puppeteer": "^21.11.0",
+    "sleeklybuilt-system": "file:../../../.."
+  }
+}

@@ -6,7 +6,8 @@ export type BudgetProvider =
   | 'browser_automation'
   | 'custom_scrape'
   | 'meta_graph'
-  | 'llm_narrative';
+  | 'llm_narrative'
+  | 'llm_draft';
 
 export type BudgetPeriod = 'monthly' | 'daily';
 

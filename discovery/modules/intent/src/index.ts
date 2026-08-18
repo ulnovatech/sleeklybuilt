@@ -1,4 +1,5 @@
 export { IntentService } from './service';
+export { IntentRepository } from './repository';
 export { DemandInboxService } from './demand-inbox';
 export { DEMAND_INGEST_RUN_ID } from './demand-ingest-run';
 export { CustomScrapeService, type CustomScrapeHealth } from './custom-scrape-service';

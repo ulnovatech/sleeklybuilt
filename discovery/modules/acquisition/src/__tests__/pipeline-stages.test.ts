@@ -30,5 +30,20 @@ assert(scoreIdx >= 0 && browserIdx === scoreIdx + 1, 'browser_enrich after score
 assert(placesIdx === browserIdx + 1, 'places_enrich after browser_enrich');
 assert(boostOn.length === 8, 'boost pipeline has eight stages with browser');
 
+const monitor = getPipelineStagesForRun('standard', false, { planType: 'monitor' });
+assert(
+  monitor.join(',') === 'crawl,bi_enrich,derive_signals,score',
+  'monitor pipeline is crawl → bi_enrich → derive_signals → score',
+);
+assert(!monitor.includes('discover'), 'monitor excludes discover');
+assert(!monitor.includes('resolve_accounts'), 'monitor excludes resolve_accounts');
+assert(!monitor.includes('browser_enrich'), 'monitor excludes browser_enrich');
+
+const monitorIgnoresBoost = getPipelineStagesForRun('boost', true, { planType: 'monitor' });
+assert(
+  monitorIgnoresBoost.join(',') === monitor.join(','),
+  'monitor planType overrides boost browser stages',
+);
+
 console.log(`${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

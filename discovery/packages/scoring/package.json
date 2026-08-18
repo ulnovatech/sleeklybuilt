@@ -8,7 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx src/__tests__/opportunity-brief.test.ts && tsx src/__tests__/bi-scoring.test.ts"
+    "test": "tsx src/__tests__/opportunity-brief.test.ts && tsx src/__tests__/bi-scoring.test.ts && tsx src/__tests__/acquisition-lane.test.ts && tsx src/__tests__/segment-outcomes.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

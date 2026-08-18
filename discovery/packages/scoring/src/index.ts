@@ -47,6 +47,11 @@ export interface ScoringInput {
   demandWeightMultiplier?: number;
   /** BI profile hints from bi_enrich stage */
   bi?: BiScoringInput;
+  /**
+   * C8 segment outcome adjustment (−8…+8). Caller applies only when sampleSize ≥ 5.
+   * Positive = segment wins above baseline.
+   */
+  segmentOutcomes?: number;
 }
 
 export interface ScoringResult {
@@ -94,8 +99,6 @@ export function computeLeadScore(input: ScoringInput): ScoringResult {
 
   if (!input.hasWebsite && requireWebsiteOpportunity) {
     factors.noWebsite = 20;
-  } else if (input.hasWebsite) {
-    factors.hasWebsite = 5;
   }
 
   if (input.hasWebsite && input.httpsEnabled === false) {
@@ -123,6 +126,10 @@ export function computeLeadScore(input: ScoringInput): ScoringResult {
     Object.assign(factors, applyBiScoringFactors(factors, hints));
   }
 
+  if (typeof input.segmentOutcomes === 'number' && input.segmentOutcomes !== 0) {
+    factors.segmentOutcomes = input.segmentOutcomes;
+  }
+
   const raw = Object.values(factors).reduce((a, b) => a + b, 0);
   const score = Math.max(0, Math.min(100, raw));
   const reachability = computeReachability({
@@ -147,6 +154,8 @@ export {
   isLinkInBioWebsite,
 } from './bi-scoring';
 export type { BiScoringHints, BiScoringInput } from './bi-scoring';
+export { deriveAcquisitionLane } from './acquisition-lane';
+export type { AcquisitionLane } from './acquisition-lane';
 
 export {
   buildWebsiteOpportunityBrief,
@@ -170,3 +179,19 @@ export type {
   WebsiteGap,
   WebsiteOpportunityBriefContext,
 } from './opportunity-brief';
+
+export {
+  SEGMENT_MIN_SAMPLE,
+  SEGMENT_ADJUSTMENT_MIN,
+  SEGMENT_ADJUSTMENT_MAX,
+  SEGMENT_BASELINE_FALLBACK,
+  segmentKeyFor,
+  parseSegmentKey,
+  normalizeSegmentPart,
+  computeSegmentAdjustment,
+  formatSegmentRecordLabel,
+  derivePresenceClassFromBiHints,
+  derivePrimaryGap,
+  clamp as clampNumber,
+} from './segment-outcomes';
+export type { PresenceClass, SegmentKeyParts } from './segment-outcomes';

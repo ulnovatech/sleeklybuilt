@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 # Oracle Cloud VM bootstrap — Ubuntu 22.04 / 24.04 (ARM64 or AMD64)
-# Idempotent host prep for UlnoVaTech Docker deploy.
+# Idempotent host prep for SleeklyBuilt Docker deploy.
 #
 # Legacy: primary target is GCE — see infra/gcloud/bootstrap.sh and docs/DEPLOY_GCLOUD.md
 #
 # Usage (as root):
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ulnovatech/main/infra/oracle/bootstrap.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/sleeklybuilt/main/infra/oracle/bootstrap.sh | sudo bash
 #   # or from a git checkout:
 #   sudo bash infra/oracle/bootstrap.sh
 #
 # Optional env:
 #   DEPLOY_USER=deploy   default deploy user name
-#   DEPLOY_ROOT=/opt/ulnovatech
+#   DEPLOY_ROOT=/opt/sleeklybuilt
 
 set -euo pipefail
 
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
-DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/ulnovatech}"
+DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/sleeklybuilt}"
 
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   echo "Run as root: sudo $0" >&2

@@ -145,3 +145,76 @@ function uln_template_meta(string $folderId): array
         'businessTypes' => $businessTypes,
     ];
 }
+
+/**
+ * Whether a file under images/ is a gallery page shot (not product media).
+ */
+function uln_is_gallery_shot(string $filename): bool
+{
+    $base = strtolower(basename($filename));
+    $ext = strtolower(pathinfo($base, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'gif'], true)) {
+        return false;
+    }
+
+    if ($base === 'main.png') {
+        return true;
+    }
+
+    // Legacy Windows Snipping Tool dumps.
+    if (str_starts_with($base, 'screenshot')) {
+        return true;
+    }
+
+    // Webflow marketplace marketing dumps and mixed product media.
+    if (str_contains($base, '___') || str_contains($base, ' webflow ')) {
+        return false;
+    }
+    if (in_array($ext, ['jfif', 'webp'], true) && $base !== 'main.webp') {
+        return false;
+    }
+    if (preg_match('/\A(kit|ty|lapi|911|shoee|hero|product)[_-]?\d*\./', $base) === 1) {
+        return false;
+    }
+
+    // Auto-capture names: about.png, about_us.png, shop.png, contact_us.png, …
+    if ($ext === 'png' && preg_match('/\A[a-z0-9_]{2,64}\.png\z/', $base) === 1) {
+        foreach ([
+            'not_found', '404', '401', 'protected_page', 'protected', 'licenses', 'license',
+            'style_guide', 'styleguide', 'changelog', 'change_log', 'signin', 'signup',
+            'reset_password', 'checkout', 'cart',
+        ] as $blocked) {
+            if ($base === $blocked . '.png' || str_starts_with($base, $blocked . '_')) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @param list<string> $urls Absolute or root-relative image URLs
+ * @return list<string>
+ */
+function uln_order_gallery_shots(array $urls): array
+{
+    $urls = array_values(array_filter($urls, static function ($url) {
+        return is_string($url) && $url !== '' && uln_is_gallery_shot(basename(parse_url($url, PHP_URL_PATH) ?: $url));
+    }));
+
+    usort($urls, static function (string $a, string $b): int {
+        $ba = basename(parse_url($a, PHP_URL_PATH) ?: $a);
+        $bb = basename(parse_url($b, PHP_URL_PATH) ?: $b);
+        if ($ba === 'main.png') {
+            return -1;
+        }
+        if ($bb === 'main.png') {
+            return 1;
+        }
+        return strnatcasecmp($ba, $bb);
+    });
+
+    return $urls;
+}

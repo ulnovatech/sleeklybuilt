@@ -1,7 +1,7 @@
 param(
     [string]$NginxBase = 'http://localhost:8080',
     [string]$DirectBase = 'http://localhost:3000',
-    [string]$DiscoveryHost = 'discovery.ulnovatech.store'
+    [string]$DiscoveryHost = 'discovery.sleeklybuilt.pro'
 )
 
 $ErrorActionPreference = 'Stop'

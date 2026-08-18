@@ -4,9 +4,9 @@
  */
 
 export const PRODUCT = {
-  name: 'Demand Capture',
-  edition: 'Web agency · v1',
-  tagline: 'Find opportunities · Pursue honestly · Close revenue',
+  name: 'Lead Discovery OS',
+  edition: 'Operations intelligence',
+  tagline: 'Discover · qualify · pursue · close',
 } as const;
 
 export type NavItem = { href: string; label: string };
@@ -15,27 +15,27 @@ export type NavSection = { label: string; items: NavItem[] };
 
 export const NAV_SECTIONS: NavSection[] = [
   {
-    label: 'Start',
-    items: [{ href: '/ops', label: 'Today' }],
-  },
-  {
-    label: 'Find',
+    label: 'Discover',
     items: [
       { href: '/discovery', label: 'Discovery runs' },
-      { href: '/intent/inbox', label: 'Demand inbox' },
-      { href: '/intent', label: 'Add demand' },
+      { href: '/discovery/plans', label: 'Discovery plans' },
+      { href: '/intent', label: 'Demand' },
     ],
   },
   {
-    label: 'Triage',
-    items: [{ href: '/review', label: 'Work queue' }],
+    label: 'Decide',
+    items: [{ href: '/review', label: 'Queue' }],
+  },
+  {
+    label: 'Qualification',
+    items: [{ href: '/data-quality', label: 'Data quality' }],
   },
   {
     label: 'Pursue',
     items: [
-      { href: '/leads', label: 'Pursuits' },
-      { href: '/outreach', label: 'Outreach' },
+      { href: '/leads', label: 'Pipeline' },
       { href: '/follow-ups', label: 'Follow-ups' },
+      { href: '/outreach', label: 'Outreach Queue' },
     ],
   },
   {
@@ -46,9 +46,19 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    label: 'System',
+    label: 'Automation',
     items: [
-      { href: '/data-quality', label: 'Data quality' },
+      { href: '/automation', label: 'Automation Center' },
+      { href: '/hunter', label: 'Market Hunter' },
+    ],
+  },
+  {
+    label: 'Analytics',
+    items: [{ href: '/ops', label: 'Today' }],
+  },
+  {
+    label: 'Settings',
+    items: [
       { href: '/settings', label: 'Settings' },
     ],
   },
@@ -57,45 +67,43 @@ export const NAV_SECTIONS: NavSection[] = [
 export const PAGE_COPY = {
   ops: {
     title: 'Today',
-    description:
-      'Daily start — revenue proof, acquisition KPIs, work queue backlog, and pursuit funnel. Work demand first, then verified opportunities.',
+    description: 'Overnight activity, triage priorities, and acquisition KPIs.',
   },
   discovery: {
     title: 'Discovery runs',
-    description: 'Proactive prospecting by geo and industry. Runs the full pipeline: crawl, signals, scoring.',
+    description: 'Proactive prospecting by geo and industry — save runs as recurring plans.',
+  },
+  discoveryPlans: {
+    title: 'Discovery plans',
+    description: 'Recurring discovery schedules with guided setup and overnight yield.',
   },
   demandInbox: {
-    title: 'Demand inbox',
-    description:
-      'Hot demand only — orphan signals from RSS, Reddit, and paste. For daily triage use Work queue (demand + opportunities together).',
+    title: 'Demand',
+    description: 'Capture and triage orphan demand — matched signals flow to Queue.',
   },
   addDemand: {
-    title: 'Add demand',
-    description:
-      'Paste real demand (job posts, help requests, referrals). Unmatched signals land in Demand inbox. Enrichment from discovery crawls is separate.',
+    title: 'Capture demand',
+    description: 'Paste real demand signals; unmatched entries land in Demand.',
   },
   workQueue: {
-    title: 'Work queue',
-    description:
-      'Daily triage — hot demand first, then verified discovery opportunities, then the rest. Open the Opportunity Brief on each lead before outreach.',
+    title: 'Queue',
+    description: 'Daily triage — greenfield first, inspect evidence, promote or dismiss inline.',
   },
   opportunities: {
     title: 'Opportunities',
-    description:
-      'Pre-pursuit accounts from discovery and demand. Verified prospects have email, phone, or Places confirmation. Promote to a pursuit when ready to contact.',
+    description: 'Pre-pursuit accounts from discovery and demand — promote when ready.',
   },
   pursuits: {
-    title: 'Pursuits',
-    description: 'Active sales motions — outreach, follow-up, qualification, and proposals per account.',
+    title: 'Pipeline',
+    description: 'Active sales motions — outreach, follow-up, and proposals per account.',
   },
   outreach: {
-    title: 'Outreach',
-    description:
-      'Honest outreach — BOI-personalized openers merge with templates. Copy, edit, record sends externally.',
+    title: 'Outreach Queue',
+    description: 'Qualified pursuits needing contact — Case File, channels, and AI pitches in one workspace.',
   },
   followUps: {
     title: 'Follow-ups',
-    description: 'Contacted pursuits due for a follow-up. Record replies to advance the funnel.',
+    description: 'Open pursuits with follow-up due — record replies or clear stale outreach.',
   },
   proposals: {
     title: 'Proposals',
@@ -103,11 +111,11 @@ export const PAGE_COPY = {
   },
   revenue: {
     title: 'Revenue',
-    description: 'Close won deals and track revenue proof — the north star beyond lead count.',
+    description: 'Close won deals and track revenue proof.',
   },
   settings: {
     title: 'Platform settings',
-    description: 'Acquisition budgets, ICP scoring, credentials, and integrations.',
+    description: 'Acquisition budgets, channel pitch provider, ICP scoring, credentials, and integrations.',
   },
 } as const;
 
@@ -145,6 +153,11 @@ export const BOI_COPY = {
     'No opportunity brief yet. This business may need more enrichment data (reviews, crawl, or contact paths).',
   partialNote: 'Partial intelligence — more data may arrive as the pipeline completes.',
   errorLoad: 'Could not load opportunity brief.',
+  websiteBrief: {
+    viewBrief: 'View website brief',
+    hideBrief: 'Hide website brief',
+    errorLoad: 'Could not load website brief.',
+  },
   readinessBands: {
     high: 'High readiness',
     medium: 'Medium readiness',

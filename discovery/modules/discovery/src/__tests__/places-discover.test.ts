@@ -39,6 +39,13 @@ assert(placesIdFromExternalId(mapped?.externalId) === 'ChIJtest123', 'places id 
 assert(mapped?.phone === '+256700000000', 'phone mapped');
 assert(mapped?.city === 'Kampala', 'city from address components');
 assert(mapped?.metadata?.placesVerified === true, 'marked places verified');
+assert(mapped?.metadata?.websiteClass === 'real', 'real Places website is classified');
+
+const linkInBio = placeSearchResultToDiscoveredBusiness(
+  { ...samplePlace, websiteUri: 'https://linktr.ee/joe-kitchen' },
+  params,
+);
+assert(linkInBio?.metadata?.websiteClass === 'link_in_bio', 'link-in-bio Places website stays in greenfield classification');
 
 const queries = buildCitySearchQueries(params);
 assert(queries.length === 1, 'single city yields one query');

@@ -3,12 +3,118 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --canvas: 220 22% 97%;
+  --surface: 0 0% 100%;
+  --surface-raised: 220 20% 99%;
+  --surface-overlay: 0 0% 100%;
+  --surface-selected: 220 85% 96%;
+  --ink: 222 35% 13%;
+  --ink-muted: 219 15% 40%;
+  --ink-faint: 220 10% 55%;
+  --line: 220 16% 89%;
+  --line-strong: 220 13% 78%;
+  --accent: 218 84% 45%;
+  --accent-foreground: 0 0% 100%;
+  --accent-muted: 218 85% 95%;
+  --success: 152 62% 34%;
+  --success-foreground: 152 62% 20%;
+  --success-muted: 151 50% 94%;
+  --warning: 38 92% 42%;
+  --warning-foreground: 33 88% 25%;
+  --warning-muted: 43 95% 93%;
+  --danger: 0 70% 48%;
+  --danger-foreground: 0 65% 29%;
+  --danger-muted: 0 75% 96%;
+  --info: 207 76% 43%;
+  --info-foreground: 210 70% 25%;
+  --info-muted: 207 80% 95%;
+  --focus: 218 84% 45%;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --shadow-panel: 0 1px 2px hsl(220 35% 13% / 0.04), 0 8px 24px hsl(220 35% 13% / 0.04);
+  --shadow-overlay: 0 20px 50px hsl(220 35% 13% / 0.16);
+  --header-height: 3.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: 222 28% 8%;
+    --surface: 222 25% 11%;
+    --surface-raised: 222 23% 14%;
+    --surface-overlay: 222 24% 16%;
+    --surface-selected: 218 48% 18%;
+    --ink: 220 20% 95%;
+    --ink-muted: 220 12% 70%;
+    --ink-faint: 220 10% 52%;
+    --line: 220 16% 21%;
+    --line-strong: 220 13% 31%;
+    --accent: 217 91% 65%;
+    --accent-foreground: 222 28% 8%;
+    --accent-muted: 218 45% 18%;
+    --success: 151 55% 53%;
+    --success-foreground: 151 70% 82%;
+    --success-muted: 151 35% 16%;
+    --warning: 43 90% 57%;
+    --warning-foreground: 43 90% 84%;
+    --warning-muted: 39 40% 17%;
+    --danger: 0 88% 67%;
+    --danger-foreground: 0 90% 87%;
+    --danger-muted: 0 40% 18%;
+    --info: 204 92% 67%;
+    --info-foreground: 204 90% 86%;
+    --info-muted: 207 42% 18%;
+    --focus: 217 91% 65%;
+  }
+}
+
+* {
+  border-color: hsl(var(--line));
+}
+
+html {
+  background: hsl(var(--canvas));
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  min-height: 100vh;
+  color: hsl(var(--ink));
+  background: hsl(var(--canvas));
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  color: hsl(var(--accent-foreground));
+  background: hsl(var(--accent));
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid hsl(var(--focus));
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--line-strong)) transparent;
+  }
+
+  .sticky-below-header {
+    position: sticky;
+    top: var(--header-height);
+    z-index: 10;
+  }
 }

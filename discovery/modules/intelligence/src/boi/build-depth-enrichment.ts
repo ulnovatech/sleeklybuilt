@@ -24,11 +24,12 @@ export function buildDepthEnrichment(input: {
   profile: BusinessIntelligenceProfile;
   digitalGaps: BoIDigitalGap[];
   pageSpeed?: BoIPageSpeedSnapshot | null;
+  agencyPackages?: import('@agency/settings').AgencyPackage[];
 }): BoIDepthEnrichment {
   return {
     sentimentSummary: buildSentimentSummary(input.profile),
     techStack: detectTechStack(input.profile),
-    projectValue: estimateProjectValue(input.profile, input.digitalGaps),
+    projectValue: estimateProjectValue(input.profile, input.digitalGaps, input.agencyPackages),
     pageSpeed: input.pageSpeed ?? null,
   };
 }

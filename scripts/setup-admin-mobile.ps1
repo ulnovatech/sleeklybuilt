@@ -3,15 +3,15 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
-Write-Host '==> Ulnova Admin Mobile — setup' -ForegroundColor Cyan
+Write-Host '==> Sleekly Admin Mobile — setup' -ForegroundColor Cyan
 
 Write-Host '==> Database migrations'
-php ulndash/backend/scripts/apply_admin_mobile_migrations.php
+php sleekly-dash/backend/scripts/apply_admin_mobile_migrations.php
 if ($LASTEXITCODE -ne 0) {
-    throw 'Migrations failed. Start MySQL (XAMPP) and verify ulndash/backend/.env'
+    throw 'Migrations failed. Start MySQL (XAMPP) and verify sleekly-dash/backend/.env'
 }
 
-$envFile = Join-Path $root 'ulndash\backend\.env'
+$envFile = Join-Path $root 'sleekly-dash\backend\.env'
 $required = @('MOBILE_JWT_SECRET', 'DASH_ADMIN_USER')
 $recommended = @('FCM_PROJECT_ID')
 
@@ -19,16 +19,16 @@ if (Test-Path $envFile) {
     $envText = Get-Content $envFile -Raw
     foreach ($key in $required) {
         if ($envText -notmatch "(?m)^$key=.+") {
-            Write-Warning "Missing or empty $key in ulndash/backend/.env"
+            Write-Warning "Missing or empty $key in sleekly-dash/backend/.env"
         }
     }
     foreach ($key in $recommended) {
         if ($envText -notmatch "(?m)^$key=.+") {
-            Write-Warning "Optional for push: set $key in ulndash/backend/.env"
+            Write-Warning "Optional for push: set $key in sleekly-dash/backend/.env"
         }
     }
 } else {
-    Write-Warning 'Copy ulndash/backend/.env.example to .env and configure credentials'
+    Write-Warning 'Copy sleekly-dash/backend/.env.example to .env and configure credentials'
 }
 
 $googleServices = Join-Path $root 'admin-mobile\android\app\google-services.json'

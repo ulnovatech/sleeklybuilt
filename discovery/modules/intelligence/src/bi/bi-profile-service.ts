@@ -1,6 +1,8 @@
 import { AccountRepository } from '@agency/accounts';
 import { logger, mapWithConcurrency, pipelineConcurrency } from '@agency/config';
+import { hasRealWebsite } from '@agency/scoring';
 import { DiscoveryRepository } from '@agency/discovery';
+import { platformSettings } from '@agency/settings';
 import { IntelligenceRepository } from '../repository';
 import { buildBusinessIntelligenceProfile, readCrawlFootprintSources } from './build-profile';
 import { buildRelationshipGraph } from './build-relationship-graph';
@@ -28,7 +30,14 @@ async function attachBoiSynthesis(
   discoveryRepo?: DiscoveryRepository,
 ): Promise<BusinessIntelligenceProfile> {
   const pageSpeed = await fetchPageSpeedIfConfigured(profile);
-  const rulesBoi = synthesizeOpportunityIntelligence({ profile, pageSpeed });
+  await platformSettings.ensureLoaded();
+  const agency = platformSettings.getAgencySettings();
+  const rulesBoi = synthesizeOpportunityIntelligence({
+    profile,
+    pageSpeed,
+    agencyServices: agency.services,
+    agencyPackages: agency.packages,
+  });
   let boi = rulesBoi;
 
   if (discoveryRunId) {
@@ -58,13 +67,33 @@ export class BiProfileService {
   private discoveryRepo = new DiscoveryRepository();
   private accountRepo = new AccountRepository();
 
-  async enrichBusiness(businessId: string, discoveryRunId?: string): Promise<BusinessIntelligenceProfile | null> {
+  async enrichBusiness(
+    businessId: string,
+    discoveryRunId?: string,
+  ): Promise<{
+    profile: BusinessIntelligenceProfile;
+    change?: 'website_gained';
+  } | null> {
     const business = await this.discoveryRepo.getBusiness(businessId);
     if (!business) throw new Error('Business not found');
     if (!business.accountId) return null;
 
     const account = await this.accountRepo.getById(business.accountId);
     if (!account) return null;
+
+    const previousRow = await this.biRepo.getByAccountId(account.id);
+    const previousProfile = previousRow?.profile
+      ? (previousRow.profile as unknown as BusinessIntelligenceProfile)
+      : null;
+    const prevHadWebsite = previousProfile
+      ? hasRealWebsite({
+          hasWebsite: previousProfile.presence?.hasWebsite ?? false,
+          website: previousProfile.contact?.website ?? null,
+          resolvedWebsiteFromBio:
+            previousProfile.digitalFootprint?.linkInBioPages?.find((p) => p.resolvedWebsite)
+              ?.resolvedWebsite ?? null,
+        })
+      : null;
 
     const analysis = await this.intelRepo.getAnalysis(businessId);
     const runId = discoveryRunId ?? business.discoveryRunId;
@@ -145,7 +174,18 @@ export class BiProfileService {
       },
     });
 
-    return profile;
+    const nowHasWebsite = hasRealWebsite({
+      hasWebsite: profile.presence?.hasWebsite ?? false,
+      website: profile.contact?.website ?? null,
+      resolvedWebsiteFromBio:
+        profile.digitalFootprint.linkInBioPages.find((p) => p.resolvedWebsite)?.resolvedWebsite ??
+        null,
+    });
+
+    const change =
+      prevHadWebsite === false && nowHasWebsite === true ? ('website_gained' as const) : undefined;
+
+    return { profile, change };
   }
 
   async refreshBusinesses(
@@ -160,8 +200,8 @@ export class BiProfileService {
     const concurrency = pipelineConcurrency();
 
     const outcomes = await mapWithConcurrency(unique, concurrency, async (businessId) => {
-      const profile = await this.enrichBusiness(businessId, discoveryRunId);
-      return profile ? 'ok' : 'skip';
+      const result = await this.enrichBusiness(businessId, discoveryRunId);
+      return result ? 'ok' : 'skip';
     });
 
     for (const outcome of outcomes) {
@@ -183,25 +223,39 @@ export class BiProfileService {
     const businesses = await this.discoveryRepo.listBusinessesByRun(runId);
     let enriched = 0;
     let skippedNoAccount = 0;
+    let skippedFresh = 0;
     let completenessTotal = 0;
     let linkInBioResolved = 0;
+    const changes: NonNullable<BiEnrichRunResult['changes']> = [];
     const concurrency = pipelineConcurrency();
 
     const outcomes = await mapWithConcurrency(businesses, concurrency, async (business) => {
+      if (business.discoveryState === 'known_fresh') {
+        return { kind: 'fresh' as const };
+      }
       if (!business.accountId) {
         return { kind: 'skip' as const };
       }
-      const profile = await this.enrichBusiness(business.id, runId);
-      if (!profile) return { kind: 'skip' as const };
+      const result = await this.enrichBusiness(business.id, runId);
+      if (!result) return { kind: 'skip' as const };
       return {
         kind: 'ok' as const,
-        completeness: profile.completeness.score,
-        linkInBioResolved: profile.digitalFootprint.linkInBioPages.filter((p) => p.fetchStatus === 'ok')
-          .length,
+        completeness: result.profile.completeness.score,
+        linkInBioResolved: result.profile.digitalFootprint.linkInBioPages.filter(
+          (p) => p.fetchStatus === 'ok',
+        ).length,
+        change: result.change,
+        businessId: business.id,
+        accountId: business.accountId,
+        website: result.profile.contact.website ?? null,
       };
     });
 
     for (const outcome of outcomes) {
+      if (outcome.kind === 'fresh') {
+        skippedFresh++;
+        continue;
+      }
       if (outcome.kind === 'skip') {
         skippedNoAccount++;
         continue;
@@ -209,6 +263,14 @@ export class BiProfileService {
       enriched++;
       completenessTotal += outcome.completeness;
       linkInBioResolved += outcome.linkInBioResolved;
+      if (outcome.change === 'website_gained') {
+        changes.push({
+          businessId: outcome.businessId,
+          accountId: outcome.accountId,
+          change: 'website_gained',
+          website: outcome.website,
+        });
+      }
     }
 
     const averageCompleteness = enriched > 0 ? Math.round(completenessTotal / enriched) : 0;
@@ -217,11 +279,21 @@ export class BiProfileService {
       runId,
       enriched,
       skippedNoAccount,
+      skippedFresh,
       averageCompleteness,
       linkInBioResolved,
+      websiteGained: changes.length,
     });
 
-    return { enriched, skippedNoAccount, averageCompleteness, linkInBioResolved };
+    return {
+      enriched,
+      skippedNoAccount,
+      skippedFresh,
+      skippedEnrichment: skippedFresh,
+      averageCompleteness,
+      linkInBioResolved,
+      changes,
+    };
   }
 
   async patchPlacesReviewSignalsForRun(runId: string): Promise<{ patched: number; skipped: number }> {

@@ -1,5 +1,6 @@
 export * from './accounts';
 export * from './discovery';
+export * from './discovery-plans';
 export * from './acquisition';
 export * from './intent';
 export * from './intelligence';
@@ -9,4 +10,8 @@ export * from './outreach';
 export * from './proposal';
 export * from './revenue';
 export * from './integrations';
+export * from './crm-bridge';
+export * from './segment-performance';
 export * from './market-hunter';
+export * from './operator-console';
+export * from './drafts';

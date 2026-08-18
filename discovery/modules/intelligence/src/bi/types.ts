@@ -163,6 +163,16 @@ export type InfrastructureAudit = {
 export type BiEnrichRunResult = {
   enriched: number;
   skippedNoAccount: number;
+  /** Known-fresh accounts skipped to avoid re-enrichment spend (C2). */
+  skippedFresh?: number;
+  skippedEnrichment?: number;
   averageCompleteness: number;
   linkInBioResolved: number;
+  /** Presence changes detected vs previous BI snapshot (C9 monitor). */
+  changes?: Array<{
+    businessId: string;
+    accountId: string;
+    change: 'website_gained';
+    website?: string | null;
+  }>;
 };

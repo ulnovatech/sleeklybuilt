@@ -1,4 +1,4 @@
-import type { Reachability } from '@agency/scoring';
+import type { AcquisitionLane, Reachability } from '@agency/scoring';
 
 /** Tier 1 — hot demand always sorts above discovery opportunities. */
 export const DEMAND_PRIORITY_BASE = 10_000;
@@ -8,6 +8,8 @@ export const VERIFIED_OPPORTUNITY_BASE = 5_000;
 
 /** Tier 3 — unverified discovery prospects. */
 export const UNVERIFIED_OPPORTUNITY_BASE = 1_000;
+/** Keeps greenfield prospects ahead of redesign candidates within the same tier. */
+export const GREENFIELD_LANE_BONUS = 200;
 
 const REACHABILITY_BONUS: Record<Reachability, number> = {
   high: 30,
@@ -26,10 +28,12 @@ export function computeOpportunityPriority(
   verified: boolean,
   reachability: Reachability,
   score: number,
+  lane: AcquisitionLane = 'redesign',
 ): number {
   const base = verified ? VERIFIED_OPPORTUNITY_BASE : UNVERIFIED_OPPORTUNITY_BASE;
   const bonus = verified ? REACHABILITY_BONUS[reachability] ?? 0 : 0;
-  return base + Math.max(0, Math.min(100, score)) + bonus;
+  const laneBonus = lane === 'greenfield' ? GREENFIELD_LANE_BONUS : 0;
+  return base + laneBonus + Math.max(0, Math.min(100, score)) + bonus;
 }
 
 export function opportunityTier(verified: boolean): 'verified_opportunity' | 'unverified_opportunity' {

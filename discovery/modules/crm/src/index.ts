@@ -1,4 +1,5 @@
 export { CrmService } from './service';
+export { CrmRepository } from './repository';
 export {
   canTransition,
   assertTransition,

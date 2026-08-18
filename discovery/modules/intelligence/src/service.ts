@@ -156,12 +156,35 @@ export class IntelligenceService {
 
 
   async analyzeRunBusinesses(runId: string) {
-    const businesses = await this.discoveryRepo.listBusinessesByRun(runId);
+    const all = await this.discoveryRepo.listBusinessesByRun(runId);
+    const fresh = all.filter((b) => b.discoveryState === 'known_fresh');
+    const toAnalyze = all.filter((b) => b.discoveryState !== 'known_fresh');
+
+    // Seed lightweight analysis for fresh knowns so score still has a row — no network.
+    await mapWithConcurrency(fresh, pipelineConcurrency(), async (b) => {
+      await this.repo.upsertAnalysis({
+        businessId: b.id,
+        hasWebsite: Boolean(b.website?.trim()),
+        mobileFriendly: null,
+        httpsEnabled: null,
+        performanceScore: null,
+        notes: 'skipped_known_fresh',
+      });
+      if (b.accountId) {
+        // Do not overwrite lastCrawledAt — enrichment remains fresh.
+      }
+      return b.id;
+    });
+
     const concurrency = pipelineConcurrency();
-    const results = await mapWithConcurrency(businesses, concurrency, (b) =>
+    const results = await mapWithConcurrency(toAnalyze, concurrency, (b) =>
       this.analyzeBusiness(b.id, runId),
     );
-    return { analyzed: results.length };
+    return {
+      analyzed: results.length,
+      skippedFresh: fresh.length,
+      skippedEnrichment: fresh.length,
+    };
   }
 
 

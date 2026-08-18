@@ -13,7 +13,7 @@
     "drizzle-orm": "^0.38.3"
   },
   "scripts": {
-    "test": "tsx src/__tests__/template-merge.test.ts && tsx src/__tests__/export-gates.test.ts && tsx src/__tests__/default-templates.test.ts && tsx src/__tests__/compose-outreach-body.test.ts"
+    "test": "tsx src/__tests__/template-merge.test.ts && tsx src/__tests__/export-gates.test.ts && tsx src/__tests__/export-drafts.test.ts && tsx src/__tests__/default-templates.test.ts && tsx src/__tests__/compose-outreach-body.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

@@ -76,6 +76,35 @@ export function RunYieldPanel({ stats }: { stats: DiscoveryRunStats }) {
           hint="Candidates before resolve"
         />
         <StatCard
+          label="New accounts"
+          value={stats.newAccounts ?? 0}
+          hint={`${stats.knownFresh ?? 0} fresh · ${stats.knownStale ?? 0} stale`}
+        />
+        <StatCard
+          label="Skipped enrich"
+          value={stats.skippedEnrichment ?? 0}
+          hint="Known-fresh (no crawl/BI spend)"
+        />
+        <StatCard
+          label="Qualified"
+          value={stats.qualified ?? stats.scoredAtOrAboveMin}
+          hint={`${stats.highOpportunity ?? 0} high opportunity`}
+        />
+        <StatCard
+          label="Avg score"
+          value={stats.avgScore != null ? stats.avgScore : '—'}
+          hint={
+            stats.estimatedOutreachDays != null
+              ? `~${stats.estimatedOutreachDays}d outreach capacity`
+              : undefined
+          }
+        />
+        <StatCard
+          label="Rejected / known skip"
+          value={stats.rejected ?? 0}
+          hint={`${stats.suppressedSkipped} suppressed`}
+        />
+        <StatCard
           label="Prospect signals"
           value={stats.prospectCandidates}
           hint={`${stats.highPotentialEstimate} high-potential estimate`}

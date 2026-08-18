@@ -27,6 +27,14 @@ export type { LocaleExternalResource } from './builtin-lexicon';
 export { SettingsRepository } from './repository';
 export { buildDefaultPlatformSettings, DEFAULT_INDUSTRIES } from './defaults';
 export { OPERATING_KPI_TARGETS, type OperatingKpi } from './operating-kpis';
+export {
+  agencyDisplayName,
+  agencyHasCatalog,
+  buildGenericAgencyPreset,
+  buildSleeklyBuiltAgencyPreset,
+  getAgencyPreset,
+  listAgencyPresets,
+} from './agency-presets';
 export type {
   PlatformSettings,
   AcquisitionSettings,
@@ -40,6 +48,8 @@ export type {
   MinReachabilityLevel,
   CrmSettings,
   BoiSettings,
+  DraftSettings,
+  DraftProvider,
   MarketHunterSettings,
   MarketHunterPlatformToggles,
   MarketHunterPlatformKey,
@@ -47,6 +57,10 @@ export type {
   MarketHunterCostEstimates,
   MarketHunterResearchProvider,
   MarketHunterComplaintsProvider,
+  AgencySettings,
+  AgencyPackage,
+  AgencyService,
+  AgencyPresetId,
   LocalePack,
   LocalePackToken,
   LocaleSettings,

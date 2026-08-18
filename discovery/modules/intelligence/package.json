@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx src/__tests__/parse-html.test.ts && tsx src/__tests__/link-intent.test.ts && tsx src/__tests__/link-discovery.test.ts && tsx src/__tests__/crawl.test.ts && tsx src/__tests__/browser-eligibility.test.ts && tsx src/__tests__/bi-profile.test.ts && tsx src/__tests__/boi-schema.test.ts && tsx src/__tests__/boi-gap-pain.test.ts && tsx src/__tests__/boi-synthesis.test.ts && tsx src/__tests__/boi-persist.test.ts && tsx src/__tests__/boi-outreach-opener.test.ts && tsx src/__tests__/boi-llm-narrative.test.ts && tsx src/__tests__/boi-depth.test.ts && tsx src/__tests__/footprint.test.ts && tsx src/__tests__/infrastructure-audit.test.ts"
+    "test": "tsx src/__tests__/parse-html.test.ts && tsx src/__tests__/link-intent.test.ts && tsx src/__tests__/link-discovery.test.ts && tsx src/__tests__/crawl.test.ts && tsx src/__tests__/browser-eligibility.test.ts && tsx src/__tests__/bi-profile.test.ts && tsx src/__tests__/boi-schema.test.ts && tsx src/__tests__/boi-gap-pain.test.ts && tsx src/__tests__/boi-synthesis.test.ts && tsx src/__tests__/boi-persist.test.ts && tsx src/__tests__/boi-outreach-opener.test.ts && tsx src/__tests__/boi-llm-narrative.test.ts && tsx src/__tests__/boi-depth.test.ts && tsx src/__tests__/footprint.test.ts && tsx src/__tests__/infrastructure-audit.test.ts && tsx src/__tests__/contact-screening.test.ts && tsx src/__tests__/case-file.test.ts && tsx src/__tests__/controlled-drafts.test.ts"
   },
   "dependencies": {
     "@agency/accounts": "workspace:*",

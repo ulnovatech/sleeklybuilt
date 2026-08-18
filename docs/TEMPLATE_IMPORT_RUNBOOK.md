@@ -7,11 +7,33 @@
 3. Wait for `queued → running → scrubbing → validating → ready`.
 4. Review the sandboxed staged preview, file counts, and asset warnings.
 5. Publish, discard, or confirm replacement when the hostname already exists.
-6. Use the template card’s edit action for catalog metadata changes.
-7. Use the document action for structured homepage content changes.
+6. After publish, gallery screenshots start automatically (homepage + main nav pages only, max 6).
+   Status appears in the import drawer. Use **Recapture shots** if needed.
+7. Use the template card’s edit action for catalog metadata changes.
+8. Use the document action for structured homepage content changes.
 
 The Webflow hostname is the stable slug. Do not rename the published folder or
 edit `catalog.json` manually.
+
+## Gallery screenshots
+
+Publishing queues a background capture that writes:
+
+```text
+portfolio/portfolio/<slug>/images/main.png   # homepage
+portfolio/portfolio/<slug>/images/<page>.png # About, Shop, Contact, …
+```
+
+Rules:
+
+- Only pages linked from the homepage (depth 1), ranked as main marketing pages
+- Skips CMS items, checkout/cart, auth, 404, template-info, licenses, style guides
+- Cap: **6 images total** (matches the gallery card strip)
+- Requires Node 20+ and Chromium/Puppeteer in the PHP runtime
+  (`TEMPLATE_SCREENSHOT_NODE`, `TEMPLATE_SCREENSHOT_CHROMIUM`)
+- Prefer `BASE_URL` / `TEMPLATE_SCREENSHOT_BASE_URL` so CDN assets render
+
+Manual API: `POST /api/template-imports/{id}/screenshots` with `{ "force": true }`.
 
 ## Limits and retention
 
@@ -26,10 +48,10 @@ edit `catalog.json` manually.
 Production persistence:
 
 ```text
-/opt/ulnovatech/data/template-imports
-/opt/ulnovatech/data/template-profiles
-/opt/ulnovatech/logs/template-import
-/opt/ulnovatech/public_html/portfolio/portfolio
+/opt/sleeklybuilt/data/template-imports
+/opt/sleeklybuilt/data/template-profiles
+/opt/sleeklybuilt/logs/template-import
+/opt/sleeklybuilt/public_html/portfolio/portfolio
 ```
 
 ## Structured content editing
@@ -57,10 +79,10 @@ Use Unldash first: the job panel shows the safe error and current report.
 For deeper server diagnostics:
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
   exec -T php-fpm sh -lc \
-  'ls -l /var/log/ulnovatech/template-import && tail -n 200 /var/log/ulnovatech/template-import/job-JOB_ID.log'
+  'ls -l /var/log/sleeklybuilt/template-import && tail -n 200 /var/log/sleeklybuilt/template-import/job-JOB_ID.log'
 ```
 
 Replace `JOB_ID` with the numeric job identifier shown in Unldash. Worker logs
@@ -73,7 +95,7 @@ failure, metadata update, section apply, and section rollback records the
 authenticated actor. Edited content values are not copied into audit details.
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 docker compose -f infra/docker-compose.full.yml exec -T mysql \
   sh -lc 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" \
     -e "SELECT created_at, actor, action, slug, job_id
@@ -88,16 +110,16 @@ Never paste database passwords into tickets, chat, job reports, or screenshots.
 Nightly maintenance is installed in the `deploy` user's crontab:
 
 ```bash
-crontab -l | grep ulnovatech-template-import-maintenance
+crontab -l | grep sleeklybuilt-template-import-maintenance
 ```
 
 Run a non-destructive inspection:
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
   exec -T -u www-data php-fpm \
-  php /var/www/public_html/ulndash/backend/scripts/purge_template_import_artifacts.php --dry-run
+  php /var/www/public_html/sleekly-dash/backend/scripts/purge_template_import_artifacts.php --dry-run
 ```
 
 Run cleanup immediately by removing `--dry-run`. The script only accepts
@@ -134,13 +156,13 @@ preserved independently of application deployment.
 After deploy:
 
 ```bash
-cd /opt/ulnovatech/repo
+cd /opt/sleeklybuilt/repo
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml ps
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
   exec -T -u www-data php-fpm \
-  php /var/www/public_html/ulndash/backend/tests/TemplateImportHardeningTest.php
+  php /var/www/public_html/sleekly-dash/backend/tests/TemplateImportHardeningTest.php
 systemctl status cron --no-pager
-crontab -l | grep ulnovatech-template-import-maintenance
+crontab -l | grep sleeklybuilt-template-import-maintenance
 ```
 
 Unauthenticated template import, catalog-edit, and staged-preview requests must

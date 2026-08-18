@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { Button, Dialog } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
 
 type SuppressionEntry = {
@@ -18,6 +19,8 @@ export function SuppressionListPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ email: '', phone: '', domain: '', reason: '' });
+  const [pendingRemoval, setPendingRemoval] = useState<SuppressionEntry | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,16 +62,20 @@ export function SuppressionListPanel() {
     }
   };
 
-  const removeEntry = async (id: string) => {
-    if (!window.confirm('Remove this suppression entry?')) return;
+  const removeEntry = async () => {
+    if (!pendingRemoval) return;
+    setRemoving(true);
     setError(null);
     try {
-      await api(`/api/accounts/suppression?id=${encodeURIComponent(id)}`, {
+      await api(`/api/accounts/suppression?id=${encodeURIComponent(pendingRemoval.id)}`, {
         method: 'DELETE',
       });
+      setPendingRemoval(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove entry');
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -163,7 +170,7 @@ export function SuppressionListPanel() {
                   <td className="py-2 text-right">
                     <button
                       type="button"
-                      onClick={() => removeEntry(entry.id)}
+                      onClick={() => setPendingRemoval(entry)}
                       className="text-red-700 hover:underline text-xs"
                     >
                       Remove
@@ -175,6 +182,28 @@ export function SuppressionListPanel() {
           </table>
         </div>
       )}
+
+      <Dialog
+        open={pendingRemoval !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingRemoval(null);
+        }}
+        title="Remove this suppression entry?"
+        description={
+          pendingRemoval
+            ? `${pendingRemoval.email ?? pendingRemoval.phone ?? pendingRemoval.domain ?? 'This entry'} becomes contactable again in outreach and exports.`
+            : ''
+        }
+      >
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="ghost" onClick={() => setPendingRemoval(null)}>
+            Cancel
+          </Button>
+          <Button size="sm" variant="danger" loading={removing} onClick={() => void removeEntry()}>
+            Remove entry
+          </Button>
+        </div>
+      </Dialog>
     </section>
   );
 }

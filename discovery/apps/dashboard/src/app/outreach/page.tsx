@@ -1,369 +1,539 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { OutreachCompose } from '@/components/OutreachCompose';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Download, ExternalLink } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
-import { api } from '@/lib/api';
+import { OutreachQueueRow, PursuitWorkspace } from '@/components/pursuit';
+import type { DraftChannel, OutreachQueueResponse } from '@/components/pursuit';
+import {
+  Button,
+  Dialog,
+  EmptyState,
+  ErrorState,
+  Input,
+  Skeleton,
+  StatusBadge,
+} from '@/components/ui/primitives';
+import { useToast } from '@/components/ui/toast';
+import { useApiQuery } from '@/lib/use-api-query';
+import { useListView } from '@/lib/use-list-view';
 import { PAGE_COPY } from '@/lib/product-copy';
 
-type OpportunityType =
-  | 'demand_response'
-  | 'greenfield'
-  | 'redesign'
-  | 'modernize'
-  | 'general'
-  | '';
+const QUEUE_STATUSES = ['REVIEWED', 'QUALIFIED', 'CONTACTED', 'REPLIED', 'NO_RESPONSE'] as const;
+const CHANNEL_FILTERS = [
+  { id: 'any', label: 'Any channel' },
+  { id: 'email', label: 'Email' },
+  { id: 'whatsapp', label: 'WhatsApp' },
+  { id: 'phone', label: 'Phone' },
+] as const;
+const SORT_OPTIONS = [
+  { id: 'follow_up', label: 'Follow-up due' },
+  { id: 'priority', label: 'Priority' },
+  { id: 'score', label: 'Score' },
+  { id: 'updatedAt', label: 'Updated' },
+  { id: 'name', label: 'Name' },
+] as const;
+const EXPORT_CHANNELS: Array<{ id: DraftChannel; label: string }> = [
+  { id: 'email', label: 'Email pitches' },
+  { id: 'whatsapp', label: 'WhatsApp pitches' },
+  { id: 'phone', label: 'Phone scripts' },
+  { id: 'follow_up', label: 'Follow-up pitches' },
+];
 
-type Template = {
-  id: string;
-  name: string;
-  subject: string | null;
-  body: string;
-  channel: string;
-  opportunityType?: string | null;
-};
-type LeadRow = {
-  lead: { id: string; status: string; priority: string };
-  business: { name: string };
-};
+type QueueListView = ReturnType<typeof useListView>;
 
-const DEFAULT_STATUS_FILTERS = ['REVIEWED', 'CONTACTED'] as const;
-const ALL_STATUS_FILTERS = ['NEW', 'REVIEWED', 'CONTACTED'] as const;
+function isDesktopViewport() {
+  return typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches;
+}
 
-export default function OutreachPage() {
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [leads, setLeads] = useState<LeadRow[]>([]);
-  const [ownerScope, setOwnerScope] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string[]>([...DEFAULT_STATUS_FILTERS]);
-  const [selectedLeadId, setSelectedLeadId] = useState('');
-  const [exportTemplateId, setExportTemplateId] = useState('');
-  const [includeUnreviewedExport, setIncludeUnreviewedExport] = useState(false);
-  const [exportMsg, setExportMsg] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: 'Intro — Web Services',
-    subject: 'Quick idea for {{business}}',
-    body: 'Hi {{name}},\n\nI noticed {{business}} in {{city}} could benefit from a modern web presence.\n\nWould you be open to a short call this week?',
-    channel: 'email',
-    opportunityType: '' as OpportunityType,
+export default function OutreachQueuePage() {
+  return (
+    <Suspense fallback={<OutreachQueueSkeleton />}>
+      <OutreachQueuePageContent />
+    </Suspense>
+  );
+}
+
+function OutreachQueuePageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { push } = useToast();
+  const list = useListView({
+    sort: 'follow_up',
+    direction: 'asc',
+    limit: 20,
   });
+  const { state, update } = list;
+  const [draftQuery, setDraftQuery] = useState(state.q);
+  const [exportChannel, setExportChannel] = useState<DraftChannel>('email');
+  const [exporting, setExporting] = useState(false);
+  const [exportNote, setExportNote] = useState<string | null>(null);
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
+  const [exportPreview, setExportPreview] = useState<{
+    count: number;
+    skippedNoDraft: number;
+    skippedNoContact: number;
+    skippedSuppressed: number;
+    skippedReachability: number;
+    message: string;
+  } | null>(null);
 
-  const loadLeads = () =>
-    api<{ leads: LeadRow[]; ownerScope: string }>('/api/crm/leads').then((d) => {
-      setLeads(d.leads);
-      setOwnerScope(d.ownerScope);
-    });
+  const selectedId = searchParams.get('selected') ?? '';
 
-  const loadTemplates = () =>
-    api<{ templates: Template[] }>('/api/outreach/templates').then((d) => {
-      setTemplates(d.templates);
-      if (!exportTemplateId && d.templates[0]) setExportTemplateId(d.templates[0].id);
-    });
+  const apiPath = useMemo(() => {
+    const params = new URLSearchParams();
+    if (state.q) params.set('q', state.q);
+    params.set('sort', state.sort);
+    params.set('direction', state.direction);
+    params.set('page', String(state.page));
+    params.set('limit', String(state.limit));
+    if (state.filters.status) params.set('status', state.filters.status);
+    if (state.filters.channel && state.filters.channel !== 'any') {
+      params.set('channel', state.filters.channel);
+    }
+    if (state.filters.followUpDue && state.filters.followUpDue !== 'any') {
+      params.set('followUpDue', state.filters.followUpDue);
+    }
+    return `/api/outreach/queue?${params.toString()}`;
+  }, [state.direction, state.filters.channel, state.filters.followUpDue, state.filters.status, state.limit, state.page, state.q, state.sort]);
 
-  useEffect(() => {
-    loadTemplates().catch(console.error);
-    loadLeads().catch(console.error);
-  }, []);
+  const { data, error, isLoading, refresh } = useApiQuery<OutreachQueueResponse>(apiPath);
+  const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / state.limit));
 
-  const filteredLeads = useMemo(
-    () => leads.filter((l) => statusFilter.includes(l.lead.status)),
-    [leads, statusFilter],
+  const setSelected = useCallback(
+    (leadId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (leadId) params.set('selected', leadId);
+      else params.delete('selected');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
   );
 
-  const toggleStatus = (status: string) => {
-    setStatusFilter((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status],
-    );
-  };
+  const selectRow = useCallback(
+    (leadId: string) => {
+      if (!isDesktopViewport()) {
+        router.push(`/leads/${leadId}?from=outreach`);
+        return;
+      }
+      setSelected(leadId);
+    },
+    [router, setSelected],
+  );
 
-  const saveTemplate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await api('/api/outreach/templates', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...form,
-        opportunityType: form.opportunityType || null,
-      }),
-    });
-    await loadTemplates();
-  };
+  useEffect(() => {
+    if (!items.length || !isDesktopViewport()) return;
+    if (selectedId && items.some((item) => item.leadId === selectedId)) return;
+    setSelected(items[0].leadId);
+  }, [items, selectedId, setSelected]);
 
-  const templatesByType = useMemo(() => {
-    const grouped: Record<string, Template[]> = { untyped: [] };
-    for (const t of templates) {
-      const key = t.opportunityType ?? 'untyped';
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(t);
-    }
-    return grouped;
-  }, [templates]);
-
-  const downloadExport = async () => {
-    if (!exportTemplateId) return;
-    setExportMsg(null);
-    setExportError(null);
-
-    const params = new URLSearchParams({
-      templateId: exportTemplateId,
-      date: 'today',
-    });
-    if (includeUnreviewedExport) params.set('includeUnreviewed', 'true');
-
-    const headers: Record<string, string> = {
-      'X-Dev-User': 'operator',
-    };
-    if (includeUnreviewedExport) {
-      headers['X-Confirm-Unreviewed'] = 'true';
-    }
-
+  const downloadExport = async (confirmSkipped: boolean) => {
+    setExporting(true);
+    setExportNote(null);
     try {
-      const res = await fetch(`/api/outreach/export?${params}`, { headers });
+      const params = new URLSearchParams({
+        channel: exportChannel,
+        date: 'today',
+      });
+      if (confirmSkipped) params.set('confirmSkipped', 'true');
+      const res = await fetch(`/api/outreach/export?${params}`, {
+        headers: { 'X-Dev-User': 'operator' },
+      });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(
-          typeof data.error === 'string' ? data.error : 'Export failed',
-        );
+        const payload = await res.json().catch(() => ({}));
+        throw new Error(typeof payload.error === 'string' ? payload.error : 'Export failed');
       }
       const blob = await res.blob();
       const count = res.headers.get('X-Export-Count') ?? '?';
+      const skippedDraft = res.headers.get('X-Export-Skipped-No-Draft') ?? '0';
       const skippedContact = res.headers.get('X-Export-Skipped-No-Contact') ?? '0';
       const skippedSuppressed = res.headers.get('X-Export-Skipped-Suppressed') ?? '0';
-      const skippedReachability = res.headers.get('X-Export-Skipped-Reachability') ?? '0';
-      const minReach = res.headers.get('X-Export-Min-Reachability') ?? 'low';
+      const skippedReach = res.headers.get('X-Export-Skipped-Reachability') ?? '0';
       const disposition = res.headers.get('Content-Disposition') ?? '';
       const filenameMatch = disposition.match(/filename="([^"]+)"/);
-      const filename = filenameMatch?.[1] ?? 'outreach-export.csv';
-
+      const filename = filenameMatch?.[1] ?? `outreach-drafts-${exportChannel}.csv`;
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
       URL.revokeObjectURL(url);
-
-      setExportMsg(
-        `Exported ${count} row(s). Skipped ${skippedContact} without contact, ${skippedSuppressed} suppressed, ${skippedReachability} below ${minReach} reachability.`,
-      );
-    } catch (e) {
-      setExportError(e instanceof Error ? e.message : 'Export failed');
+      const note = `Exported ${count} cached ${exportChannel} pitch(es). Skipped ${skippedDraft} without a draft, ${skippedContact} without contact, ${skippedSuppressed} suppressed, ${skippedReach} below reachability.`;
+      setExportNote(note);
+      setExportConfirmOpen(false);
+      setExportPreview(null);
+      push({ tone: 'success', title: 'Draft export ready', description: note });
+    } catch (reason) {
+      const message = reason instanceof Error ? reason.message : 'Export failed';
+      setExportNote(message);
+      push({ tone: 'error', title: 'Export failed', description: message });
+    } finally {
+      setExporting(false);
     }
   };
 
-  const selectedLead = filteredLeads.find((l) => l.lead.id === selectedLeadId);
+  const beginExport = async () => {
+    setExporting(true);
+    setExportNote(null);
+    let proceedWithoutConfirm = false;
+    try {
+      const params = new URLSearchParams({
+        channel: exportChannel,
+        date: 'today',
+        dryRun: 'true',
+      });
+      const res = await fetch(`/api/outreach/export?${params}`, {
+        headers: { 'X-Dev-User': 'operator' },
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof payload.error === 'string' ? payload.error : 'Export preview failed');
+      }
+      if ((payload.count ?? 0) === 0 && (payload.skippedNoDraft ?? 0) === 0) {
+        setExportNote(payload.message ?? 'No rows to export.');
+        push({
+          tone: 'info',
+          title: 'Nothing to export',
+          description: payload.message ?? 'Generate pitches first, then export.',
+        });
+        return;
+      }
+      if (payload.requiresConfirm || (payload.skippedNoDraft ?? 0) > 0) {
+        setExportPreview({
+          count: payload.count ?? 0,
+          skippedNoDraft: payload.skippedNoDraft ?? 0,
+          skippedNoContact: payload.skippedNoContact ?? 0,
+          skippedSuppressed: payload.skippedSuppressed ?? 0,
+          skippedReachability: payload.skippedReachability ?? 0,
+          message: payload.message ?? '',
+        });
+        setExportConfirmOpen(true);
+        return;
+      }
+      proceedWithoutConfirm = true;
+    } catch (reason) {
+      const message = reason instanceof Error ? reason.message : 'Export failed';
+      setExportNote(message);
+      push({ tone: 'error', title: 'Export failed', description: message });
+    } finally {
+      if (!proceedWithoutConfirm) setExporting(false);
+    }
+    if (proceedWithoutConfirm) {
+      await downloadExport(false);
+    }
+  };
 
   return (
-    <div className="max-w-4xl space-y-8">
-      <div>
-        <PageHeader title={PAGE_COPY.outreach.title} description={PAGE_COPY.outreach.description} />
-        {ownerScope !== 'all' && (
-          <p className="text-xs text-slate-500 -mt-4 mb-2">
-            Showing your pursuits only (owner scope). Add <code>?owner=all</code> to API for all operators.
-          </p>
-        )}
+    <div className="space-y-4">
+      <PageHeader
+        compact
+        title={PAGE_COPY.outreach.title}
+        description={PAGE_COPY.outreach.description}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" variant="secondary" asChild>
+              <Link href="/review">Open review queue</Link>
+        </Button>
+        <Button size="sm" variant="ghost" asChild>
+              <Link href="/leads">Pipeline</Link>
+        </Button>
       </div>
+        }
+      />
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-950">
-        <p className="font-medium">Safety gates</p>
-        <ul className="mt-1 list-disc list-inside space-y-0.5 text-amber-900">
-          <li>CSV export defaults to REVIEWED + CONTACTED only (not NEW)</li>
-          <li>Rows without email and phone are excluded</li>
-          <li>Suppressed accounts are never exported or sent</li>
-          <li>Reachability below your ICP minimum (Settings) is excluded from export</li>
+      <OutreachQueueToolbar
+        list={list}
+        draftQuery={draftQuery}
+        setDraftQuery={setDraftQuery}
+        exportChannel={exportChannel}
+        setExportChannel={setExportChannel}
+        exporting={exporting}
+        onExport={() => void beginExport()}
+      />
+
+      <Dialog
+        open={exportConfirmOpen}
+        onOpenChange={(open) => {
+          setExportConfirmOpen(open);
+          if (!open) setExportPreview(null);
+        }}
+        title="Confirm draft export"
+        description={
+          exportPreview?.message ??
+          'Some pursuits lack a cached draft for this channel and will be skipped.'
+        }
+      >
+        {exportPreview && (
+          <ul className="mb-4 space-y-1 text-sm text-ink-muted">
+            <li>Cached drafts to export: {exportPreview.count}</li>
+            <li>Skipped without draft: {exportPreview.skippedNoDraft}</li>
+            <li>Skipped without contact: {exportPreview.skippedNoContact}</li>
+            <li>Skipped suppressed: {exportPreview.skippedSuppressed}</li>
+            <li>Skipped reachability: {exportPreview.skippedReachability}</li>
         </ul>
-      </div>
+        )}
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setExportConfirmOpen(false);
+              setExportPreview(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            loading={exporting}
+            disabled={!exportPreview || exportPreview.count === 0}
+            onClick={() => void downloadExport(true)}
+          >
+            Export {exportPreview?.count ?? 0} draft(s)
+          </Button>
+        </div>
+      </Dialog>
 
-      <form onSubmit={saveTemplate} className="bg-white border rounded-lg p-4 space-y-3">
-        <h3 className="font-medium">New template</h3>
-        <p className="text-xs text-slate-500">
-          Tokens: {'{{name}}'}, {'{{business}}'}, {'{{city}}'}, {'{{website}}'}. Default templates
-          auto-seed per opportunity type on first load.
-        </p>
-        <select
-          className="w-full border rounded-md px-3 py-2 text-sm"
-          value={form.opportunityType}
-          onChange={(e) =>
-            setForm({ ...form, opportunityType: e.target.value as OpportunityType })
+      {data?.ownerScope && data.ownerScope !== 'all' && (
+        <p className="text-xs text-ink-muted">Showing your pursuits only (owner scope).</p>
+      )}
+
+      <p className="rounded-md border border-line bg-surface-raised px-3 py-2 text-xs text-ink-muted">
+        CSV export uses generated pitches only — not templates. Pursuits without a cached draft for the
+        chosen channel are skipped. Suppressed accounts and rows below ICP reachability never export.
+      </p>
+      {exportNote && <p className="text-xs text-ink-muted">{exportNote}</p>}
+
+      {error && (
+        <ErrorState
+          title="Outreach Queue could not load"
+          description={error.message}
+          onRetry={() => void refresh()}
+        />
+      )}
+
+      {isLoading && <OutreachQueueSkeleton />}
+
+      {!isLoading && !error && items.length === 0 && (
+        <EmptyState
+          title="No pursuits ready for outreach"
+          description="Promote opportunities from Review, or check Pipeline for pursuits already in later stages."
+          action={
+            <Button size="sm" asChild>
+              <Link href="/review">Open review queue</Link>
+            </Button>
           }
-        >
-          <option value="">No opportunity type (generic)</option>
-          <option value="demand_response">Demand response</option>
-          <option value="greenfield">Greenfield site</option>
-          <option value="redesign">Redesign</option>
-          <option value="modernize">Modernize</option>
-          <option value="general">General fit</option>
-        </select>
-        <input
-          className="w-full border rounded-md px-3 py-2 text-sm"
-          placeholder="Template name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
         />
-        <input
-          className="w-full border rounded-md px-3 py-2 text-sm"
-          placeholder="Subject"
-          value={form.subject}
-          onChange={(e) => setForm({ ...form, subject: e.target.value })}
-        />
-        <textarea
-          className="w-full border rounded-md px-3 py-2 text-sm h-24"
-          value={form.body}
-          onChange={(e) => setForm({ ...form, body: e.target.value })}
-        />
-        <button type="submit" className="bg-slate-800 text-white px-4 py-2 rounded-md text-sm">
-          Save template
-        </button>
-      </form>
+      )}
 
-      <div className="bg-white border rounded-lg p-4">
-        <h3 className="font-medium mb-3">Templates by opportunity type ({templates.length})</h3>
-        {templates.length === 0 ? (
-          <p className="text-sm text-slate-500 italic">Loading templates…</p>
-        ) : (
-          <div className="space-y-4 text-sm">
-            {(
-              [
-                'demand_response',
-                'greenfield',
-                'redesign',
-                'modernize',
-                'general',
-                'untyped',
-              ] as const
-            ).map((type) => {
-              const list = templatesByType[type];
-              if (!list?.length) return null;
-              return (
-                <div key={type}>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-1">
-                    {type === 'untyped' ? 'Other' : type.replace(/_/g, ' ')}
-                  </p>
-                  <ul className="space-y-2">
-                    {list.map((t) => (
-                      <li key={t.id} className="border-b border-slate-100 pb-2 last:border-0">
-                        <strong>{t.name}</strong> — {t.channel}
-                        {t.subject && <span className="text-slate-500"> · {t.subject}</span>}
+      {!isLoading && items.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(18rem,22rem)_minmax(0,1fr)] lg:items-start">
+          <div className="space-y-2 lg:sticky lg:top-4 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+            <div className="flex items-center justify-between px-1">
+              <p className="text-xs text-ink-muted">
+                {total} pursuit{total === 1 ? '' : 's'} · page {state.page}/{totalPages}
+              </p>
+              <StatusBadge tone="info">Select to pitch</StatusBadge>
+            </div>
+            <ul className="space-y-2" aria-label="Outreach queue">
+              {items.map((item) => (
+                <li key={item.leadId}>
+                  <OutreachQueueRow
+                    item={item}
+                    selected={item.leadId === selectedId}
+                    onSelect={() => selectRow(item.leadId)}
+                  />
                       </li>
                     ))}
                   </ul>
-                </div>
-              );
-            })}
+            {totalPages > 1 && (
+              <div className="flex justify-between gap-2 pt-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={state.page <= 1}
+                  onClick={() => update({ page: state.page - 1 })}
+                >
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={state.page >= totalPages}
+                  onClick={() => update({ page: state.page + 1 })}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+            <p className="px-1 text-[11px] text-ink-faint lg:hidden">
+              Opening a pursuit on a narrow screen goes to the full workspace.
+            </p>
           </div>
-        )}
-      </div>
 
-      <div className="bg-white border rounded-lg p-4 space-y-4">
-        <h3 className="font-medium">Operator workflow</h3>
-
-        <div>
-          <p className="text-xs font-medium text-slate-500 mb-2">Lead status filter (compose list)</p>
-          <div className="flex flex-wrap gap-2">
-            {ALL_STATUS_FILTERS.map((s) => (
-              <label key={s} className="flex items-center gap-1.5 text-sm">
-                <input
-                  type="checkbox"
-                  checked={statusFilter.includes(s)}
-                  onChange={() => toggleStatus(s)}
-                />
-                {s}
-                {s === 'NEW' && (
-                  <span className="text-xs text-amber-700">(not in default export)</span>
-                )}
-              </label>
-            ))}
+          <div className="hidden min-w-0 lg:block">
+            {selectedId ? (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-ink">Pursuit workspace</p>
+                  <Button size="sm" variant="ghost" asChild>
+                    <Link href={`/leads/${selectedId}?from=outreach`}>
+                      Open full page
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </div>
+                <PursuitWorkspace leadId={selectedId} onOutreachRecorded={() => void refresh()} />
+          </div>
+            ) : (
+              <EmptyState
+                title="Select a pursuit"
+                description="Choose a queue item to scan the Case File and generate a channel pitch."
+                className="min-h-64"
+              />
+            )}
           </div>
         </div>
+      )}
+    </div>
+  );
+}
 
-        <select
-          className="w-full border rounded-md px-3 py-2 text-sm"
-          value={selectedLeadId}
-          onChange={(e) => setSelectedLeadId(e.target.value)}
-        >
-          <option value="">Select lead…</option>
-          {filteredLeads.map((l) => (
-            <option key={l.lead.id} value={l.lead.id}>
-              {l.business.name} — {l.lead.status} ({l.lead.priority})
-            </option>
-          ))}
-        </select>
-
-        {selectedLeadId && selectedLead && (
-          <OutreachCompose
-            leadId={selectedLeadId}
-            leadLabel={`${selectedLead.business.name} (${selectedLead.lead.status})`}
-            onRecorded={() => {
-              loadLeads().catch(console.error);
+function OutreachQueueToolbar({
+  list,
+  draftQuery,
+  setDraftQuery,
+  exportChannel,
+  setExportChannel,
+  exporting,
+  onExport,
+}: {
+  list: QueueListView;
+  draftQuery: string;
+  setDraftQuery: (value: string) => void;
+  exportChannel: DraftChannel;
+  setExportChannel: (value: DraftChannel) => void;
+  exporting: boolean;
+  onExport: () => void;
+}) {
+  const { state, update, clearFilters } = list;
+  return (
+    <div className="space-y-3 rounded-lg border border-line bg-surface p-3 shadow-panel">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+        <label className="min-w-0 flex-1 space-y-1 text-xs font-medium text-ink-muted">
+          Search
+          <Input
+            value={draftQuery}
+            placeholder="Business, city, email, phone…"
+            onChange={(event) => setDraftQuery(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') update({ q: draftQuery.trim(), resetPage: true });
             }}
           />
-        )}
-
-        {!selectedLeadId && (
-          <p className="text-sm text-slate-500 italic">
-            Select a lead to preview merged copy and record outreach.
-          </p>
-        )}
-      </div>
-
-      <div className="bg-white border rounded-lg p-4 space-y-3">
-        <h3 className="font-medium">CSV export</h3>
-        <p className="text-sm text-slate-600">
-          Export today&apos;s batch: REVIEWED + CONTACTED leads not yet contacted today, with merged
-          subject, body, email, phone, and Maps URL. NEW leads are excluded unless you opt in below.
-        </p>
+        </label>
+        <label className="space-y-1 text-xs font-medium text-ink-muted">
+          Status
+          <select
+            className="h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink lg:w-44"
+            value={state.filters.status ?? ''}
+            onChange={(event) =>
+              update({ filters: { ...state.filters, status: event.target.value }, resetPage: true })
+            }
+          >
+            <option value="">All queue stages</option>
+            {QUEUE_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1 text-xs font-medium text-ink-muted">
+          Channel
+          <select
+            className="h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink lg:w-40"
+            value={state.filters.channel ?? 'any'}
+            onChange={(event) =>
+              update({ filters: { ...state.filters, channel: event.target.value }, resetPage: true })
+            }
+          >
+            {CHANNEL_FILTERS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1 text-xs font-medium text-ink-muted">
+          Sort
         <select
-          className="w-full border rounded-md px-3 py-2 text-sm"
-          value={exportTemplateId}
-          onChange={(e) => setExportTemplateId(e.target.value)}
+            className="h-9 w-full rounded-md border border-line bg-surface px-3 text-sm text-ink lg:w-40"
+            value={state.sort}
+            onChange={(event) => update({ sort: event.target.value, resetPage: true })}
+          >
+            {SORT_OPTIONS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button
+          size="sm"
+          onClick={() => update({ q: draftQuery.trim(), resetPage: true })}
         >
-          <option value="">Select template for export…</option>
-          {templates.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-              {t.opportunityType ? ` · ${t.opportunityType.replace(/_/g, ' ')}` : ''}
+          Apply
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            setDraftQuery('');
+            clearFilters();
+          }}
+        >
+          Clear
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <label className="flex items-center gap-2 text-xs font-medium text-ink-muted">
+          Export channel
+          <select
+            className="h-8 rounded-md border border-line bg-surface px-2 text-sm text-ink"
+            value={exportChannel}
+            onChange={(event) => setExportChannel(event.target.value as DraftChannel)}
+          >
+            {EXPORT_CHANNELS.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.label}
             </option>
           ))}
         </select>
-        <label className="flex items-start gap-2 text-sm text-amber-900">
-          <input
-            type="checkbox"
-            className="mt-1"
-            checked={includeUnreviewedExport}
-            onChange={(e) => setIncludeUnreviewedExport(e.target.checked)}
-          />
-          <span>
-            Include unreviewed NEW leads in export
-            <span className="block text-xs text-amber-800">
-              Requires explicit confirmation — only use for research lanes, not default outreach.
-            </span>
-          </span>
         </label>
-        {exportMsg && (
-          <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded p-2">
-            {exportMsg}
-          </p>
-        )}
-        {exportError && (
-          <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-2">
-            {exportError}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={downloadExport}
-          disabled={!exportTemplateId}
-          className="bg-brand-600 text-white px-4 py-2 rounded-md text-sm disabled:opacity-50"
-        >
-          Download CSV (today)
-        </button>
+        <Button size="sm" variant="secondary" loading={exporting} onClick={onExport}>
+          <Download className="h-3.5 w-3.5" />
+          Export cached drafts
+        </Button>
       </div>
+    </div>
+  );
+}
 
-      <p className="text-sm text-slate-500">
-        Or open a lead hub for inline compose:{' '}
-        <Link href="/leads" className="text-brand-600 hover:underline">
-          Leads list
-        </Link>
-      </p>
+function OutreachQueueSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
+      <div className="space-y-2">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+      <Skeleton className="hidden h-80 w-full lg:block" />
     </div>
   );
 }

@@ -1,8 +1,10 @@
 # Demand Capture — Web Agency Platform
 
-> **UlnoVaTech monorepo:** this app lives at `ulnovatech/discovery/`. See [MONOREPO.md](MONOREPO.md) and [../docs/DISCOVERY_INTELLIGENCE.md](../docs/DISCOVERY_INTELLIGENCE.md).
-
 Production-ready modular monolith for web/digital agencies: find website opportunities and demand, triage, pursue honestly, and track revenue.
+
+**SleeklyBuilt / ulnovatech:** this tree is the **canonical Discovery Intelligence source** (C0).  
+`C:\xampp\htdocs\ulnovatech\discovery` is a junction here — do not maintain a nested duplicate.  
+See `ulnovatech/docs/DISCOVERY_SOURCE.md`.
 
 **V1 scope:** [docs/V1_CHARTER.md](docs/V1_CHARTER.md) — Path A, razor-sharp results for one ICP before public SaaS.
 

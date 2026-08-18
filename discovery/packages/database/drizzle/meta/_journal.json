@@ -120,6 +120,69 @@
       "when": 1750500000000,
       "tag": "0016_market_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1750600000000,
+      "tag": "0017_operator_saved_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1750700000000,
+      "tag": "0018_bulk_operation_logs",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1750800000000,
+      "tag": "0019_outreach_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1754500000000,
+      "tag": "0020_discovery_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1754501000000,
+      "tag": "0021_business_discovery_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1754600000000,
+      "tag": "0022_crm_bridge",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1754700000000,
+      "tag": "0023_segment_performance",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1754800000000,
+      "tag": "0024_sleekly_dash_company_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1754900000000,
+      "tag": "0025_outreach_draft_phone_channel",
+      "breakpoints": true
     }
   ]
 }

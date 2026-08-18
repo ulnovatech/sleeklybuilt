@@ -8,7 +8,7 @@
     "./review-verification": "./src/review-verification.ts"
   },
   "scripts": {
-    "test": "tsx src/__tests__/reachability.test.ts && tsx src/__tests__/review-verification.test.ts && tsx src/__tests__/icp-scoring.test.ts && tsx src/__tests__/work-queue-priority.test.ts && tsx src/__tests__/unique-business-ids.test.ts"
+    "test": "tsx src/__tests__/reachability.test.ts && tsx src/__tests__/review-verification.test.ts && tsx src/__tests__/icp-scoring.test.ts && tsx src/__tests__/work-queue-priority.test.ts && tsx src/__tests__/unique-business-ids.test.ts && tsx src/__tests__/outcome-learning.test.ts"
   },
   "dependencies": {
     "@agency/accounts": "workspace:*",

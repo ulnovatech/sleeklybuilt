@@ -1,6 +1,6 @@
 # DNS — superseded by temporary IP access
 
-**Production no longer uses InfinityFree / `ulnovatech.store`.**
+**Production no longer uses InfinityFree / `sleeklybuilt.pro`.**
 
 Current access model: GCE IP + nip.io hostnames — see **[`ACCESS.md`](./ACCESS.md)**.
 

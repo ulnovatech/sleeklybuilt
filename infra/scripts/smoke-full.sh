@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Full-stack smoke tests: ulnovatech + Discovery Intelligence
+# Full-stack smoke tests: sleeklybuilt + Discovery Intelligence
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,7 +7,7 @@ BASE="${1:-http://localhost:8080}"
 
 echo "=== Full stack smoke @ ${BASE} ==="
 
-bash "${SCRIPT_DIR}/smoke-ulnovatech.sh" "$BASE"
+bash "${SCRIPT_DIR}/smoke-sleeklybuilt.sh" "$BASE"
 bash "${SCRIPT_DIR}/smoke-discovery.sh" "$BASE"
 
 # Production HTTPS discovery subdomain (optional second pass)

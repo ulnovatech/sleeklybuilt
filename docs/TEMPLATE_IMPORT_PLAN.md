@@ -2,7 +2,7 @@
 
 > **Purpose:** Turn the current manual `wget` + ad-hoc cleanup workflow into a reliable, UI-driven pipeline inside **Unldash**, while keeping portfolio previews stable, seller-free, and commercially usable.
 >
-> **Scope:** Sales gallery previews on UlnovaTech infrastructure — not a Webflow clone, not a raw HTML handoff product.
+> **Scope:** Sales gallery previews on SleeklyBuilt infrastructure — not a Webflow clone, not a raw HTML handoff product.
 >
 > **Last updated:** 2026-07-17
 
@@ -12,7 +12,7 @@
 
 | Layer | What we store | Why |
 |-------|---------------|-----|
-| **Preview artifact** | Cleaned HTML locally on our server | Control URLs, scrub seller docks, inject UlnovaTech CTA |
+| **Preview artifact** | Cleaned HTML locally on our server | Control URLs, scrub seller docks, inject SleeklyBuilt CTA |
 | **Assets (default)** | Remote Webflow CDN (`cdn.prod.website-files.com`) | Fast import, smaller disk, good enough for gallery |
 | **Assets (selective)** | Local only when required | Rebrand-critical images, 404s, legal archive for paid deliverables |
 | **Editable source (MVP)** | `catalog.json` metadata + optional section profile | Simple Unldash forms — not prettified Webflow HTML |
@@ -46,7 +46,7 @@
                             │ POST /api/template-imports
                             ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ ulndash/backend/api.php (authenticated)                         │
+│ sleekly-dash/backend/api.php (authenticated)                         │
 │  TemplateImportController → template_import_jobs (MySQL)        │
 └───────────────────────────┬─────────────────────────────────────┘
                             │ spawn CLI worker (job id only)
@@ -102,7 +102,7 @@
 - [x] Restrict source hosts to valid subdomains of `webflow.io`
 - [x] Define folder-id rule: lowercase full hostname, e.g. `willey-fragrance.webflow.io`
 - [x] Define import states: `queued | running | scrubbing | validating | ready | published | rolled_back | failed | discarded`
-- [x] Encode these contracts in `ulndash/backend/config/TemplateImportPolicy.php`
+- [x] Encode these contracts in `sleekly-dash/backend/config/TemplateImportPolicy.php`
 
 ### Acceptance criteria
 - [x] Preview artifact is explicitly not the client deliverable
@@ -123,8 +123,8 @@
 
 ### Files implemented
 - `docs/TEMPLATE_IMPORT_PLAN.md` (this doc)
-- `ulndash/backend/config/TemplateImportPolicy.php`
-- `ulndash/backend/tests/TemplateImportPolicyTest.php`
+- `sleekly-dash/backend/config/TemplateImportPolicy.php`
+- `sleekly-dash/backend/tests/TemplateImportPolicyTest.php`
 - `portfolio/api/rename_template.php`
 
 ---
@@ -142,7 +142,7 @@
   created_by, created_at, updated_at, published_at
   ```
 - [x] `TemplateImportController.php` — create job, get status, list jobs
-- [x] Routes in `ulndash/backend/api.php` (auth required):
+- [x] Routes in `sleekly-dash/backend/api.php` (auth required):
   - `POST /api/template-imports`
   - `GET /api/template-imports`
   - `GET /api/template-imports/{id}`
@@ -386,7 +386,7 @@ Import report must **flag** these as “static preview limitations.”
 - Sandboxed staged preview remains inside the full-screen sheet
 
 ### Deliverables
-- [x] Route in `ulndash/frontend/src/main.jsx`: `/templates`
+- [x] Route in `sleekly-dash/frontend/src/main.jsx`: `/templates`
 - [x] Sidebar link wired to the responsive page
 - [x] `TemplatesAPI` and `TemplateImportsAPI` services
 - [x] Poll active imports every 2s while running
@@ -460,7 +460,7 @@ Prettified Webflow HTML is still unmaintainable. MVP editor = catalog fields.
 ### Deliverables
 - [x] Rate limit: configurable imports per hour per authenticated user
 - [x] Audit log: actor and target for import/publish/replace/discard/rollback/metadata actions
-- [x] Worker logs → `/opt/ulnovatech/logs/template-import/`
+- [x] Worker logs → `/opt/sleeklybuilt/logs/template-import/`
 - [x] Cron: purge unreferenced staging dirs > 7 days and worker logs > 30 days
 - [x] Persistent host mounts for private staging and logs across container replacement
 - [x] Deploy: migrations, worker, PHP routes, persistent directories, and cron via GitHub Actions
@@ -552,7 +552,7 @@ php rename_template.php  # deprecated
 |-------|------|------|
 | **Import scrub** | Chunk 3 | Remove `.hireus-*`, strip seller URLs from HTML |
 | **CSS hide** | Chunk 3 | Inject hide rules in processed HTML (optional inline) |
-| **Runtime `cta.js`** | Existing | Fallback scrubber + UlnovaTech purchase dock |
+| **Runtime `cta.js`** | Existing | Fallback scrubber + SleeklyBuilt purchase dock |
 | **Publish gate** | Chunk 8 | Block if seller patterns detected |
 
 Known signatures:
@@ -566,11 +566,11 @@ Known signatures:
 
 | Area | Path |
 |------|------|
-| Frontend routes | `ulndash/frontend/src/main.jsx` |
-| Sidebar nav | `ulndash/frontend/src/components/Sidebar.jsx` (line ~68 `/templates`) |
-| API router | `ulndash/backend/api.php` |
+| Frontend routes | `sleekly-dash/frontend/src/main.jsx` |
+| Sidebar nav | `sleekly-dash/frontend/src/components/Sidebar.jsx` (line ~68 `/templates`) |
+| API router | `sleekly-dash/backend/api.php` |
 | Auth gate | `SessionAuth` + `ApiAuth::requireAuth()` |
-| Import pattern reference | `ulndash/frontend/src/pages/ImportCSV.jsx` |
+| Import pattern reference | `sleekly-dash/frontend/src/pages/ImportCSV.jsx` |
 | Catalog lib | `portfolio/api/lib/catalog.php` |
 | Live templates | `portfolio/portfolio/` |
 | Preview CTA/scrubber | `portfolio/portfolio/cta.js` |
@@ -585,7 +585,7 @@ An operator can:
 2. Open **Templates**
 3. Paste a licensed `*.webflow.io` URL
 4. Wait for job completion
-5. Preview staged template (seller mole gone, UlnovaTech dock present)
+5. Preview staged template (seller mole gone, SleeklyBuilt dock present)
 6. Edit title/category in UI
 7. Publish to gallery
 8. See template on portfolio listing + order flow with correct folder ID

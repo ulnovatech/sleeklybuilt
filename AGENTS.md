@@ -1,4 +1,4 @@
-# AGENTS.md — UlnoVaTech / Design OS
+# AGENTS.md — SleeklyBuilt / Design OS
 
 This file is mandatory for every agent session in this repository.
 

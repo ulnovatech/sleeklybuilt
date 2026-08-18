@@ -12,6 +12,7 @@ import {
 import {
   inlinePipelineMaxSteps,
   inlinePipelineStaleJobMinutes,
+  isBrowserAutomationEnabled,
   logger,
 } from '@agency/config';
 import { captureException } from '@agency/config/observability';
@@ -20,13 +21,16 @@ import {
   countProspectCandidates,
   DiscoveryService,
   DiscoveryRepository,
+  DiscoveryPlanRepository,
   GooglePlacesDetailsProvider,
   refreshRunYieldStats,
+  tickDiscoveryPlans,
   type DiscoveredBusiness,
 } from '@agency/discovery';
 import { IntentService } from '@agency/intent';
 import { IntelligenceService } from '@agency/intelligence';
-import { QualificationService, uniqueBusinessIds } from '@agency/qualification';
+import { SleeklyDashBridgeService, isSleeklyDashConfigured } from '@agency/integrations';
+import { QualificationService, refreshSegmentPerformance, uniqueBusinessIds } from '@agency/qualification';
 
 const queue = new JobQueue();
 const jobRepo = new JobRepository();
@@ -36,6 +40,18 @@ const intelligence = new IntelligenceService();
 const intent = new IntentService();
 const qualification = new QualificationService();
 const placesDetails = new GooglePlacesDetailsProvider();
+
+/** Throttle Discovery Plan scheduler inside the job worker loop. */
+let lastPlanTickAt = 0;
+const PLAN_TICK_INTERVAL_MS = 60_000;
+
+/** Throttle SleeklyBuilt CRM outcome/inbound pull. */
+let lastCrmBridgeSyncAt = 0;
+const CRM_BRIDGE_SYNC_INTERVAL_MS = 5 * 60_000;
+
+/** Nightly segment performance refresh (outcome learning). */
+let lastSegmentRefreshAt = 0;
+const SEGMENT_REFRESH_INTERVAL_MS = 24 * 60 * 60_000;
 
 /** Prevent concurrent resumeRunPipeline for the same run (parallel polls abort mid-claim). */
 const resumeLocks = new Map<string, Promise<{ steps: number }>>();
@@ -152,6 +168,9 @@ async function executeStage(job: ClaimedJob): Promise<Record<string, unknown> | 
         businessCount: result.businesses.length,
         suppressedSkipped: result.suppressedSkipped,
         candidatesAfterVerify: result.candidatesAfterVerify,
+        newAccounts: result.newAccounts,
+        knownFresh: result.knownFresh,
+        knownStale: result.knownStale,
       };
     }
     case 'crawl': {
@@ -160,8 +179,27 @@ async function executeStage(job: ClaimedJob): Promise<Record<string, unknown> | 
     }
     case 'bi_enrich': {
       const result = await intelligence.biEnrichRun(runId);
-      logger.info('BI enrich step', { runId, ...result });
-      return result as unknown as Record<string, unknown>;
+      const changes = result.changes ?? [];
+      let changeSignals = 0;
+      for (const change of changes) {
+        if (change.change !== 'website_gained') continue;
+        await intent.createSignal({
+          businessId: change.businessId,
+          discoveryRunId: runId,
+          source: 'bi_monitor',
+          signalType: 'website_gained',
+          signalClass: 'enrichment',
+          signalStrength: 85,
+          title: 'Website gained since last check',
+          snippet: change.website
+            ? `Now has owned website: ${change.website}`
+            : 'Business gained a real website since the previous BI snapshot.',
+          sourceUrl: change.website ?? undefined,
+        });
+        changeSignals++;
+      }
+      logger.info('BI enrich step', { runId, ...result, changeSignals });
+      return { ...result, changeSignals } as unknown as Record<string, unknown>;
     }
     case 'derive_signals': {
       const signals = await intent.deriveSignalsForRun(runId);
@@ -447,17 +485,81 @@ export async function drainOnce() {
 export async function workerTick() {
   await queue.reclaimStaleJobs();
   await touchWorkerHeartbeat();
+
+  const now = Date.now();
+  if (now - lastPlanTickAt >= PLAN_TICK_INTERVAL_MS) {
+    lastPlanTickAt = now;
+    try {
+      const result = await tickDiscoveryPlans({
+        enqueueRun: enqueueRunPipeline,
+      });
+      if (result.scheduled.length > 0 || result.skipped.length > 0) {
+        logger.info('Discovery plan tick', {
+          claimed: result.claimed,
+          scheduled: result.scheduled.length,
+          skipped: result.skipped.length,
+        });
+      }
+    } catch (err) {
+      logger.error('Discovery plan tick failed', { error: String(err) });
+      captureException(err);
+    }
+  }
+
+  if (now - lastCrmBridgeSyncAt >= CRM_BRIDGE_SYNC_INTERVAL_MS) {
+    lastCrmBridgeSyncAt = now;
+    try {
+      if (await isSleeklyDashConfigured()) {
+        const bridge = new SleeklyDashBridgeService();
+        const result = await bridge.syncAll();
+        if (result.configured && (result.outcomes?.upserted || result.inbound?.created)) {
+          logger.info('CRM bridge sync', {
+            outcomesUpserted: result.outcomes?.upserted ?? 0,
+            inboundCreated: result.inbound?.created ?? 0,
+          });
+        }
+        if (result.configured && (result.outcomes?.upserted ?? 0) > 0) {
+          const learning = await refreshSegmentPerformance();
+          logger.info('Segment performance refresh after CRM outcomes', learning);
+        }
+      }
+    } catch (err) {
+      logger.error('CRM bridge sync failed', { error: String(err) });
+      captureException(err);
+    }
+  }
+
+  if (now - lastSegmentRefreshAt >= SEGMENT_REFRESH_INTERVAL_MS) {
+    lastSegmentRefreshAt = now;
+    try {
+      const result = await refreshSegmentPerformance();
+      if (result.segments > 0 || result.outcomes > 0) {
+        logger.info('Segment performance refresh', result);
+      }
+    } catch (err) {
+      logger.error('Segment performance refresh failed', { error: String(err) });
+      captureException(err);
+    }
+  }
+
   return drainOnce();
 }
 
 export async function enqueueRunPipeline(runId: string) {
   const run = await discoveryRepo.getRun(runId);
   const profile = (run?.runProfile ?? 'standard') as 'micro' | 'standard' | 'boost';
-  const stages = getPipelineStagesForRun(profile);
+  let planType: string | null = null;
+  if (run?.planId) {
+    const plan = await new DiscoveryPlanRepository().getPlan(run.planId);
+    planType = plan?.planType ?? null;
+  }
+  const stages = getPipelineStagesForRun(profile, isBrowserAutomationEnabled(), { planType });
   await setPipelinePlan(runId, stages);
   await appendPipelineLog(runId, {
     level: 'info',
-    message: `Pipeline plan: ${stages.map((s) => STAGE_LABELS[s] ?? s).join(' → ')}`,
+    message: `Pipeline plan: ${stages.map((s) => STAGE_LABELS[s] ?? s).join(' → ')}${
+      planType === 'monitor' ? ' (monitor)' : ''
+    }`,
   });
   const first = stages[0];
   if (!first) throw new Error('Pipeline has no stages');

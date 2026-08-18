@@ -15,7 +15,8 @@ import {
 export default function AttendantPanel() {
   const {
     open,
-    closePanel,
+    minimized,
+    minimizePanel,
     pageContext,
     sessionStatus,
     messages,
@@ -40,22 +41,31 @@ export default function AttendantPanel() {
   const lastVisitorFailed = [...messages].reverse().find((m) => m.role === 'visitor' && m.status === 'failed')
   const connecting =
     escalationState === 'escalated' || escalationState === 'human_active'
+  const expanded = open && !minimized
 
   useEffect(() => {
-    if (!open || !panelRef.current) return undefined
-    return bindFocusTrap(panelRef.current, { onEscape: closePanel })
-  }, [open, closePanel])
+    if (!expanded || !panelRef.current) return undefined
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    if (desktop.matches) {
+      const onKey = (event) => {
+        if (event.key === 'Escape') minimizePanel()
+      }
+      document.addEventListener('keydown', onKey)
+      return () => document.removeEventListener('keydown', onKey)
+    }
+    return bindFocusTrap(panelRef.current, { onEscape: minimizePanel })
+  }, [expanded, minimizePanel])
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!expanded) return undefined
     const prev = document.body.style.overflow
-    if (window.matchMedia('(max-width: 767px)').matches) {
+    if (window.matchMedia('(max-width: 1023px)').matches) {
       document.body.style.overflow = 'hidden'
     }
     return () => {
       document.body.style.overflow = prev
     }
-  }, [open])
+  }, [expanded])
 
   useEffect(() => {
     const el = transcriptRef.current
@@ -63,7 +73,7 @@ export default function AttendantPanel() {
     el.scrollTop = el.scrollHeight
   }, [messages, pendingConfirm, pendingChoices, error, streaming])
 
-  if (!open) return null
+  if (!expanded) return null
 
   const showEmpty = messages.length === 0 && sessionStatus !== 'loading' && !error
 
@@ -71,18 +81,18 @@ export default function AttendantPanel() {
     <>
       <button
         type="button"
-        className="fixed inset-0 z-40 bg-surface-overlay md:hidden"
-        aria-label="Dismiss attendant"
-        onClick={closePanel}
+        className="fixed inset-0 z-40 bg-surface-overlay lg:hidden"
+        aria-label="Minimize attendant"
+        onClick={minimizePanel}
       />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="attendant-dialog-title"
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92vh] flex-col overflow-hidden rounded-t-2xl border border-subtle bg-surface-raised shadow-xl md:inset-auto md:bottom-6 md:right-5 md:h-[min(640px,calc(100vh-3rem))] md:w-[380px] md:rounded-2xl"
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[92vh] flex-col overflow-hidden rounded-t-2xl border border-subtle bg-surface-raised shadow-xl lg:inset-auto lg:bottom-0 lg:right-0 lg:top-0 lg:h-auto lg:max-h-none lg:w-[380px] lg:rounded-none lg:border-y-0 lg:border-r-0 lg:shadow-none"
       >
-        <AttendantHeader onClose={closePanel} />
+        <AttendantHeader onMinimize={minimizePanel} />
 
         {connecting ? (
           <div className="border-b border-subtle bg-surface-sunken px-4 py-2.5" role="status">

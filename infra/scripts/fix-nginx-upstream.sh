@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
-cd /opt/ulnovatech/repo
-export PUBLIC_HTML_PATH=/opt/ulnovatech/public_html
-export ULNOVATECH_ENV_FILE=/opt/ulnovatech/env/docker.ulnovatech.env
-export DISCOVERY_ENV_FILE=/opt/ulnovatech/env/docker.discovery.env
+cd /opt/sleeklybuilt/repo
+export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
+export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
+export DISCOVERY_ENV_FILE=/opt/sleeklybuilt/env/docker.discovery.env
 
 docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml \
   up -d --force-recreate --no-deps nginx

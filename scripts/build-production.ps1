@@ -50,8 +50,12 @@ if (-not (Test-Path $attendantSrc)) {
 }
 $attendantDest = Join-Path $publicHtml 'attendant'
 New-Item -ItemType Directory -Force -Path $attendantDest | Out-Null
-foreach ($part in @('schemas', 'prompts', 'rules', 'skills')) {
-  Copy-Item -Recurse -Force (Join-Path $attendantSrc $part) (Join-Path $attendantDest $part)
+foreach ($part in @('schemas', 'prompts', 'rules', 'skills', 'company', 'expertise')) {
+  $src = Join-Path $attendantSrc $part
+  if (-not (Test-Path $src)) {
+    throw "attendant/$part missing — required for attendant runtime"
+  }
+  Copy-Item -Recurse -Force $src (Join-Path $attendantDest $part)
 }
 New-Item -ItemType Directory -Force -Path (Join-Path $publicHtml 'portfolio\api') | Out-Null
 Copy-Item -Recurse -Force (Join-Path $root 'portfolio\api\*') (Join-Path $publicHtml 'portfolio\api')

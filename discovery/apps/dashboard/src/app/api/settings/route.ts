@@ -1,8 +1,10 @@
 import { requireOperator } from '@/lib/api-auth';
 import {
   platformSettings,
+  listAgencyPresets,
   type AcquisitionMode,
   type AcquisitionSettings,
+  type AgencySettings,
   type CrawlSettings,
   type CredentialKey,
   type DiscoveryOptionsSettings,
@@ -11,9 +13,11 @@ import {
   type QualificationSettings,
   type CrmSettings,
   type BoiSettings,
+  type DraftSettings,
   type MarketHunterSettings,
   CREDENTIAL_ENV_MAP,
 } from '@agency/settings';
+import { BudgetGovernor } from '@agency/acquisition';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -29,6 +33,7 @@ const acquisitionPatchSchema = z
         custom_scrape: z.number().int().min(0).optional(),
         meta_graph: z.number().int().min(0).optional(),
         llm_narrative: z.number().int().min(0).optional(),
+        llm_draft: z.number().int().min(0).optional(),
       })
       .optional(),
     searchLimits: z
@@ -53,6 +58,7 @@ const acquisitionPatchSchema = z
       })
       .optional(),
     placesTtlDays: z.number().int().min(1).optional(),
+    enrichmentStaleAfterDays: z.number().int().min(1).max(365).optional(),
     places: z
       .object({
         standardVerifyMaxPerRun: z.number().int().min(0).optional(),
@@ -148,6 +154,15 @@ const boiPatchSchema = z
   })
   .optional();
 
+const draftsPatchSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    provider: z.enum(['openrouter', 'openai', 'anthropic']).optional(),
+    model: z.string().min(1).max(120).optional(),
+    maxOutputTokens: z.number().int().min(100).max(4000).optional(),
+  })
+  .optional();
+
 const marketHunterPlatformSchema = z
   .object({
     codecanyon: z.boolean().optional(),
@@ -196,6 +211,40 @@ const marketHunterPatchSchema = z
 
 const credentialsPatchSchema = z.record(z.string()).optional();
 
+const agencyPackageSchema = z.object({
+  id: z.string().min(1).max(80),
+  title: z.string().min(1).max(200),
+  priceUgx: z.number().int().min(0),
+  depositUgx: z.number().int().min(0).optional(),
+  badge: z.string().max(40).nullable().optional(),
+  band: z.enum(['starter', 'growth', 'premium']).optional(),
+  description: z.string().max(500).optional(),
+});
+
+const agencyServiceSchema = z.object({
+  id: z.string().min(1).max(80),
+  name: z.string().min(1).max(200),
+  mapsToSolutionId: z.string().max(80).optional(),
+  description: z.string().max(500).optional(),
+});
+
+const agencyPatchSchema = z
+  .object({
+    presetId: z.enum(['generic', 'sleeklybuilt', 'custom']).optional(),
+    brandName: z.string().max(200).optional(),
+    legalName: z.string().max(200).optional(),
+    tagline: z.string().max(500).optional(),
+    currency: z.literal('UGX').optional(),
+    email: z.string().max(200).optional(),
+    phone: z.string().max(80).optional(),
+    location: z.string().max(200).optional(),
+    senderName: z.string().max(200).optional(),
+    signature: z.string().max(2000).optional(),
+    packages: z.array(agencyPackageSchema).max(50).optional(),
+    services: z.array(agencyServiceSchema).max(100).optional(),
+  })
+  .optional();
+
 const patchSchema = z.object({
   acquisition: acquisitionPatchSchema,
   discovery: discoveryPatchSchema,
@@ -205,7 +254,9 @@ const patchSchema = z.object({
   qualification: qualificationPatchSchema,
   crm: crmPatchSchema,
   boi: boiPatchSchema,
+  drafts: draftsPatchSchema,
   marketHunter: marketHunterPatchSchema,
+  agency: agencyPatchSchema,
   credentials: credentialsPatchSchema,
 });
 
@@ -219,16 +270,27 @@ const CREDENTIAL_LABELS: Record<CredentialKey, string> = {
   gmail_oauth_client_id: 'Gmail OAuth Client ID',
   gmail_oauth_client_secret: 'Gmail OAuth Client Secret',
   gmail_oauth_refresh_token: 'Gmail OAuth Refresh Token (set via Connect)',
-  openai_api_key: 'OpenAI API Key (BOI narrative)',
-  openrouter_api_key: 'OpenRouter API Key (Market Hunter — recommended)',
+  openai_api_key: 'OpenAI API Key (BOI narrative + drafts)',
+  openrouter_api_key: 'OpenRouter API Key (Gemini pitches + Market Hunter)',
   xai_grok_api_key: 'xAI Grok API Key (Market Hunter direct research)',
-  anthropic_api_key: 'Anthropic API Key (Market Hunter direct complaints)',
+  anthropic_api_key: 'Anthropic API Key (drafts + Market Hunter complaints)',
+  sleekly_dash_base_url: 'SleeklyBuilt CRM base URL (sleekly-dash)',
+  sleekly_dash_service_token: 'SleeklyBuilt CRM service token',
 };
+
+async function readDraftBudget() {
+  try {
+    return await new BudgetGovernor().getProviderSummary('llm_draft');
+  } catch {
+    return null;
+  }
+}
 
 export async function GET() {
   try {
     const settings = await platformSettings.ensureLoaded();
     const credentialStatuses = platformSettings.getCredentialStatuses(settings);
+    const draftBudget = await readDraftBudget();
 
     return NextResponse.json({
       acquisition: settings.acquisition,
@@ -239,7 +301,11 @@ export async function GET() {
       qualification: settings.qualification,
       crm: settings.crm,
       boi: settings.boi,
+      drafts: settings.drafts,
+      draftBudget,
       marketHunter: settings.marketHunter,
+      agency: settings.agency,
+      agencyPresets: listAgencyPresets(),
       credentials: (Object.keys(CREDENTIAL_ENV_MAP) as CredentialKey[]).map((key) => ({
         key,
         label: CREDENTIAL_LABELS[key],
@@ -266,7 +332,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { acquisition, discovery, crawl, locales, intent, qualification, crm, boi, marketHunter, credentials } =
+    const { acquisition, discovery, crawl, locales, intent, qualification, crm, boi, drafts, marketHunter, agency, credentials } =
       parsed.data;
 
     if (acquisition) {
@@ -294,8 +360,14 @@ export async function PATCH(request: Request) {
     if (boi) {
       await platformSettings.updateBoi(boi as Partial<BoiSettings>);
     }
+    if (drafts) {
+      await platformSettings.updateDrafts(drafts as Partial<DraftSettings>);
+    }
     if (marketHunter) {
       await platformSettings.updateMarketHunter(marketHunter as Partial<MarketHunterSettings>);
+    }
+    if (agency) {
+      await platformSettings.updateAgency(agency as Partial<AgencySettings>);
     }
     if (credentials) {
       await platformSettings.updateCredentials(credentials as Partial<Record<CredentialKey, string>>);
@@ -313,7 +385,9 @@ export async function PATCH(request: Request) {
       qualification: settings.qualification,
       crm: settings.crm,
       boi: settings.boi,
+      drafts: settings.drafts,
       marketHunter: settings.marketHunter,
+      agency: settings.agency,
       acquisitionMode: settings.acquisition.mode as AcquisitionMode,
     });
   } catch (e) {

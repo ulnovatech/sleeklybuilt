@@ -67,11 +67,17 @@ try {
             sort($files);
             foreach ($files as $file) {
                 $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
-                    $screenshots[] = $templatesBaseUrl . "/" . $dir . "/images/" . $file;
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+                    continue;
                 }
+                if (!uln_is_gallery_shot($file)) {
+                    continue;
+                }
+                $screenshots[] = $templatesBaseUrl . "/" . $dir . "/images/" . $file;
             }
         }
+
+        $screenshots = uln_order_gallery_shots($screenshots);
 
         $mainImage = null;
         foreach ($screenshots as $img) {

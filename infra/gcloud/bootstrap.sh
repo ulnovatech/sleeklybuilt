@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 # Google Compute Engine VM bootstrap — Ubuntu 22.04 / 24.04 (AMD64)
-# Idempotent host prep for UlnoVaTech Docker deploy.
+# Idempotent host prep for SleeklyBuilt Docker deploy.
 #
 # Usage (as root):
-#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/ulnovatech/main/infra/gcloud/bootstrap.sh | sudo bash
+#   curl -fsSL https://raw.githubusercontent.com/YOUR_ORG/sleeklybuilt/main/infra/gcloud/bootstrap.sh | sudo bash
 #   # or from a git checkout:
 #   sudo bash infra/gcloud/bootstrap.sh
 #
 # Optional env:
 #   DEPLOY_USER=deploy   default deploy user name
-#   DEPLOY_ROOT=/opt/ulnovatech
+#   DEPLOY_ROOT=/opt/sleeklybuilt
 
 set -euo pipefail
 
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
-DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/ulnovatech}"
+DEPLOY_ROOT="${DEPLOY_ROOT:-/opt/sleeklybuilt}"
 
 if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
   echo "Run as root: sudo $0" >&2
@@ -119,7 +119,7 @@ Next steps (as ${DEPLOY_USER}):
   4. Place service-account.json in ${DEPLOY_ROOT}/secrets/ (optional FCM/GA)
   5. Follow docs/DEPLOY_GCLOUD.md for first deploy
 
-Also open GCE VPC firewall for tcp:22, tcp:80, tcp:443 (tag e.g. ulnovatech-web).
+Also open GCE VPC firewall for tcp:22, tcp:80, tcp:443 (tag e.g. sleeklybuilt-web).
 
 Re-login as ${DEPLOY_USER} if docker group was just added.
 

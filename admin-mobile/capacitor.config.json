@@ -1,6 +1,6 @@
 {
-  "appId": "store.ulnovatech.admin",
-  "appName": "Ulnova Admin",
+  "appId": "pro.sleeklybuilt.admin",
+  "appName": "Sleekly Admin",
   "webDir": "dist",
   "android": {
     "allowMixedContent": false,

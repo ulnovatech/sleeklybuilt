@@ -2,13 +2,16 @@ import { AccountService } from '@agency/accounts';
 import { getDb, leads } from '@agency/database';
 import { DiscoveryRepository } from '@agency/discovery';
 import { IntentService } from '@agency/intent';
-import { IntelligenceService } from '@agency/intelligence';
+import { IntelligenceService, screenWhatsAppNumber } from '@agency/intelligence';
 import {
   buildWebsiteOpportunityBrief,
   biScoringInputFromProfile,
   computeLeadScore,
+  deriveAcquisitionLane,
   deriveBiScoringHints,
   deriveOpportunityBrief,
+  derivePresenceClassFromBiHints,
+  derivePrimaryGap,
   footprintChipLabels,
   hasRealWebsite,
   isValidEmailFormat,
@@ -20,15 +23,14 @@ import { platformSettings } from '@agency/settings';
 import { mapWithConcurrency, pipelineConcurrency } from '@agency/config';
 import { eq } from 'drizzle-orm';
 import { QualificationRepository } from './repository';
+import { resolveSegmentForBusiness } from './outcome-learning';
 import { queryReviewQueue, type ReviewQueueFilters } from './review-queue-query';
+import { queryWorkQueueCandidates } from './work-queue-query';
 import {
   buildDemandEntry,
   buildOpportunityEntry,
-  mergeWorkQueueEntries,
-  paginateWorkQueue,
-  WORK_QUEUE_OPP_BATCH,
-  workQueueCounts,
   type OpportunityWorkItem,
+  type WorkQueueEntry,
   type WorkQueueFilters,
 } from './work-queue';
 
@@ -97,6 +99,20 @@ export class QualificationService {
     const settings = await platformSettings.ensureLoaded();
     const icp = settings.qualification.icp;
 
+    const biHints = biContext?.biHints;
+    const presenceClass = derivePresenceClassFromBiHints({
+      hasWebsite,
+      socialOnlyPresence: biHints?.socialOnlyPresence,
+      linktreeOnly: biHints?.linktreeOnly,
+    });
+    const primaryGap = derivePrimaryGap({ biHints });
+    const segment = await resolveSegmentForBusiness({
+      industry: business.industry,
+      city: business.city,
+      presenceClass,
+      primaryGap,
+    });
+
     const result = computeLeadScore({
       hasWebsite,
       httpsEnabled: analysis?.httpsEnabled ?? null,
@@ -114,6 +130,7 @@ export class QualificationService {
       requireWebsiteOpportunity: icp.requireWebsiteOpportunity,
       demandWeightMultiplier: icp.demandWeightMultiplier,
       bi: biContext?.biInput,
+      segmentOutcomes: segment.adjustment || undefined,
     });
 
     return this.repo.upsertScore({
@@ -201,16 +218,22 @@ export class QualificationService {
           bi: biContext?.biHints,
           footprintPlatforms: biContext?.biInput.socialPlatforms,
         });
+        const acquisitionLane = deriveAcquisitionLane({
+          hasRealWebsite: hasWebsite,
+          opportunityType: opportunity.opportunityType,
+        });
 
         return {
           business: {
             id: row.businessId,
             name: row.businessName,
             city: row.businessCity,
+            country: row.businessCountry,
             website: row.businessWebsite,
             email,
             phone,
           },
+          whatsapp: screenWhatsAppNumber(phone, null, row.businessCountry),
           account: { id: row.accountId },
           run: { id: row.runId, industry: row.runIndustry, city: row.runCity },
           score: row.score,
@@ -221,6 +244,7 @@ export class QualificationService {
           demandSignalCount: counts.demand,
           enrichmentSignalCount: counts.enrichment,
           opportunityType: opportunity.opportunityType,
+          acquisitionLane,
           opportunityTypeLabel: opportunity.opportunityTypeLabel,
           pitchAngle: opportunity.pitchAngle,
           positiveFactors: opportunity.positiveFactors,
@@ -259,6 +283,19 @@ export class QualificationService {
       ? hasRealWebsite(biContext.biInput)
       : (analysis?.hasWebsite ?? !!business.website);
 
+    const presenceClass = derivePresenceClassFromBiHints({
+      hasWebsite,
+      socialOnlyPresence: biContext?.biHints.socialOnlyPresence,
+      linktreeOnly: biContext?.biHints.linktreeOnly,
+    });
+    const primaryGap = derivePrimaryGap({ biHints: biContext?.biHints });
+    const segment = await resolveSegmentForBusiness({
+      industry: business.industry,
+      city: business.city,
+      presenceClass,
+      primaryGap,
+    });
+
     const demandSnippets = signals
       .filter((s) => s.signalClass === 'demand')
       .sort((a, b) => b.signalStrength - a.signalStrength)
@@ -281,6 +318,7 @@ export class QualificationService {
       score: scoreRow?.score ?? undefined,
       reachability: scoreRow?.reachability ?? undefined,
       footprintChips: biContext?.footprintChips,
+      segmentEvidence: segment.evidence,
       analysis: analysis
         ? {
             hasWebsite: analysis.hasWebsite,
@@ -295,45 +333,119 @@ export class QualificationService {
   }
 
   async getWorkQueue(filters: WorkQueueFilters = {}) {
-    const kind = filters.kind ?? 'all';
-    const page = filters.page ?? 1;
-    const limit = filters.limit ?? 20;
+    const acquisitionLane = filters.acquisitionLane ?? 'greenfield';
+    const candidates = await queryWorkQueueCandidates({
+      ...filters,
+      acquisitionLane,
+      verification: filters.verification ?? 'all',
+    });
 
-    const demandEntries =
-      kind === 'opportunity'
-        ? []
-        : (await this.intentService.listOrphanDemand({ page: 1, limit: 100 })).items.map(
-            buildDemandEntry,
-          );
+    const demandIds = candidates.rows
+      .filter((row) => row.kind === 'demand' && row.demandId)
+      .map((row) => row.demandId!);
+    const accountIds = candidates.rows
+      .filter((row) => row.kind === 'opportunity' && row.accountId)
+      .map((row) => row.accountId!);
 
-    let opportunityEntries: ReturnType<typeof buildOpportunityEntry>[] = [];
-    if (kind !== 'demand') {
+    const demandById = new Map<string, ReturnType<typeof buildDemandEntry>>();
+    await Promise.all(
+      demandIds.map(async (id) => {
+        const signal = await this.intentService.findById(id);
+        if (!signal || signal.dismissedAt) return;
+        demandById.set(
+          signal.id,
+          buildDemandEntry({
+            id: signal.id,
+            source: signal.source,
+            signalType: signal.signalType,
+            signalStrength: signal.signalStrength,
+            title: signal.title,
+            snippet: signal.snippet,
+            sourceUrl: signal.sourceUrl,
+            capturedAt: signal.capturedAt,
+          }),
+        );
+      }),
+    );
+
+    const opportunityByAccount = new Map<string, ReturnType<typeof buildOpportunityEntry>>();
+    if (accountIds.length) {
       const { queue } = await this.getReviewQueue(
         {
+          accountIds,
+          verification: filters.verification ?? 'all',
+          page: 1,
+          limit: Math.min(100, Math.max(accountIds.length, 1)),
+          q: filters.q,
           runId: filters.runId,
           minScore: filters.minScore,
           reachability: filters.reachability,
-          minReachability: filters.minReachability,
-          verification: filters.verification ?? 'all',
-          page: 1,
-          limit: WORK_QUEUE_OPP_BATCH,
         },
         { applyPlatformDefaults: false },
       );
-
       let opportunities = queue as OpportunityWorkItem[];
       if (filters.opportunityType) {
         opportunities = opportunities.filter((o) => o.opportunityType === filters.opportunityType);
       }
-      opportunityEntries = opportunities.map(buildOpportunityEntry);
+      for (const item of opportunities) {
+        opportunityByAccount.set(item.account.id, buildOpportunityEntry(item));
+      }
     }
 
-    const merged = mergeWorkQueueEntries(demandEntries, opportunityEntries);
-    const paginated = paginateWorkQueue(merged, page, limit);
+    const items: WorkQueueEntry[] = [];
+    for (const row of candidates.rows) {
+      if (row.kind === 'demand' && row.demandId) {
+        const entry = demandById.get(row.demandId);
+        if (entry) items.push(entry);
+        continue;
+      }
+      if (row.kind === 'opportunity' && row.accountId) {
+        const entry = opportunityByAccount.get(row.accountId);
+        if (entry) items.push(entry);
+      }
+    }
+
+    const [demandCountResult, opportunityCountResult] = await Promise.all([
+      filters.kind === 'opportunity'
+        ? Promise.resolve({ total: 0 })
+        : queryWorkQueueCandidates({
+            ...filters,
+            acquisitionLane,
+            kind: 'demand',
+            page: 1,
+            limit: 1,
+            cursor: undefined,
+          }),
+      filters.kind === 'demand'
+        ? Promise.resolve({ total: 0 })
+        : queryWorkQueueCandidates({
+            ...filters,
+            acquisitionLane,
+            kind: 'opportunity',
+            page: 1,
+            limit: 1,
+            cursor: undefined,
+          }),
+    ]);
 
     return {
-      ...paginated,
-      counts: workQueueCounts(demandEntries, opportunityEntries),
+      items,
+      total: candidates.total,
+      page: candidates.page,
+      limit: candidates.limit,
+      nextCursor: candidates.nextCursor,
+      hasMore: candidates.hasMore,
+      /**
+       * Opportunity type is derived from BI context after the page is hydrated, so it
+       * narrows the loaded rows only. `total` still counts SQL-level candidates.
+       */
+      presenceRefined: Boolean(filters.opportunityType),
+      counts: {
+        demand: demandCountResult.total,
+        opportunity: opportunityCountResult.total,
+        verifiedOpportunity: opportunityCountResult.total,
+        unverifiedOpportunity: 0,
+      },
     };
   }
 

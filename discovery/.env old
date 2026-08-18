@@ -1,0 +1,28 @@
+# Single project env — infrastructure only. API keys → Settings UI in the dashboard.
+DATABASE_URL=postgresql://postgres:ojoh@127.0.0.1:5432/agency_platform
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+ALLOW_DEV_AUTH=true
+STORAGE_LOCAL_PATH=./storage/uploads
+
+ACQUISITION_MODE=standard
+PLACES_MONTHLY_CAP=150
+CSE_DAILY_CAP=100
+BING_DAILY_CAP=50
+META_GRAPH_DAILY_CAP=50
+BROWSER_DAILY_CAP=10
+CUSTOM_SCRAPE_DAILY_CAP=50
+
+# Optional local shortcut: run pipeline inside Next.js (single terminal)
+# INLINE_PIPELINE=true
+
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/ops
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/ops
+
+SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
+CRON_SECRET=

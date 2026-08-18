@@ -5,8 +5,43 @@ import {
   intentSignals,
   TEST_FIXTURE_COUNTRIES,
 } from '@agency/database';
-import { desc, eq, inArray, isNotNull, notInArray } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  notInArray,
+  or,
+  type SQL,
+} from 'drizzle-orm';
 import type { DiscoveredBusiness } from './providers/types';
+
+export type DiscoveryRunsListInput = {
+  page?: number;
+  limit?: number;
+  q?: string;
+  status?: string;
+  /** Filter to a single discovery plan. */
+  planId?: string;
+  /** When true, only runs linked to any plan; when false, only manual runs. */
+  hasPlan?: boolean;
+  sort?: 'createdAt' | 'status' | 'country' | 'industry';
+  direction?: 'asc' | 'desc';
+};
+
+export type DiscoveryBusinessesListInput = {
+  runId: string;
+  page?: number;
+  limit?: number;
+  q?: string;
+  sort?: 'name' | 'city' | 'source';
+  direction?: 'asc' | 'desc';
+};
 
 export class DiscoveryRepository {
   async createRun(data: {
@@ -16,6 +51,9 @@ export class DiscoveryRepository {
     runProfile?: string;
     prospectFocus?: boolean;
     boiNarrative?: boolean;
+    planId?: string;
+    planTargetId?: string;
+    trigger?: string;
   }) {
     const db = getDb();
     const [run] = await db
@@ -27,6 +65,9 @@ export class DiscoveryRepository {
         runProfile: data.runProfile ?? 'standard',
         prospectFocus: data.prospectFocus ?? false,
         boiNarrative: data.boiNarrative ?? false,
+        planId: data.planId ?? null,
+        planTargetId: data.planTargetId ?? null,
+        trigger: data.trigger ?? 'manual',
         status: 'pending',
       })
       .returning();
@@ -75,6 +116,54 @@ export class DiscoveryRepository {
       .orderBy(desc(discoveryRuns.createdAt));
   }
 
+  async listRunsPaged(input: DiscoveryRunsListInput = {}) {
+    const db = getDb();
+    const page = Math.max(1, input.page ?? 1);
+    const limit = Math.min(100, Math.max(1, input.limit ?? 20));
+    const offset = (page - 1) * limit;
+    const conditions: SQL[] = [notInArray(discoveryRuns.country, [...TEST_FIXTURE_COUNTRIES])];
+    if (input.status) conditions.push(eq(discoveryRuns.status, input.status));
+    if (input.planId) conditions.push(eq(discoveryRuns.planId, input.planId));
+    if (input.hasPlan === true) conditions.push(isNotNull(discoveryRuns.planId));
+    if (input.hasPlan === false) conditions.push(isNull(discoveryRuns.planId));
+    const q = input.q?.trim();
+    if (q) {
+      const pattern = `%${q.replace(/[%_]/g, '\\$&')}%`;
+      const match = or(
+        ilike(discoveryRuns.country, pattern),
+        ilike(discoveryRuns.city, pattern),
+        ilike(discoveryRuns.industry, pattern),
+        ilike(discoveryRuns.status, pattern),
+      );
+      if (match) conditions.push(match);
+    }
+    const where = and(...conditions);
+    const dir = input.direction === 'asc' ? asc : desc;
+    const orderBy =
+      input.sort === 'status'
+        ? [dir(discoveryRuns.status), desc(discoveryRuns.createdAt)]
+        : input.sort === 'country'
+          ? [dir(discoveryRuns.country), desc(discoveryRuns.createdAt)]
+          : input.sort === 'industry'
+            ? [dir(discoveryRuns.industry), desc(discoveryRuns.createdAt)]
+            : [dir(discoveryRuns.createdAt), desc(discoveryRuns.id)];
+
+    const [totalRow] = await db.select({ value: count() }).from(discoveryRuns).where(where);
+    const items = await db
+      .select()
+      .from(discoveryRuns)
+      .where(where)
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset);
+    return {
+      items,
+      total: Number(totalRow?.value ?? 0),
+      page,
+      limit,
+    };
+  }
+
   async getRun(id: string) {
     const db = getDb();
     const [run] = await db.select().from(discoveryRuns).where(eq(discoveryRuns.id, id));
@@ -83,7 +172,7 @@ export class DiscoveryRepository {
 
   async insertBusinesses(
     runId: string,
-    items: Array<DiscoveredBusiness & { accountId: string }>,
+    items: Array<DiscoveredBusiness & { accountId: string; discoveryState?: string | null }>,
   ) {
     if (items.length === 0) return [];
     const db = getDb();
@@ -109,6 +198,7 @@ export class DiscoveryRepository {
           rating: b.rating ?? null,
           reviewCount: b.reviewCount ?? null,
           metadata: b.metadata ?? null,
+          discoveryState: b.discoveryState ?? null,
         })),
       )
       .returning();
@@ -117,6 +207,50 @@ export class DiscoveryRepository {
   async listBusinessesByRun(runId: string) {
     const db = getDb();
     return db.select().from(businesses).where(eq(businesses.discoveryRunId, runId));
+  }
+
+  async listBusinessesByRunPaged(input: DiscoveryBusinessesListInput) {
+    const db = getDb();
+    const page = Math.max(1, input.page ?? 1);
+    const limit = Math.min(100, Math.max(1, input.limit ?? 20));
+    const offset = (page - 1) * limit;
+    const conditions: SQL[] = [eq(businesses.discoveryRunId, input.runId)];
+    const q = input.q?.trim();
+    if (q) {
+      const pattern = `%${q.replace(/[%_]/g, '\\$&')}%`;
+      const match = or(
+        ilike(businesses.name, pattern),
+        ilike(businesses.city, pattern),
+        ilike(businesses.email, pattern),
+        ilike(businesses.phone, pattern),
+        ilike(businesses.website, pattern),
+        ilike(businesses.source, pattern),
+      );
+      if (match) conditions.push(match);
+    }
+    const where = and(...conditions);
+    const dir = input.direction === 'asc' ? asc : desc;
+    const orderBy =
+      input.sort === 'city'
+        ? [dir(businesses.city), asc(businesses.name)]
+        : input.sort === 'source'
+          ? [dir(businesses.source), asc(businesses.name)]
+          : [dir(businesses.name), desc(businesses.id)];
+
+    const [totalRow] = await db.select({ value: count() }).from(businesses).where(where);
+    const items = await db
+      .select()
+      .from(businesses)
+      .where(where)
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset);
+    return {
+      items,
+      total: Number(totalRow?.value ?? 0),
+      page,
+      limit,
+    };
   }
 
   async getBusiness(id: string) {

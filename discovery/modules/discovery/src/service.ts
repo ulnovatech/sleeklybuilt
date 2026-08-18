@@ -1,9 +1,10 @@
-import { AccountService } from '@agency/accounts';
+import { AccountRepository, AccountService } from '@agency/accounts';
 import { BudgetGovernor } from '@agency/acquisition';
 import { discoverProviderTimeoutMs, logger, withTimeout } from '@agency/config';
 import { isTestFixtureCountry } from '@agency/database';
 import { platformSettings } from '@agency/settings';
 import { DiscoveryRepository } from './repository';
+import { classifyDiscoveryState } from './lib/discovery-state';
 import { ensureDiscoverySettings, profileToMode, type RunProfile } from './lib/run-profile';
 import { getConfiguredDiscoveryProviders } from './providers/registry';
 import { placesIdFromExternalId } from './providers/places/place-to-candidate';
@@ -39,7 +40,14 @@ export type CreateRunParams = {
   profile?: RunProfile;
   prospectFocus?: boolean;
   boiNarrative?: boolean;
+  planId?: string;
+  planTargetId?: string;
+  trigger?: 'manual' | 'plan' | 'cron';
+  /** Monitor plans re-check known accounts — no discovery providers required. */
+  allowWithoutProviders?: boolean;
 };
+
+const MONITOR_SEED_LIMIT = 40;
 
 export class DiscoveryService {
   private repo = new DiscoveryRepository();
@@ -53,11 +61,13 @@ export class DiscoveryService {
     await ensureDiscoverySettings();
     const profile = params.profile ?? 'standard';
     const mode = profileToMode(profile);
-    const providers = await getConfiguredDiscoveryProviders(mode);
-    if (providers.length === 0) {
-      throw new Error(
-        'No discovery sources are configured. Add Google Places, search credentials, Meta Graph token, or a CSV import file in Settings.',
-      );
+    if (!params.allowWithoutProviders) {
+      const providers = await getConfiguredDiscoveryProviders(mode);
+      if (providers.length === 0) {
+        throw new Error(
+          'No discovery sources are configured. Add Google Places, search credentials, Meta Graph token, or a CSV import file in Settings.',
+        );
+      }
     }
     return this.repo.createRun({
       country: params.country,
@@ -66,7 +76,67 @@ export class DiscoveryService {
       runProfile: profile,
       prospectFocus: params.prospectFocus ?? false,
       boiNarrative: params.boiNarrative ?? false,
+      planId: params.planId,
+      planTargetId: params.planTargetId,
+      trigger: params.trigger ?? 'manual',
     });
+  }
+
+  /**
+   * Clone known accounts into a monitor run so crawl → BI → score has work
+   * without a discover stage. Forces known_stale so enrichment is not skipped.
+   */
+  async seedMonitorRun(runId: string, limit = MONITOR_SEED_LIMIT) {
+    const run = await this.repo.getRun(runId);
+    if (!run) throw new Error('Discovery run not found');
+
+    const accountRepo = new AccountRepository();
+    const rows = await accountRepo.listForMonitorSeed({
+      country: run.country,
+      city: run.city,
+      industry: run.industry,
+      limit,
+    });
+
+    if (rows.length === 0) {
+      throw new Error(
+        `Monitor seed found no known accounts for ${run.city}, ${run.country} · ${run.industry}. Run a discovery plan for this segment first.`,
+      );
+    }
+
+    const items = rows.map((a) => ({
+      name: a.canonicalName,
+      industry: a.industry ?? run.industry,
+      website: a.website ?? undefined,
+      phone: a.phone ?? undefined,
+      email: a.email ?? undefined,
+      city: a.city ?? run.city,
+      country: a.country ?? run.country,
+      source: 'manual' as const,
+      sourceUrl: a.sourceUrl ?? undefined,
+      externalId: a.externalId ?? undefined,
+      googleMapsUrl: a.googleMapsUrl ?? undefined,
+      facebookUrl: a.facebookUrl ?? undefined,
+      instagramUrl: a.instagramUrl ?? undefined,
+      rating: a.rating ?? undefined,
+      reviewCount: a.reviewCount ?? undefined,
+      metadata: {
+        ...((a.metadata as Record<string, unknown> | null) ?? {}),
+        monitorSeed: true,
+        accountSource: a.source,
+      },
+      accountId: a.id,
+      discoveryState: 'known_stale' as const,
+    }));
+
+    const saved = await this.repo.insertBusinesses(runId, items);
+    logger.info('Monitor run seeded from known accounts', {
+      runId,
+      seeded: saved.length,
+      city: run.city,
+      industry: run.industry,
+    });
+    return { seeded: saved.length, businesses: saved };
   }
 
   async executeDiscoverStage(runId: string): Promise<{
@@ -200,15 +270,32 @@ export class DiscoveryService {
     const resolved = [];
     let placesRefreshSkipped = 0;
     let suppressedSkipped = 0;
+    let newAccounts = 0;
+    let knownFresh = 0;
+    let knownStale = 0;
+    await platformSettings.ensureLoaded();
+    const staleAfterDays = platformSettings.getEnrichmentStaleAfterDays();
+    const now = new Date();
+
     for (const item of unique) {
-      const { account, skippedPlacesRefresh } = await this.accounts.resolveOrCreate(item);
+      const { account, created, skippedPlacesRefresh } = await this.accounts.resolveOrCreate(item);
       if (skippedPlacesRefresh) placesRefreshSkipped++;
       if (await this.accounts.isSuppressed(account)) {
         suppressedSkipped++;
         logger.info('Skipping suppressed account', { accountId: account.id, name: account.canonicalName });
         continue;
       }
-      resolved.push({ ...item, accountId: account.id });
+      const discoveryState = classifyDiscoveryState({
+        created,
+        account,
+        staleAfterDays,
+        now,
+      });
+      if (discoveryState === 'new') newAccounts++;
+      else if (discoveryState === 'known_fresh') knownFresh++;
+      else knownStale++;
+
+      resolved.push({ ...item, accountId: account.id, discoveryState });
     }
 
     if (resolved.length === 0) {
@@ -223,10 +310,21 @@ export class DiscoveryService {
       saved: resolved.length,
       suppressedSkipped,
       placesRefreshSkipped,
+      newAccounts,
+      knownFresh,
+      knownStale,
+      staleAfterDays,
     });
 
     const saved = await this.repo.insertBusinesses(runId, resolved);
-    return { businesses: saved, suppressedSkipped, candidatesAfterVerify: unique.length };
+    return {
+      businesses: saved,
+      suppressedSkipped,
+      candidatesAfterVerify: unique.length,
+      newAccounts,
+      knownFresh,
+      knownStale,
+    };
   }
 
   /** Synchronous path — kept for tests and manual invocation */
@@ -254,12 +352,20 @@ export class DiscoveryService {
     return this.repo.listRuns();
   }
 
+  listRunsPaged(input: Parameters<DiscoveryRepository['listRunsPaged']>[0]) {
+    return this.repo.listRunsPaged(input);
+  }
+
   getRun(id: string) {
     return this.repo.getRun(id);
   }
 
   listBusinesses(runId: string) {
     return this.repo.listBusinessesByRun(runId);
+  }
+
+  listBusinessesPaged(input: Parameters<DiscoveryRepository['listBusinessesByRunPaged']>[0]) {
+    return this.repo.listBusinessesByRunPaged(input);
   }
 
   getBusiness(id: string) {

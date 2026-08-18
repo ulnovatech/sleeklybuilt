@@ -1,11 +1,38 @@
+import type { AgencyPackage } from '@agency/settings';
 import type { BusinessIntelligenceProfile } from '../bi/types';
 import type { BoIDigitalGap, BoIProjectValueBand, BoIProjectValueEstimate } from './types';
 
-const BAND_RANGES: Record<BoIProjectValueBand, { minUgx: number; maxUgx: number }> = {
+const LEGACY_BAND_RANGES: Record<BoIProjectValueBand, { minUgx: number; maxUgx: number }> = {
   starter: { minUgx: 1_500_000, maxUgx: 4_000_000 },
   growth: { minUgx: 4_000_000, maxUgx: 12_000_000 },
   premium: { minUgx: 12_000_000, maxUgx: 30_000_000 },
 };
+
+function bandRangesFromPackages(
+  packages: AgencyPackage[],
+): Record<BoIProjectValueBand, { minUgx: number; maxUgx: number }> {
+  const byBand = (band: BoIProjectValueBand) =>
+    packages.filter((p) => p.band === band).sort((a, b) => a.priceUgx - b.priceUgx);
+  const sorted = [...packages].sort((a, b) => a.priceUgx - b.priceUgx);
+  const starterPkgs = byBand('starter');
+  const growthPkgs = byBand('growth');
+  const premiumPkgs = byBand('premium');
+
+  const starterPrice = starterPkgs[0]?.priceUgx ?? sorted[0]?.priceUgx ?? LEGACY_BAND_RANGES.starter.minUgx;
+  const growthPrice =
+    growthPkgs[0]?.priceUgx ?? sorted[Math.min(1, sorted.length - 1)]?.priceUgx ?? starterPrice;
+  const premiumPrice =
+    premiumPkgs[0]?.priceUgx ?? sorted[sorted.length - 1]?.priceUgx ?? growthPrice;
+
+  return {
+    starter: { minUgx: starterPrice, maxUgx: Math.max(starterPrice, growthPrice) },
+    growth: { minUgx: growthPrice, maxUgx: Math.max(growthPrice, premiumPrice) },
+    premium: {
+      minUgx: premiumPrice,
+      maxUgx: Math.max(premiumPrice, Math.round(premiumPrice * 1.5)),
+    },
+  };
+}
 
 const TIER1_CITIES = new Set(
   ['kampala', 'nairobi', 'kigali', 'dar es salaam', 'lagos', 'accra', 'johannesburg'].map((c) =>
@@ -82,6 +109,7 @@ function gapPressure(digitalGaps: BoIDigitalGap[]): { steps: number; labels: str
 export function estimateProjectValue(
   profile: BusinessIntelligenceProfile,
   digitalGaps: BoIDigitalGap[],
+  agencyPackages?: AgencyPackage[],
 ): BoIProjectValueEstimate | null {
   if (digitalGaps.length === 0 && !profile.presence.hasWebsite) {
     return null;
@@ -97,7 +125,11 @@ export function estimateProjectValue(
 
   band = bumpBand(band, gaps.steps);
 
-  const range = BAND_RANGES[band];
+  const ranges =
+    agencyPackages && agencyPackages.length > 0
+      ? bandRangesFromPackages(agencyPackages)
+      : LEGACY_BAND_RANGES;
+  const range = ranges[band];
   const factors = [base.label, market.label, ...gaps.labels].filter(Boolean);
 
   if (factors.length === 0) return null;

@@ -1,7 +1,7 @@
-import { FiPhone, FiX } from 'react-icons/fi'
+import { FiChevronDown, FiPhone } from 'react-icons/fi'
 import { useSiteConfig } from '../../context/SiteContactContext'
 
-export default function AttendantHeader({ onClose }) {
+export default function AttendantHeader({ onMinimize }) {
   const siteConfig = useSiteConfig()
 
   const iconBtn =
@@ -30,8 +30,8 @@ export default function AttendantHeader({ onClose }) {
       <a href={`tel:${siteConfig.primaryPhone}`} className={iconBtn} aria-label="Call us">
         <FiPhone className="h-5 w-5" aria-hidden="true" />
       </a>
-      <button type="button" onClick={onClose} className={iconBtn} aria-label="Close attendant">
-        <FiX className="h-5 w-5" aria-hidden="true" />
+      <button type="button" onClick={onMinimize} className={iconBtn} aria-label="Minimize attendant">
+        <FiChevronDown className="h-5 w-5" aria-hidden="true" />
       </button>
     </header>
   )

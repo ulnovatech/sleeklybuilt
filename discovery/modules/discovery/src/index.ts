@@ -75,6 +75,12 @@ export {
 } from './run-yield-metrics';
 
 export {
+  classifyDiscoveryState,
+  isKnownFresh,
+  type DiscoveryState,
+} from './lib/discovery-state';
+
+export {
   countProspectCandidates,
   countHighPotentialEstimate,
   businessRowToProspectShape,
@@ -133,4 +139,26 @@ export {
 } from './providers/custom/health';
 export { CustomScrapeRateLimiter } from './providers/custom/rate-limiter';
 export type { CustomDemandItem } from './providers/custom/types';
+
+export {
+  DiscoveryPlanService,
+  DiscoveryPlanRepository,
+  tickDiscoveryPlans,
+  expandPlanTargets,
+  computeNextRunAt,
+  computeSkipHoursNextRunAt,
+  canRunAt,
+  isWithinActiveHours,
+  listDiscoveryCampaigns,
+  listDiscoveryPacks,
+  resolvePlanBlueprint,
+  intersectIndustries,
+  resolvePackIndustries,
+  type TickDiscoveryPlansResult,
+  type PlanCadence,
+  type PlanSegment,
+  type DiscoveryCampaign,
+  type DiscoveryPack,
+  type PlanBlueprint,
+} from './plans';
 

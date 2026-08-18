@@ -4,7 +4,7 @@ import { DiscoveryService } from '@agency/discovery';
 import { IntentService } from '@agency/intent';
 import { IntelligenceService } from '@agency/intelligence';
 import { OutreachService } from '@agency/outreach';
-import { GmailReplyService, isGmailConnected } from '@agency/integrations';
+import { GmailReplyService, SleeklyDashBridgeService, isGmailConnected } from '@agency/integrations';
 import { QualificationService } from '@agency/qualification';
 import { ProposalService } from '@agency/proposal';
 import type { LeadStatus } from '@agency/types';
@@ -20,6 +20,7 @@ const outreach = new OutreachService();
 const proposals = new ProposalService();
 const qualification = new QualificationService();
 const gmailReplies = new GmailReplyService();
+const sleeklyDashBridge = new SleeklyDashBridgeService();
 
 export async function GET(
   _request: Request,
@@ -42,6 +43,8 @@ export async function GET(
     const replySuggestions = gmailConnected
       ? await gmailReplies.listPendingForLead(lead.id)
       : [];
+    const crmBridge = await sleeklyDashBridge.getStatus();
+    const lastCrmPush = await sleeklyDashBridge.getLastPushForLead(lead.id);
 
     let opportunityBrief = null;
     try {
@@ -64,6 +67,11 @@ export async function GET(
       allowedTransitions,
       gmailConnected,
       replySuggestions,
+      crmBridge: {
+        configured: crmBridge.configured,
+        lastPushAt: lastCrmPush?.createdAt ?? null,
+        lastPushStatus: lastCrmPush?.status ?? null,
+      },
     });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });
