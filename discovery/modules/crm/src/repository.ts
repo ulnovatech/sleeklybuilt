@@ -1,4 +1,13 @@
-import { getDb, leads, leadNotes, leadActivities, businesses } from '@agency/database';
+import { calendarDateInTimezone, FACTORY_TIMEZONE } from '@agency/discovery';
+import {
+  getDb,
+  leads,
+  leadNotes,
+  leadActivities,
+  businesses,
+  factoryCohortMembers,
+  factoryCohorts,
+} from '@agency/database';
 import type { CrmFollowUpsListQuery, CrmLeadsListQuery, PaginatedResult } from '@agency/validation';
 import { FOLLOW_UP_STAGES, paginatedResult } from '@agency/validation';
 import {
@@ -21,6 +30,11 @@ import { TERMINAL_LEAD_STATUSES } from './state-machine';
 export type LeadListRow = {
   lead: typeof leads.$inferSelect;
   business: typeof businesses.$inferSelect;
+  factory?: {
+    rank: number | null;
+    recommendedChannel: string | null;
+    memberId: string;
+  };
 };
 
 export type ListLeadsPagedInput = CrmLeadsListQuery & {
@@ -98,10 +112,72 @@ export class CrmRepository {
     const page = Math.max(1, input.page);
     const limit = Math.min(100, Math.max(1, input.limit));
     const offset = (page - 1) * limit;
+    const pitchToday = input.pitchToday === '1' || input.pitchToday === 'true';
+    const sellDate = pitchToday
+      ? input.sellDate ?? calendarDateInTimezone(new Date(), FACTORY_TIMEZONE)
+      : null;
     const conditions = this.buildLeadListConditions(input);
-
     const where = conditions.length > 0 ? and(...conditions) : undefined;
-    const orderBy = this.buildLeadListOrder(input.sort, input.direction);
+    const orderBy = this.buildLeadListOrder(input.sort, input.direction, pitchToday);
+
+    if (pitchToday && sellDate) {
+      const [totalRow] = await db
+        .select({ value: count() })
+        .from(leads)
+        .innerJoin(businesses, eq(leads.businessId, businesses.id))
+        .innerJoin(
+          factoryCohortMembers,
+          and(eq(factoryCohortMembers.leadId, leads.id), eq(factoryCohortMembers.role, 'keeper')),
+        )
+        .innerJoin(
+          factoryCohorts,
+          and(
+            eq(factoryCohorts.id, factoryCohortMembers.cohortId),
+            eq(factoryCohorts.status, 'frozen'),
+            eq(factoryCohorts.sellDate, sellDate),
+          ),
+        )
+        .where(where);
+
+      const rows = await db
+        .select({
+          lead: leads,
+          business: businesses,
+          factoryRank: factoryCohortMembers.rank,
+          recommendedChannel: factoryCohortMembers.recommendedChannel,
+          memberId: factoryCohortMembers.id,
+        })
+        .from(leads)
+        .innerJoin(businesses, eq(leads.businessId, businesses.id))
+        .innerJoin(
+          factoryCohortMembers,
+          and(eq(factoryCohortMembers.leadId, leads.id), eq(factoryCohortMembers.role, 'keeper')),
+        )
+        .innerJoin(
+          factoryCohorts,
+          and(
+            eq(factoryCohorts.id, factoryCohortMembers.cohortId),
+            eq(factoryCohorts.status, 'frozen'),
+            eq(factoryCohorts.sellDate, sellDate),
+          ),
+        )
+        .where(where)
+        .orderBy(...orderBy)
+        .limit(limit)
+        .offset(offset);
+
+      const items: LeadListRow[] = rows.map((row) => ({
+        lead: row.lead,
+        business: row.business,
+        factory: {
+          rank: row.factoryRank,
+          recommendedChannel: row.recommendedChannel,
+          memberId: row.memberId,
+        },
+      }));
+
+      return paginatedResult(items, Number(totalRow?.value ?? 0), page, limit);
+    }
 
     const [totalRow] = await db
       .select({ value: count() })
@@ -127,6 +203,11 @@ export class CrmRepository {
     if (input.status) conditions.push(eq(leads.status, input.status));
     if (input.priority) conditions.push(eq(leads.priority, input.priority));
 
+    const unpitched = input.unpitched === '1' || input.unpitched === 'true';
+    if (unpitched) {
+      conditions.push(inArray(leads.status, ['NEW', 'REVIEWED']));
+    }
+
     if (input.followUpDue === 'overdue') {
       conditions.push(isNotNull(leads.nextFollowUpAt), lte(leads.nextFollowUpAt, new Date()));
     } else if (input.followUpDue === 'upcoming') {
@@ -150,8 +231,15 @@ export class CrmRepository {
     return conditions;
   }
 
-  private buildLeadListOrder(sort: CrmLeadsListQuery['sort'], direction: 'asc' | 'desc') {
+  private buildLeadListOrder(
+    sort: CrmLeadsListQuery['sort'],
+    direction: 'asc' | 'desc',
+    pitchToday = false,
+  ) {
     const dir = direction === 'asc' ? asc : desc;
+    if (pitchToday && (sort === 'rank' || sort === 'updatedAt')) {
+      return [asc(factoryCohortMembers.rank), desc(leads.id)];
+    }
     switch (sort) {
       case 'createdAt':
         return [dir(leads.createdAt), desc(leads.id)];

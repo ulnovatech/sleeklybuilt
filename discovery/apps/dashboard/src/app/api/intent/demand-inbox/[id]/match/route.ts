@@ -1,4 +1,5 @@
 import { requireOperator } from '@/lib/api-auth';
+import { tryDemandJump } from '@/lib/factory-demand-jump';
 import { IntentService } from '@agency/intent';
 import { QualificationService } from '@agency/qualification';
 import { NextResponse } from 'next/server';
@@ -28,7 +29,8 @@ export async function POST(
 
     const result = await intent.matchDemandToBusiness(id, parsed.data.businessId);
     const score = await qualification.scoreBusiness(result.businessId);
-    return NextResponse.json({ ...result, score });
+    const factoryJump = await tryDemandJump(result.businessId, id);
+    return NextResponse.json({ ...result, score, factoryJump });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 400 });
   }

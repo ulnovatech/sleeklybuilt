@@ -96,6 +96,8 @@ export class AccountRepository {
     reviewCount?: number | null;
     metadata?: Record<string, unknown> | null;
     lastPlacesFetchAt?: Date | null;
+    harvestDate?: string | null;
+    sellDate?: string | null;
   }) {
     const db = getDb();
     const [row] = await db
@@ -119,6 +121,8 @@ export class AccountRepository {
         reviewCount: data.reviewCount ?? null,
         metadata: data.metadata ?? null,
         lastPlacesFetchAt: data.lastPlacesFetchAt ?? null,
+        harvestDate: data.harvestDate ?? null,
+        sellDate: data.sellDate ?? null,
       })
       .returning();
     return row;

@@ -50,7 +50,7 @@ const PROMPTS = [
     id: 'email',
     field: 'email',
     question: 'Where should we reply?',
-    hint: 'We respond within one working day.',
+    hint: 'Optional — add your email if you want a reply there within one working day.',
     input: 'email',
     autoComplete: 'email',
     inputMode: 'email',
@@ -125,7 +125,7 @@ function fieldError(field, form, selectedIntent) {
     case 'phone':
       return form.phone.trim() ? null : 'Enter your phone number.'
     case 'email':
-      if (!form.email.trim()) return 'Enter your email.'
+      if (!form.email.trim()) return null
       if (!EMAIL_RE.test(form.email.trim())) return 'Enter a valid email.'
       return null
     case 'message':
@@ -287,7 +287,7 @@ export default function GamifiedContactForm() {
   }
 
   const send = async () => {
-    const required = ['intentId', 'name', 'phone', 'email', 'message']
+    const required = ['intentId', 'name', 'phone', 'message']
     if (selectedIntent?.extraField) required.splice(1, 0, 'orderRef')
     for (const field of required) {
       const message = fieldError(field, form, selectedIntent)
@@ -457,6 +457,7 @@ export default function GamifiedContactForm() {
             onKeyDown={onKeyDownAdvance}
             aria-invalid={attempted && error ? true : undefined}
             aria-describedby={error ? `${formId}-err` : undefined}
+            placeholder={current.id === 'email' ? 'Enter your most convenient email' : undefined}
             className={cn('field-input', attempted && error && 'field-input-error')}
           />
         ) : null}

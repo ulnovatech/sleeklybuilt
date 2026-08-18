@@ -2,8 +2,8 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import {
   SavedViewsControl,
@@ -28,14 +28,28 @@ import {
 import { Archive, CheckCircle2, Send } from 'lucide-react';
 import { useApiQuery } from '@/lib/use-api-query';
 import { useListView } from '@/lib/use-list-view';
-import { PAGE_COPY } from '@/lib/product-copy';
+import { DumpsterWorkspace } from '@/components/ops/dumpster-workspace';
+import { PitchTodayYieldBanner } from '@/components/ops/pitch-today-card';
+import {
+  PitchOverlayDrawer,
+  recommendedChannelToDraft,
+} from '@/components/pursuit/pitch-overlay-drawer';
 import { api } from '@/lib/api';
+import { PAGE_COPY } from '@/lib/product-copy';
+import {
+  fetchUnpitchedKeepers,
+  isUnpitchedStatus,
+  nextKeeperInList,
+  nextUnpitchedLeadId,
+  prevKeeperInList,
+} from '@/lib/pitch-session';
 import { LEAD_STATUSES } from '@agency/types';
 import { useToast } from '@/components/ui/toast';
 
 type LeadRow = {
   lead: { id: string; status: string; priority: string; updatedAt?: string; nextFollowUpAt?: string | null };
   business: { name: string; city: string | null };
+  factory?: { rank: number | null; recommendedChannel: string | null; memberId: string };
 };
 
 type LeadsListResponse = {
@@ -48,6 +62,16 @@ type LeadsListResponse = {
 };
 
 const PIPELINE_PRESETS: ProductSavedView[] = [
+  {
+    id: 'preset:pitch-today',
+    name: 'Pitch today',
+    definition: {
+      filters: { pitchToday: '1' },
+      sort: 'rank',
+      direction: 'asc',
+      density: 'compact',
+    },
+  },
   {
     id: 'preset:active',
     name: 'Active pursuits',
@@ -91,18 +115,28 @@ function statusTone(status: string): 'neutral' | 'info' | 'success' | 'warning' 
 export default function LeadsPage() {
   return (
     <Suspense fallback={null}>
-      <LeadsPageContent />
+      <LeadsGate />
     </Suspense>
   );
 }
 
+function LeadsGate() {
+  const searchParams = useSearchParams();
+  const dumpster = searchParams.get('dumpster');
+  if (dumpster === '1' || dumpster === 'true') return <DumpsterWorkspace />;
+  return <LeadsPageContent />;
+}
+
 function LeadsPageContent() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { state, update, clearFilters, toQueryString } = useListView({
     sort: 'updatedAt',
     direction: 'desc',
     limit: 20,
   });
+  const selectedId = searchParams.get('selected') ?? '';
   const [draftQuery, setDraftQuery] = useState(state.q);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectionResetToken, setSelectionResetToken] = useState(0);
@@ -119,15 +153,53 @@ function LeadsPageContent() {
   const items = data?.items ?? data?.leads ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / state.limit));
-  const hasActiveFilters = Boolean(state.q || state.filters.status || state.filters.priority);
+  const pitchToday = state.filters.pitchToday === '1' || state.filters.pitchToday === 'true';
+  const hasActiveFilters = Boolean(
+    state.q || state.filters.status || state.filters.priority || pitchToday || state.filters.sellDate,
+  );
+
+  const setSelected = useCallback(
+    (leadId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (leadId) params.set('selected', leadId);
+      else params.delete('selected');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
+
+  const selectedRow = useMemo(
+    () => items.find((row) => row.lead.id === selectedId) ?? null,
+    [items, selectedId],
+  );
+
+  const handlePitchRecorded = useCallback(async () => {
+    if (!selectedId) return;
+    const currentRank = selectedRow?.factory?.rank;
+    await refresh();
+    try {
+      const unpitched = await fetchUnpitchedKeepers(state.filters.sellDate);
+      const nextId = nextUnpitchedLeadId(unpitched, selectedId, currentRank);
+      setSelected(nextId ?? '');
+    } catch {
+      // List refresh still applied; operator can pick the next row manually.
+    }
+  }, [refresh, selectedId, selectedRow?.factory?.rank, setSelected, state.filters.sellDate]);
+
+  useEffect(() => {
+    if (!pitchToday || !items.length || selectedId) return;
+    const firstUnpitched = items.find((row) => isUnpitchedStatus(row.lead.status));
+    if (firstUnpitched) setSelected(firstUnpitched.lead.id);
+  }, [items, pitchToday, selectedId, setSelected]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (state.q.trim()) count++;
     if (state.filters.status) count++;
     if (state.filters.priority) count++;
+    if (pitchToday) count++;
     return count;
-  }, [state.filters.priority, state.filters.status, state.q]);
+  }, [pitchToday, state.filters.priority, state.filters.status, state.q]);
 
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
@@ -154,6 +226,10 @@ function LeadsPageContent() {
     const nextFilters = { ...view.definition.filters };
     const q = nextFilters.q ?? '';
     delete nextFilters.q;
+    for (const key of ['status', 'priority', 'followUpDue', 'pitchToday', 'sellDate', 'dumpster']) {
+      if (!(key in nextFilters)) nextFilters[key] = '';
+    }
+    const pitchTodayView = nextFilters.pitchToday === '1' || nextFilters.pitchToday === 'true';
     setDraftQuery(q);
     setActiveViewId(view.id);
     update({
@@ -161,6 +237,7 @@ function LeadsPageContent() {
       sort: view.definition.sort ?? state.sort,
       direction: view.definition.direction ?? state.direction,
       density: view.definition.density ?? state.density,
+      limit: pitchTodayView ? 100 : state.limit,
       filters: nextFilters,
       page: 1,
     });
@@ -245,6 +322,20 @@ function LeadsPageContent() {
         headerAriaLabel: 'Select all pursuits on this page',
         getRowLabel: (row) => row.business.name,
       }),
+      ...(pitchToday
+        ? [
+            {
+              id: 'rank',
+              header: '#',
+              cell: ({ row }: { row: { original: LeadRow } }) => (
+                <span className="tabular-nums text-sm text-ink-muted">
+                  {row.original.factory?.rank ?? '—'}
+                </span>
+              ),
+              size: 48,
+            } satisfies ColumnDef<LeadRow, unknown>,
+          ]
+        : []),
       {
         id: 'business',
         header: 'Business',
@@ -291,20 +382,32 @@ function LeadsPageContent() {
       {
         id: 'actions',
         header: '',
-        cell: ({ row }) => (
-          <Link
-            href={`/leads/${row.original.lead.id}`}
-            className="text-xs font-medium text-accent hover:underline"
-            onClick={(event) => event.stopPropagation()}
-          >
-            Open
-          </Link>
-        ),
+        cell: ({ row }) =>
+          pitchToday ? (
+            <button
+              type="button"
+              className="text-xs font-medium text-accent hover:underline"
+              onClick={(event) => {
+                event.stopPropagation();
+                setSelected(row.original.lead.id);
+              }}
+            >
+              Pitch
+            </button>
+          ) : (
+            <Link
+              href={`/leads/${row.original.lead.id}`}
+              className="text-xs font-medium text-accent hover:underline"
+              onClick={(event) => event.stopPropagation()}
+            >
+              Open
+            </Link>
+          ),
         size: 64,
         enableSorting: false,
       },
     ],
-    [],
+    [pitchToday, setSelected],
   );
 
   const selectedCount = selectedIds.size;
@@ -312,6 +415,28 @@ function LeadsPageContent() {
   return (
     <div className="space-y-4">
       <PageHeader compact title={PAGE_COPY.pursuits.title} description={PAGE_COPY.pursuits.description} />
+
+      {pitchToday ? (
+        <div className="rounded-lg border border-line bg-surface px-4 py-3">
+          <p className="text-sm font-medium text-ink">Pitch today</p>
+          <PitchTodayYieldBanner sellDate={state.filters.sellDate} />
+          <p className="mt-0.5 text-sm text-ink-muted">
+            Tap a row to pitch in the overlay — list stays here. Record advances to the next unpitched keeper.
+            {state.filters.sellDate ? ` · sell ${state.filters.sellDate}` : ''}
+          </p>
+          <div className="mt-2">
+            <Button size="sm" variant="ghost" asChild>
+              <Link
+                href={`/leads?dumpster=1&sort=rankScore&direction=desc${
+                  state.filters.sellDate ? `&sellDate=${state.filters.sellDate}` : ''
+                }`}
+              >
+                View dumpster
+              </Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="secondary" asChild>
@@ -388,6 +513,7 @@ function LeadsPageContent() {
                   <option value="status">Status</option>
                   <option value="priority">Priority</option>
                   <option value="nextFollowUpAt">Follow-up</option>
+                  {pitchToday ? <option value="rank">Pitch rank</option> : null}
                 </select>
               </label>
               <div className="flex gap-2">
@@ -458,15 +584,31 @@ function LeadsPageContent() {
         onRetry={() => void refresh()}
         selectionResetToken={selectionResetToken}
         onSelectionChange={(ids) => setSelectedIds(new Set(ids))}
-        onRowActivate={(row) => router.push(`/leads/${row.lead.id}`)}
-        emptyTitle={hasActiveFilters ? 'No pursuits match these filters' : 'No active pursuits yet'}
+        onRowActivate={(row) => {
+          if (pitchToday) setSelected(row.lead.id);
+          else router.push(`/leads/${row.lead.id}`);
+        }}
+        focusedRowId={pitchToday && selectedId ? selectedId : undefined}
+        emptyTitle={
+          pitchToday
+            ? 'No frozen keepers for this morning'
+            : hasActiveFilters
+              ? 'No pursuits match these filters'
+              : 'No active pursuits yet'
+        }
         emptyDescription={
-          hasActiveFilters
-            ? 'Clear filters or broaden search to see more pursuits.'
-            : 'Promote opportunities from the Queue to start pursuing them here.'
+          pitchToday
+            ? 'Pitch today is empty until night purify freezes yesterday’s harvest at 07:00 EAT. Do not pitch an unfiltered queue.'
+            : hasActiveFilters
+              ? 'Clear filters or broaden search to see more pursuits.'
+              : 'Promote opportunities from the Queue to start pursuing them here.'
         }
         emptyAction={
-          hasActiveFilters ? (
+          pitchToday ? (
+            <Button size="sm" asChild>
+              <Link href="/ops">Back to Today</Link>
+            </Button>
+          ) : hasActiveFilters ? (
             <Button
               size="sm"
               onClick={() => {
@@ -549,6 +691,41 @@ function LeadsPageContent() {
           </Button>
         </div>
       </Dialog>
+
+      {pitchToday ? (
+        <PitchOverlayDrawer
+          open={Boolean(selectedId)}
+          onOpenChange={(open) => {
+            if (!open) setSelected('');
+          }}
+          leadId={selectedId || null}
+          title={selectedRow?.business.name ?? 'Pitch keeper'}
+          description={
+            selectedRow
+              ? [
+                  selectedRow.factory?.rank ? `#${selectedRow.factory.rank}` : null,
+                  selectedRow.business.city,
+                  selectedRow.lead.status,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              : undefined
+          }
+          defaultChannel={recommendedChannelToDraft(selectedRow?.factory?.recommendedChannel)}
+          onRecorded={() => void handlePitchRecorded()}
+          moreHref={selectedId ? `/leads/${selectedId}` : undefined}
+          hasPrev={Boolean(selectedId && prevKeeperInList(items, selectedId))}
+          hasNext={Boolean(selectedId && nextKeeperInList(items, selectedId))}
+          onPrev={() => {
+            const prev = prevKeeperInList(items, selectedId);
+            if (prev) setSelected(prev);
+          }}
+          onNext={() => {
+            const next = nextKeeperInList(items, selectedId);
+            if (next) setSelected(next);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

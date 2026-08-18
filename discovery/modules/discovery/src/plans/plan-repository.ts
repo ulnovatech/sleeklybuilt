@@ -21,6 +21,8 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { PlanEventType, PlanSegment } from './types';
+import { isExploreFloorSlot } from './explore-floor';
+import { FACTORY_CORE_TEMPLATE_KEY, FACTORY_EXPLORE_TEMPLATE_KEY } from './factory-markets';
 
 export class DiscoveryPlanRepository {
   async createPlan(values: typeof discoveryPlans.$inferInsert) {
@@ -42,6 +44,16 @@ export class DiscoveryPlanRepository {
   async getPlan(id: string) {
     const db = getDb();
     const [row] = await db.select().from(discoveryPlans).where(eq(discoveryPlans.id, id)).limit(1);
+    return row ?? null;
+  }
+
+  async getPlanByTemplateKey(templateKey: string) {
+    const db = getDb();
+    const [row] = await db
+      .select()
+      .from(discoveryPlans)
+      .where(eq(discoveryPlans.templateKey, templateKey))
+      .limit(1);
     return row ?? null;
   }
 
@@ -123,6 +135,30 @@ export class DiscoveryPlanRepository {
       .from(discoveryPlanTargets)
       .where(eq(discoveryPlanTargets.planId, planId))
       .orderBy(desc(discoveryPlanTargets.yieldScore), asc(discoveryPlanTargets.lastRunAt));
+  }
+
+  async listFactoryYieldTargets(limit = 5) {
+    const db = getDb();
+    return db
+      .select({
+        id: discoveryPlanTargets.id,
+        planId: discoveryPlanTargets.planId,
+        country: discoveryPlanTargets.country,
+        city: discoveryPlanTargets.city,
+        industry: discoveryPlanTargets.industry,
+        yieldScore: discoveryPlanTargets.yieldScore,
+        lastYield: discoveryPlanTargets.lastYield,
+        wonCount: discoveryPlanTargets.wonCount,
+        lostCount: discoveryPlanTargets.lostCount,
+        suppressedUntil: discoveryPlanTargets.suppressedUntil,
+        templateKey: discoveryPlans.templateKey,
+        planName: discoveryPlans.name,
+      })
+      .from(discoveryPlanTargets)
+      .innerJoin(discoveryPlans, eq(discoveryPlans.id, discoveryPlanTargets.planId))
+      .where(inArray(discoveryPlans.templateKey, [FACTORY_CORE_TEMPLATE_KEY, FACTORY_EXPLORE_TEMPLATE_KEY]))
+      .orderBy(desc(discoveryPlanTargets.yieldScore), desc(discoveryPlanTargets.wonCount))
+      .limit(Math.min(20, Math.max(1, limit)));
   }
 
   async getTarget(id: string) {
@@ -253,21 +289,40 @@ export class DiscoveryPlanRepository {
 
   async pickNextTarget(planId: string, now: Date) {
     const db = getDb();
-    const [row] = await db
-      .select()
-      .from(discoveryPlanTargets)
-      .where(
-        and(
-          eq(discoveryPlanTargets.planId, planId),
-          or(isNull(discoveryPlanTargets.suppressedUntil), lte(discoveryPlanTargets.suppressedUntil, now)),
-        ),
-      )
-      .orderBy(
-        desc(discoveryPlanTargets.yieldScore),
-        sql`${discoveryPlanTargets.lastRunAt} ASC NULLS FIRST`,
-      )
-      .limit(1);
+    const runCount = await this.countPlanRuns(planId);
+    const explore = isExploreFloorSlot(runCount);
+    const eligible = and(
+      eq(discoveryPlanTargets.planId, planId),
+      or(isNull(discoveryPlanTargets.suppressedUntil), lte(discoveryPlanTargets.suppressedUntil, now)),
+    );
+    const ordered = explore
+      ? db
+          .select()
+          .from(discoveryPlanTargets)
+          .where(eligible)
+          .orderBy(
+            sql`${discoveryPlanTargets.lastRunAt} ASC NULLS FIRST`,
+            asc(discoveryPlanTargets.yieldScore),
+          )
+      : db
+          .select()
+          .from(discoveryPlanTargets)
+          .where(eligible)
+          .orderBy(
+            desc(discoveryPlanTargets.yieldScore),
+            sql`${discoveryPlanTargets.lastRunAt} ASC NULLS FIRST`,
+          );
+    const [row] = await ordered.limit(1);
     return row ?? null;
+  }
+
+  async countPlanRuns(planId: string) {
+    const db = getDb();
+    const [row] = await db
+      .select({ value: count() })
+      .from(discoveryRuns)
+      .where(eq(discoveryRuns.planId, planId));
+    return Number(row?.value ?? 0);
   }
   async countRunsToday(planId: string, dayStart: Date) {
     const db = getDb();

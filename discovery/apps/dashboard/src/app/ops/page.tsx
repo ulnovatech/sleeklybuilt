@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/layout/page-header';
 import { MorningInbox, type MorningInboxData } from '@/components/ops/morning-inbox';
+import { PitchTodayCard } from '@/components/ops/pitch-today-card';
 import { Button, ErrorState, Skeleton } from '@/components/ui/primitives';
 import { api } from '@/lib/api';
 import { PAGE_COPY } from '@/lib/product-copy';
@@ -267,6 +268,8 @@ export default function OpsDashboardPage() {
           </Button>
         }
       />
+
+      <PitchTodayCard />
 
       <OpsBand title="Needs attention" description="Start here — triage, follow-ups, and automation health.">
       {metrics.morningInbox ? <MorningInbox inbox={metrics.morningInbox} /> : null}

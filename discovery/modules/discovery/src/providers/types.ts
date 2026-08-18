@@ -35,6 +35,10 @@ export interface DiscoverySearchParams {
   acquisitionMode?: 'economy' | 'standard' | 'boost';
   /** Bias search queries toward high-potential prospect templates */
   prospectFocus?: boolean;
+  /** Morning path: skip owned websites at ingest (keep none + link-in-bio). */
+  dropRealWebsites?: boolean;
+  /** Restrict social `site:` queries. Default all platforms. */
+  socialSearch?: 'off' | 'tiktok' | 'all';
 }
 
 export interface DiscoveryProvider {

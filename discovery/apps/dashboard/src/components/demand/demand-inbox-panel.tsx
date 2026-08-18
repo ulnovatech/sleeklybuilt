@@ -21,6 +21,11 @@ import {
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 import { api } from '@/lib/api';
+import {
+  DEMAND_JUMP_REASON_COPY,
+  pitchTodayHrefForLead,
+  type DemandJumpResult,
+} from '@/lib/factory-demand-copy';
 
 type OrphanSignal = {
   id: string;
@@ -95,6 +100,26 @@ export function DemandInboxPanel() {
     void load();
   }, [load]);
 
+  const routeAfterDemandAction = (jump: DemandJumpResult | undefined, fallbackHref: string) => {
+    if (jump?.jumped && jump.leadId) {
+      push({
+        tone: 'success',
+        title: jump.already ? 'Already on Pitch today' : 'Jumped to Pitch today',
+        description: 'Hot demand is on the frozen list — it did not mix today’s harvest into the 100.',
+      });
+      router.push(pitchTodayHrefForLead(jump.leadId));
+      return;
+    }
+    push({
+      tone: 'success',
+      title: 'Saved to Queue',
+      description: jump?.reason
+        ? DEMAND_JUMP_REASON_COPY[jump.reason]
+        : 'Open it from the Queue. Same-day jump needs a frozen Pitch today list and a phone.',
+    });
+    router.push(fallbackHref);
+  };
+
   const updateDraft = (signalId: string, patch: Partial<ProspectDraft>) => {
     setDrafts((prev) => {
       const current = prev[signalId];
@@ -160,7 +185,11 @@ export function DemandInboxPanel() {
     setLoading(`create-${id}`);
     setError(null);
     try {
-      const result = await api<{ businessId: string; reviewUrl: string }>(
+      const result = await api<{
+        businessId: string;
+        reviewUrl: string;
+        factoryJump?: DemandJumpResult;
+      }>(
         `/api/intent/demand-inbox/${id}/create-prospect`,
         {
           method: 'POST',
@@ -172,8 +201,7 @@ export function DemandInboxPanel() {
           }),
         },
       );
-      push({ tone: 'success', title: 'Prospect created', description: 'Opening it in the Queue.' });
-      router.push(result.reviewUrl ?? '/review?kind=demand');
+      routeAfterDemandAction(result.factoryJump, result.reviewUrl ?? '/review?kind=demand');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Create prospect failed');
     } finally {
@@ -190,16 +218,11 @@ export function DemandInboxPanel() {
     setLoading(`match-${id}`);
     setError(null);
     try {
-      await api(`/api/intent/demand-inbox/${id}/match`, {
+      const result = await api<{ factoryJump?: DemandJumpResult }>(`/api/intent/demand-inbox/${id}/match`, {
         method: 'POST',
         body: JSON.stringify({ businessId: business.id }),
       });
-      push({
-        tone: 'success',
-        title: `Signal matched to ${business.name}`,
-        description: 'The opportunity is now in the Queue.',
-      });
-      router.push('/review?kind=opportunity');
+      routeAfterDemandAction(result.factoryJump, '/review?kind=opportunity');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Match failed');
     } finally {

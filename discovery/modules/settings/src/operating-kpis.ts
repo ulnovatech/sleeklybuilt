@@ -29,7 +29,7 @@ export const OPERATING_KPI_TARGETS: OperatingKpi[] = [
   {
     id: 'places_spend_month',
     label: 'Google Places spend / month',
-    target: '≤ cap (default 150)',
+    target: '≤ cap (default 600)',
     measurement: 'GET /api/acquisition/budget → google_places',
   },
   {

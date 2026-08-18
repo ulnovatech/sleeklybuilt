@@ -32,7 +32,7 @@ Target stack: **Vercel Hobby** (dashboard) + **Neon free tier** (Postgres).
 
 | Variable | Default | Notes |
 |----------|---------|-------|
-| `PLACES_MONTHLY_CAP` | `150` | Alert when approaching limit |
+| `PLACES_MONTHLY_CAP` | `600` | Alert when approaching limit |
 | `CSE_DAILY_CAP` | `100` | |
 | `BING_DAILY_CAP` | `50` | |
 | `META_GRAPH_DAILY_CAP` | `50` | Meta Graph page/place search (Phase 5) |

@@ -31,6 +31,7 @@ import { IntentService } from '@agency/intent';
 import { IntelligenceService } from '@agency/intelligence';
 import { SleeklyDashBridgeService, isSleeklyDashConfigured } from '@agency/integrations';
 import { QualificationService, refreshSegmentPerformance, uniqueBusinessIds } from '@agency/qualification';
+import { runFactoryPurifyTick } from './factory-purify';
 
 const queue = new JobQueue();
 const jobRepo = new JobRepository();
@@ -52,6 +53,10 @@ const CRM_BRIDGE_SYNC_INTERVAL_MS = 5 * 60_000;
 /** Nightly segment performance refresh (outcome learning). */
 let lastSegmentRefreshAt = 0;
 const SEGMENT_REFRESH_INTERVAL_MS = 24 * 60 * 60_000;
+
+/** Throttle factory night purify + keeper promote. */
+let lastFactoryPurifyAt = 0;
+const FACTORY_PURIFY_INTERVAL_MS = 60_000;
 
 /** Prevent concurrent resumeRunPipeline for the same run (parallel polls abort mid-claim). */
 const resumeLocks = new Map<string, Promise<{ steps: number }>>();
@@ -525,6 +530,19 @@ export async function workerTick() {
       }
     } catch (err) {
       logger.error('CRM bridge sync failed', { error: String(err) });
+      captureException(err);
+    }
+  }
+
+  if (now - lastFactoryPurifyAt >= FACTORY_PURIFY_INTERVAL_MS) {
+    lastFactoryPurifyAt = now;
+    try {
+      const result = await runFactoryPurifyTick();
+      if (!result.skipped || result.promoted || result.prewarmed) {
+        logger.info('Factory purify tick', result);
+      }
+    } catch (err) {
+      logger.error('Factory purify tick failed', { error: String(err) });
       captureException(err);
     }
   }

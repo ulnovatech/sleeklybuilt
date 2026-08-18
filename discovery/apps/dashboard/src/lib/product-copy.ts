@@ -67,7 +67,7 @@ export const NAV_SECTIONS: NavSection[] = [
 export const PAGE_COPY = {
   ops: {
     title: 'Today',
-    description: 'Overnight activity, triage priorities, and acquisition KPIs.',
+    description: 'Pitch today from yesterday’s harvest, overnight activity, and acquisition KPIs.',
   },
   discovery: {
     title: 'Discovery runs',
@@ -95,7 +95,11 @@ export const PAGE_COPY = {
   },
   pursuits: {
     title: 'Pipeline',
-    description: 'Active sales motions — outreach, follow-up, and proposals per account.',
+    description: 'Active sales motions — Pitch today, outreach, follow-up, and proposals per account.',
+  },
+  dumpster: {
+    title: 'Dumpster',
+    description: 'Recoverable remainder from yesterday’s harvest — not trash. Restore, snooze, or suppress with a reason.',
   },
   outreach: {
     title: 'Outreach Queue',

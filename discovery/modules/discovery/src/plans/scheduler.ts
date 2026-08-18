@@ -1,5 +1,6 @@
 import { BudgetGovernor } from '@agency/acquisition';
 import { logger } from '@agency/config';
+import { platformSettings } from '@agency/settings';
 import {
   canRunAt,
   computeNextRunAt,
@@ -94,7 +95,16 @@ export async function tickDiscoveryPlans(
 
     // Monitor re-checks known accounts — no Places/CSE discover spend.
     if (plan.planType !== 'monitor') {
+      await platformSettings.ensureLoaded();
       const sources = Array.isArray(plan.sources) ? plan.sources : [];
+      if (sources.includes('google_maps') && !platformSettings.isPlacesConfigured()) {
+        await skip(
+          'skipped_credentials',
+          'Google Places API key missing — required for factory harvest. Add it in Settings → API credentials.',
+          computeNextRunAt(now, cadence),
+        );
+        continue;
+      }
       const budgetBlocked: string[] = [];
       for (const source of sources) {
         const providers = SOURCE_TO_BUDGET[String(source)] ?? [];

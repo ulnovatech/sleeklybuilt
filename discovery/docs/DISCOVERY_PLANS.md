@@ -2,6 +2,8 @@
 
 Scheduled Discovery Plans turn Lead Discover into an overnight Intelligence OS: configure targets once, walk away, triage the morning inbox.
 
+Factory north star (cohort freeze, dumpster, overlay pitch): [GREENFIELD_PITCH_FACTORY.md](GREENFIELD_PITCH_FACTORY.md).
+
 ## Plan types
 
 | Type | What it does | Pipeline |
@@ -36,6 +38,20 @@ Plans (Goal → Targets → Sources → Cadence)
 5. **Cadence / caps:** every N hours, active hours, daily + concurrency caps.
 
 Use **Run now** to enqueue immediately. Events (scheduled, skipped_*, failed, completed) appear on the plan detail page.
+
+## Factory harvest (F0)
+
+Greenfield Pitch Factory seeds two weekday EAT plans (idempotent):
+
+```bash
+pnpm discovery:seed-factory
+```
+
+The job worker also runs this on startup. Plan A = Uganda / Kenya / Nigeria (12 runs/day). Plan B = Ghana / Tanzania / Philippines + Houston / Birmingham probes (2 runs/day). Named cities only, `website_build`, Places primary. Does not overwrite plans that already exist (`templateKey` `factory_core` / `factory_explore`).
+
+Places monthly floor is **600** (about 20 Text Search calls/day). Discovery UI defaults to Uganda / Kampala.
+
+See [GREENFIELD_PITCH_FACTORY.md](GREENFIELD_PITCH_FACTORY.md).
 
 ## Morning inbox
 

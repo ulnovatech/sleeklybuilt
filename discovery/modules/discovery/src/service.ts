@@ -10,6 +10,10 @@ import { getConfiguredDiscoveryProviders } from './providers/registry';
 import { placesIdFromExternalId } from './providers/places/place-to-candidate';
 import { GooglePlacesVerifyProvider } from './providers/places/places-verify';
 import type { DiscoveredBusiness } from './providers/types';
+import { keepOnMorningPath } from './lib/website-class';
+import { DiscoveryPlanRepository } from './plans/plan-repository';
+import { resolveMorningPath } from './plans/harvest-cohort';
+import type { PlanSocialSearch } from './plans/types';
 
 function dedupeBusinesses(items: DiscoveredBusiness[]): DiscoveredBusiness[] {
   const seen = new Set<string>();
@@ -45,6 +49,9 @@ export type CreateRunParams = {
   trigger?: 'manual' | 'plan' | 'cron';
   /** Monitor plans re-check known accounts — no discovery providers required. */
   allowWithoutProviders?: boolean;
+  harvestDate?: string | null;
+  sellDate?: string | null;
+  dropRealWebsites?: boolean;
 };
 
 const MONITOR_SEED_LIMIT = 40;
@@ -79,6 +86,9 @@ export class DiscoveryService {
       planId: params.planId,
       planTargetId: params.planTargetId,
       trigger: params.trigger ?? 'manual',
+      harvestDate: params.harvestDate ?? null,
+      sellDate: params.sellDate ?? null,
+      dropRealWebsites: params.dropRealWebsites ?? false,
     });
   }
 
@@ -147,13 +157,31 @@ export class DiscoveryService {
     if (!run) throw new Error('Discovery run not found');
 
     const mode = profileToMode((run.runProfile as RunProfile) ?? 'standard');
-    const providers = await getConfiguredDiscoveryProviders(mode);
+    let allowedSources: string[] | undefined;
+    let socialSearch: PlanSocialSearch = 'all';
+    const dropRealWebsites = run.dropRealWebsites === true;
+
+    if (run.planId) {
+      const plan = await new DiscoveryPlanRepository().getPlan(run.planId);
+      if (plan) {
+        const morning = resolveMorningPath(plan);
+        allowedSources = morning.sources;
+        socialSearch = morning.socialSearch;
+        if (socialSearch === 'off' && allowedSources) {
+          allowedSources = allowedSources.filter((s) => s !== 'social_search');
+        }
+      }
+    }
+
+    const providers = await getConfiguredDiscoveryProviders(mode, allowedSources);
     const params = {
       country: run.country,
       city: run.city,
       industry: run.industry,
       acquisitionMode: mode,
       prospectFocus: run.prospectFocus ?? false,
+      dropRealWebsites,
+      socialSearch,
     };
 
     const allBusinesses: DiscoveredBusiness[] = [];
@@ -192,7 +220,12 @@ export class DiscoveryService {
     }
 
     const unique = dedupeBusinesses(allBusinesses);
-    if (unique.length === 0) {
+    const droppedReal = dropRealWebsites ? unique.filter((b) => !keepOnMorningPath(b)).length : 0;
+    const kept = dropRealWebsites ? unique.filter((b) => keepOnMorningPath(b)) : unique;
+    if (dropRealWebsites && droppedReal > 0) {
+      logger.info('Morning path dropped owned websites', { runId, droppedReal, kept: kept.length });
+    }
+    if (kept.length === 0) {
       const providerError = providerStats.find((p) => p.error)?.error;
       if (providerError) {
         throw new Error(providerError);
@@ -235,11 +268,17 @@ export class DiscoveryService {
         }
       }
 
+      if (dropRealWebsites && unique.length > 0) {
+        throw new Error(
+          'Discovery returned only businesses with owned websites. Morning path keeps no-site and link-in-bio listings.',
+        );
+      }
+
       throw new Error(
         'Discovery returned zero businesses. Try a narrower city (not "All cities"), a different industry, or add search/CSE credentials in Settings.',
       );
     }
-    return { candidates: unique, providerStats };
+    return { candidates: kept, providerStats };
   }
 
   async executeResolveAccountsStage(runId: string, candidates: DiscoveredBusiness[]) {
@@ -247,7 +286,13 @@ export class DiscoveryService {
     if (!run) throw new Error('Discovery run not found');
 
     const mode = profileToMode((run.runProfile as RunProfile) ?? 'standard');
-    const params = { country: run.country, city: run.city, industry: run.industry, prospectFocus: run.prospectFocus ?? false };
+    const params = {
+      country: run.country,
+      city: run.city,
+      industry: run.industry,
+      prospectFocus: run.prospectFocus ?? false,
+      dropRealWebsites: run.dropRealWebsites === true,
+    };
 
     let unique = dedupeBusinesses(candidates);
 
@@ -259,6 +304,10 @@ export class DiscoveryService {
       );
       unique = dedupeBusinesses(verifyResult.candidates);
       logger.info('Places verify step', { runId, ...verifyResult });
+    }
+
+    if (run.dropRealWebsites) {
+      unique = unique.filter((b) => keepOnMorningPath(b));
     }
 
     if (unique.length === 0) {
@@ -278,7 +327,11 @@ export class DiscoveryService {
     const now = new Date();
 
     for (const item of unique) {
-      const { account, created, skippedPlacesRefresh } = await this.accounts.resolveOrCreate(item);
+      const { account, created, skippedPlacesRefresh } = await this.accounts.resolveOrCreate({
+        ...item,
+        harvestDate: run.harvestDate,
+        sellDate: run.sellDate,
+      });
       if (skippedPlacesRefresh) placesRefreshSkipped++;
       if (await this.accounts.isSuppressed(account)) {
         suppressedSkipped++;

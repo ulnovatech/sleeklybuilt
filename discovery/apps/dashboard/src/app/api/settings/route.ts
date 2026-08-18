@@ -18,6 +18,7 @@ import {
   CREDENTIAL_ENV_MAP,
 } from '@agency/settings';
 import { BudgetGovernor } from '@agency/acquisition';
+import { classifyCseCredential } from '@agency/discovery';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -261,10 +262,10 @@ const patchSchema = z.object({
 });
 
 const CREDENTIAL_LABELS: Record<CredentialKey, string> = {
-  google_places_api_key: 'Google Places API Key (single)',
-  google_places_api_keys: 'Google Places API Keys (comma-separated, rotation)',
-  google_cse_api_key: 'Google Custom Search API Key',
-  google_cse_cx: 'Google Custom Search Engine ID (CX)',
+  google_places_api_key: 'Google Places API Key (required for factory harvest)',
+  google_places_api_keys: 'Google Places API Keys (comma-separated rotation; factory required)',
+  google_cse_api_key: 'Google Custom Search API Key (optional overlay)',
+  google_cse_cx: 'Google Custom Search Engine ID / CX (optional overlay)',
   bing_search_key: 'Bing Search API Key',
   meta_graph_api_token: 'Meta Graph API Token',
   gmail_oauth_client_id: 'Gmail OAuth Client ID',
@@ -286,11 +287,27 @@ async function readDraftBudget() {
   }
 }
 
+function factoryCredentialHint(key: CredentialKey, configured: boolean, cseReason?: string): string | undefined {
+  if (key === 'google_places_api_key' || key === 'google_places_api_keys') {
+    return configured
+      ? 'Primary harvest source for Factory A/B'
+      : 'Required for factory harvest — paste a Places API (New) key';
+  }
+  if ((key === 'google_cse_api_key' || key === 'google_cse_cx') && cseReason) {
+    return cseReason;
+  }
+  return undefined;
+}
+
 export async function GET() {
   try {
     const settings = await platformSettings.ensureLoaded();
     const credentialStatuses = platformSettings.getCredentialStatuses(settings);
     const draftBudget = await readDraftBudget();
+    const cse = classifyCseCredential(
+      platformSettings.getCredential('google_cse_api_key'),
+      platformSettings.getCredential('google_cse_cx'),
+    );
 
     return NextResponse.json({
       acquisition: settings.acquisition,
@@ -306,15 +323,20 @@ export async function GET() {
       marketHunter: settings.marketHunter,
       agency: settings.agency,
       agencyPresets: listAgencyPresets(),
-      credentials: (Object.keys(CREDENTIAL_ENV_MAP) as CredentialKey[]).map((key) => ({
-        key,
-        label: CREDENTIAL_LABELS[key],
-        envVar: CREDENTIAL_ENV_MAP[key],
-        configured: credentialStatuses.find((s) => s.key === key)?.configured ?? false,
-        source: credentialStatuses.find((s) => s.key === key)?.source ?? 'none',
-        hint: credentialStatuses.find((s) => s.key === key)?.hint,
-        hasStoredValue: !!settings.credentials[key]?.trim(),
-      })),
+      credentials: (Object.keys(CREDENTIAL_ENV_MAP) as CredentialKey[]).map((key) => {
+        const status = credentialStatuses.find((s) => s.key === key);
+        const configured = status?.configured ?? false;
+        const factoryHint = factoryCredentialHint(key, configured, cse.ready ? undefined : cse.reason);
+        return {
+          key,
+          label: CREDENTIAL_LABELS[key],
+          envVar: CREDENTIAL_ENV_MAP[key],
+          configured,
+          source: status?.source ?? 'none',
+          hint: [status?.hint, factoryHint].filter(Boolean).join(' · ') || undefined,
+          hasStoredValue: !!settings.credentials[key]?.trim(),
+        };
+      }),
     });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

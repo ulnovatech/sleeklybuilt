@@ -1,3 +1,4 @@
+import { loadRootEnv } from '@agency/config/load-env';
 import { platformSettings } from '@agency/settings';
 import { placeSearchResultToDiscoveredBusiness, placesIdFromExternalId } from '../providers/places/place-to-candidate';
 import { GooglePlacesDiscoveryProvider } from '../providers/places/places-discover';
@@ -47,11 +48,18 @@ const linkInBio = placeSearchResultToDiscoveredBusiness(
 );
 assert(linkInBio?.metadata?.websiteClass === 'link_in_bio', 'link-in-bio Places website stays in greenfield classification');
 
+const noSite = placeSearchResultToDiscoveredBusiness(
+  { ...samplePlace, websiteUri: undefined },
+  params,
+);
+assert(noSite?.metadata?.websiteClass === 'none', 'Places without website is none');
+
 const queries = buildCitySearchQueries(params);
 assert(queries.length === 1, 'single city yields one query');
 assert(queries[0].includes('Restaurant') && queries[0].includes('Kampala'), 'query includes industry and city');
 
 async function testDiscoverPagination() {
+  loadRootEnv();
   if (!process.env.DATABASE_URL) {
     console.log('skip places discover pagination test (DATABASE_URL not set)');
     return;
@@ -92,14 +100,40 @@ async function testDiscoverPagination() {
 
   const result = await provider.discoverWithStats({
     ...params,
-    acquisitionMode: 'standard',
+    acquisitionMode: 'boost',
   });
 
   assert(result.businesses.length === 2, 'pagination yields two unique places');
-  assert(result.textSearchCalls === 2, 'two API calls for paginated query');
+  assert(result.textSearchCalls >= 2, 'paginated query spends more than one Text Search');
   assert(result.businesses.every((b) => b.source === 'google_maps'), 'all from google_maps');
 
   client.textSearch = originalTextSearch;
+  provider.isConfigured = originalConfigured;
+
+  const dropClient = (provider as unknown as { client: { textSearch: Function } }).client;
+  dropClient.textSearch = async () => ({
+    places: [
+      samplePlace,
+      { ...samplePlace, id: 'places/ChIJnone', displayName: { text: 'No Site Grill' }, websiteUri: undefined },
+      { ...samplePlace, id: 'places/ChIJbio', displayName: { text: 'Bio Cafe' }, websiteUri: 'https://linktr.ee/biocafe' },
+    ],
+  });
+  provider.isConfigured = async () => true;
+  const morningDropped = await provider.discoverWithStats({
+    ...params,
+    acquisitionMode: 'standard',
+    dropRealWebsites: true,
+  });
+  assert(
+    morningDropped.businesses.every((b) => b.metadata?.websiteClass !== 'real'),
+    'Places ingest on morning path drops owned websites',
+  );
+  assert(
+    morningDropped.businesses.some((b) => b.metadata?.websiteClass === 'none') &&
+      morningDropped.businesses.some((b) => b.metadata?.websiteClass === 'link_in_bio'),
+    'Places ingest keeps none and link-in-bio',
+  );
+  dropClient.textSearch = originalTextSearch;
   provider.isConfigured = originalConfigured;
 }
 

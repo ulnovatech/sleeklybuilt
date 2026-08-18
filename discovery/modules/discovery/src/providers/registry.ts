@@ -8,6 +8,7 @@ import { GooglePlacesVerifyProvider } from './places/places-verify';
 import { MetaGraphDiscoveryProvider } from './meta/meta-graph-provider';
 import { SocialSearchProvider } from './social/social-search-provider';
 import { getAcquisitionMode, googleMapsEnabledInMode } from '../lib/run-profile';
+import { classifyCseCredential } from '../plans/factory-credentials';
 import type { DiscoveryProvider } from './types';
 
 const placesDiscover = new GooglePlacesDiscoveryProvider();
@@ -31,6 +32,7 @@ async function isProviderConfigured(provider: DiscoveryProvider): Promise<boolea
  */
 export async function getConfiguredDiscoveryProviders(
   mode = getAcquisitionMode(),
+  allowedSources?: string[],
 ): Promise<DiscoveryProvider[]> {
   await platformSettings.ensureLoaded();
   const ordered: DiscoveryProvider[] = [];
@@ -43,7 +45,9 @@ export async function getConfiguredDiscoveryProviders(
   if (await isProviderConfigured(socialProvider)) ordered.push(socialProvider);
   if (await isProviderConfigured(csvProvider)) ordered.push(csvProvider);
 
-  return ordered;
+  if (!allowedSources || allowedSources.length === 0) return ordered;
+  const allow = new Set(allowedSources);
+  return ordered.filter((p) => allow.has(p.name));
 }
 
 export async function getDiscoveryProviderStatus(): Promise<
@@ -72,9 +76,14 @@ export async function getDiscoveryProviderStatus(): Promise<
       placesConfigured && !mapsAllowed
         ? `Disabled in ${mode} mode — use standard or boost for Places discovery`
         : placesConfigured && mapsAllowed
-          ? 'Primary discovery + verify for search/CSV candidates'
-          : undefined,
+          ? 'Factory required — primary harvest + verify'
+          : 'Required for factory harvest — add Google Places API key in Settings',
   });
+
+  const cseStatus = classifyCseCredential(
+    platformSettings.getCredential('google_cse_api_key'),
+    platformSettings.getCredential('google_cse_cx'),
+  );
 
   for (const p of [searchProvider, metaProvider, socialProvider]) {
     const configured = await isProviderConfigured(p);
@@ -88,7 +97,9 @@ export async function getDiscoveryProviderStatus(): Promise<
           ? 'Facebook page + place search; linked Instagram profiles when available'
           : p === socialProvider && configured
             ? 'TikTok, LinkedIn, X, YouTube via CSE/Bing site: queries (shares search budget)'
-            : undefined,
+            : p === searchProvider && !configured
+              ? cseStatus.reason
+              : undefined,
     });
   }
 

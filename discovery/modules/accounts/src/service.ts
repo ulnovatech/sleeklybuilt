@@ -45,7 +45,8 @@ export interface AccountResolveInput {
   reviewCount?: number;
 
   metadata?: Record<string, unknown>;
-
+  harvestDate?: string | null;
+  sellDate?: string | null;
 }
 
 
@@ -253,7 +254,8 @@ export class AccountService {
           : (input.metadata ?? existing.metadata),
 
         lastEnrichedAt: now,
-
+        harvestDate: existing.harvestDate ?? input.harvestDate ?? null,
+        sellDate: existing.sellDate ?? input.sellDate ?? null,
       });
 
       return {
@@ -309,7 +311,8 @@ export class AccountService {
       metadata: input.metadata ?? null,
 
       lastPlacesFetchAt: isGoogleMaps || placesEnriched ? now : null,
-
+      harvestDate: input.harvestDate ?? null,
+      sellDate: input.sellDate ?? null,
     });
 
 
@@ -360,6 +363,20 @@ export class AccountService {
 
     return this.repo.update(accountId, { reviewSnoozedUntil: until });
 
+  }
+
+  async unsuppress(accountId: string) {
+    return this.repo.update(accountId, { suppressed: false });
+  }
+
+  async markHasWebsite(accountId: string) {
+    const existing = await this.repo.getById(accountId);
+    return this.repo.update(accountId, {
+      metadata: {
+        ...((existing?.metadata as Record<string, unknown> | null) ?? {}),
+        websiteClass: 'real',
+      },
+    });
   }
 
 

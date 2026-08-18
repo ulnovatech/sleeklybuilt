@@ -71,7 +71,7 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
     acquisition: {
       mode: envMode(),
       caps: {
-        google_places: envInt('PLACES_MONTHLY_CAP', 150),
+        google_places: envInt('PLACES_MONTHLY_CAP', 600),
         google_cse: envInt('CSE_DAILY_CAP', 100),
         bing_search: envInt('BING_DAILY_CAP', 50),
         browser_automation: envInt('BROWSER_DAILY_CAP', 10),
@@ -114,8 +114,8 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
       citiesByCountry: { ...CITIES_BY_COUNTRY },
       allCitiesLabel: ALL_CITIES,
       defaults: {
-        country: 'United States',
-        city: ALL_CITIES,
+        country: 'Uganda',
+        city: 'Kampala',
         industry: 'Restaurant',
       },
       csvImportPath: 'storage/imports/businesses.csv',

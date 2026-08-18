@@ -78,9 +78,28 @@ Also enable if prompted:
 
 ### 2.5 Add key in Settings UI (preferred)
 
-Open **Settings → API credentials** → **Google Places API Key** → paste your key → **Save**.
+Open **Settings → API credentials** → **Google Places API Key (required for factory harvest)** → paste your key → **Save**.
 
-Env var `GOOGLE_PLACES_API_KEY` is optional (CI fallback only when Settings is empty).
+Env var `GOOGLE_PLACES_API_KEY` is optional (CI fallback only when Settings is empty). Factory plans will skip (`skipped_credentials`) until this key is present.
+
+Check without printing secrets:
+
+```powershell
+pnpm discovery:factory-health
+```
+
+Optional live probe (spends 1 Places Text Search):
+
+```powershell
+pnpm discovery:factory-health -- --probe
+```
+
+Night purify (operator, any hour). Freezes yesterday’s morning-path harvest into ~100 keepers for the sell date. `--force` rebuilds an already frozen day:
+
+```powershell
+pnpm discovery:purify
+pnpm discovery:purify -- --force
+```
 
 ### 2.6 Restart the app
 
@@ -88,7 +107,7 @@ Env var `GOOGLE_PLACES_API_KEY` is optional (CI fallback only when Settings is e
 pnpm dev
 ```
 
-Open **Discovery Runs** → **Sources** — you should see **Google Maps / Business listings (primary) — ready** when using standard/boost mode.
+Open **Discovery** → **Provider status** — you should see **Factory ready** and **Google Maps / Business listings — ready** when using standard/boost mode. A widget snippet `cse.js?cx=…` is **not** the backend CSE JSON API.
 
 ### 2.7 Test a run
 
@@ -101,9 +120,11 @@ Results should include structured businesses: name, phone, website, city, Maps l
 
 ---
 
-## Step 2b: Google Custom Search (supplemental — required for micro/economy)
+## Step 2b: Google Custom Search (optional factory overlay; required for micro/economy)
 
-Public search supplements Places in standard/boost. In **micro** / `ACQUISITION_MODE=economy`, Places discovery is disabled (0 API calls) — use CSE/Bing + CSV.
+Public search is an overlay on the same factory segments — not a replacement for Places. In **micro** / `ACQUISITION_MODE=economy`, Places discovery is disabled (0 API calls) — use CSE/Bing + CSV.
+
+The Programmable Search **website widget** (`cse.js?cx=…`) is not the JSON API. Factory overlay needs **both** a Custom Search **API key** and the engine **CX**. CX alone is stored but search stays off until the key is saved.
 
 1. Go to [Programmable Search Engine](https://programmablesearchengine.google.com/controlpanel/create)
 2. Create a search engine (search the entire web)
@@ -236,6 +257,8 @@ Set on Vercel:
 | Error | Fix |
 |-------|-----|
 | No discovery sources configured | Add `GOOGLE_PLACES_API_KEY`, CSE/Bing keys, or CSV file |
+| Factory harvest blocked / skipped_credentials | Paste a Places API (New) key in Settings → API credentials; run `pnpm discovery:factory-health` |
+| CSE shows CX but not ready | Add Custom Search **API key** (widget `cx=` is not enough) |
 | Run stuck on pending | Start `pnpm jobs:worker` |
 | Google Places API error 403 | Enable Places API (New), check billing, check key restrictions |
 | Google Places API error 429 | Quota exceeded — wait or increase quota in Cloud Console |
@@ -261,8 +284,10 @@ Set on Vercel:
 - [ ] Places API (New) enabled in Google Cloud
 - [ ] Billing linked on Google Cloud
 - [ ] **Settings → API credentials** — Places key saved
-- [ ] `pnpm jobs:worker` running
-- [ ] Discovery → Sources shows Google Maps **ready** (standard mode)
+- [ ] `pnpm discovery:factory-health` prints Factory harvest ready: yes
+- [ ] `pnpm jobs:worker` running (seeds factory plans on startup)
+- [ ] Discovery → Plans shows Factory A (core) and Factory B (explore)
+- [ ] Discovery → Provider status shows **Factory ready** and Google Maps **ready** (standard mode)
 - [ ] Test **standard** run returns Places-backed businesses with Maps links
 
 When all boxes are checked, the system is running on **real discovery data**.

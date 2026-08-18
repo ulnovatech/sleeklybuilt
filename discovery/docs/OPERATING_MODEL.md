@@ -4,7 +4,7 @@ How a 1–2 person web/digital agency uses Demand Capture for opportunity discov
 
 **Product scope:** [V1_CHARTER.md](V1_CHARTER.md) — Path A (web agency v1, razor-sharp results first).
 
-Related docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [ACQUISITION_TIERS.md](ACQUISITION_TIERS.md) · [DEPLOYMENT.md](DEPLOYMENT.md) · [SETUP_RESOURCES.md](SETUP_RESOURCES.md)
+Related docs: [ARCHITECTURE.md](ARCHITECTURE.md) · [ACQUISITION_TIERS.md](ACQUISITION_TIERS.md) · [DEPLOYMENT.md](DEPLOYMENT.md) · [SETUP_RESOURCES.md](SETUP_RESOURCES.md) · [GREENFIELD_PITCH_FACTORY.md](GREENFIELD_PITCH_FACTORY.md) (daily harvest → 07:00 list → dumpster → overlay pitch)
 
 ---
 
@@ -122,7 +122,7 @@ Initial targets for a solo operator or pair running ~3–5 discovery runs per we
 | Reachable leads promoted / week | ≥ 15 | Leads created from review with reachability medium+ or verified contact |
 | Review → contacted conversion | ≥ 40% | CONTACTED / (REVIEWED + NEW promoted that week) |
 | Duplicate outreach rate | &lt; 2% | Same account contacted twice in 30 days (should be blocked by dedup) |
-| Google Places spend / month | ≤ cap (default 150) | `GET /api/acquisition/budget` → `google_places` |
+| Google Places spend / month | ≤ cap (default 600) | `GET /api/acquisition/budget` → `google_places` |
 | Discovery run success rate | ≥ 90% | Runs `completed` / runs started (7-day window) |
 | Demand signals actioned / week | ≥ 5 | Inbox items matched, prospect-created, or dismissed (not ignored) |
 

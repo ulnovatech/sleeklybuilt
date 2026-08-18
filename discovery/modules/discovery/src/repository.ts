@@ -54,6 +54,9 @@ export class DiscoveryRepository {
     planId?: string;
     planTargetId?: string;
     trigger?: string;
+    harvestDate?: string | null;
+    sellDate?: string | null;
+    dropRealWebsites?: boolean;
   }) {
     const db = getDb();
     const [run] = await db
@@ -68,6 +71,9 @@ export class DiscoveryRepository {
         planId: data.planId ?? null,
         planTargetId: data.planTargetId ?? null,
         trigger: data.trigger ?? 'manual',
+        harvestDate: data.harvestDate ?? null,
+        sellDate: data.sellDate ?? null,
+        dropRealWebsites: data.dropRealWebsites ?? false,
         status: 'pending',
       })
       .returning();

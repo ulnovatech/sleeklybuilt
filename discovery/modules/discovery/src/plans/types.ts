@@ -5,6 +5,7 @@ export type PlanEventType =
   | 'skipped_hours'
   | 'skipped_cap'
   | 'skipped_budget'
+  | 'skipped_credentials'
   | 'skipped_no_target'
   | 'skipped_suppressed'
   | 'target_suppressed'
@@ -31,6 +32,8 @@ export type PlanTargetsConfig = {
   keywords?: string[];
 };
 
+export type PlanSocialSearch = 'off' | 'tiktok' | 'all';
+
 export type PlanFiltersConfig = {
   presence?: 'greenfield' | 'redesign' | 'any';
   minScore?: number;
@@ -38,6 +41,8 @@ export type PlanFiltersConfig = {
   minReviews?: number;
   requirePhone?: boolean;
   requireEmail?: boolean;
+  /** Factory default tiktok. Off skips social_search even if listed in sources. */
+  socialSearch?: PlanSocialSearch;
 };
 
 export type PlanLimitsConfig = {

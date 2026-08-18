@@ -1,4 +1,4 @@
-import { boolean, integer, jsonb, pgTable, real, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, date, integer, jsonb, pgTable, real, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { accounts } from './accounts';
 
 export const discoveryRuns = pgTable('discovery_runs', {
@@ -14,6 +14,12 @@ export const discoveryRuns = pgTable('discovery_runs', {
   planId: uuid('plan_id'),
   planTargetId: uuid('plan_target_id'),
   trigger: varchar('trigger', { length: 20 }).notNull().default('manual'),
+  /** EAT calendar date this run harvested into. */
+  harvestDate: date('harvest_date', { mode: 'string' }),
+  /** First Pitch-today date for this harvest (harvest + 1 calendar day). */
+  sellDate: date('sell_date', { mode: 'string' }),
+  /** Morning path: do not keep websiteClass=real at ingest. */
+  dropRealWebsites: boolean('drop_real_websites').notNull().default(false),
   errorMessage: text('error_message'),
   startedAt: timestamp('started_at', { withTimezone: true }),
   completedAt: timestamp('completed_at', { withTimezone: true }),

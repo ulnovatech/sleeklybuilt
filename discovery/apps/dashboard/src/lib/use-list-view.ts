@@ -13,7 +13,7 @@ export type ListViewState = {
   filters: Record<string, string>;
 };
 
-const reservedKeys = new Set(['q', 'sort', 'direction', 'density', 'view', 'page', 'limit']);
+const reservedKeys = new Set(['q', 'sort', 'direction', 'density', 'view', 'page', 'limit', 'selected']);
 
 function parsePositiveInt(value: string | null, fallback: number, max?: number) {
   const parsed = value ? Number.parseInt(value, 10) : Number.NaN;

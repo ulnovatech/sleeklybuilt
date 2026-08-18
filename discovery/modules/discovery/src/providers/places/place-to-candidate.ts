@@ -1,5 +1,5 @@
 import { platformSettings } from '@agency/settings';
-import { isLinkInBioWebsite } from '@agency/scoring';
+import { classifyWebsiteClass } from '../../lib/website-class';
 import type { DiscoveredBusiness, DiscoverySearchParams } from '../types';
 import type { PlacesTextSearchResult } from './places-types';
 
@@ -36,7 +36,7 @@ export function placeSearchResultToDiscoveredBusiness(
     parseCityFromAddressComponents(place.addressComponents) ??
     (platformSettings.isAllCities(params.city) ? undefined : params.city);
   const website = place.websiteUri || undefined;
-  const websiteClass = !website ? 'none' : isLinkInBioWebsite(website) ? 'link_in_bio' : 'real';
+  const websiteClass = classifyWebsiteClass(website);
 
   return {
     name,

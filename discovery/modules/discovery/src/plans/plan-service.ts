@@ -11,6 +11,7 @@ import { DiscoveryService } from '../service';
 import { expandPlanTargets } from './expand-targets';
 import { computeNextRunAt } from './cadence';
 import { DiscoveryPlanRepository } from './plan-repository';
+import { cohortDatesForHarvest, resolveMorningPath } from './harvest-cohort';
 import type { PlanCadence, PlanFiltersConfig, PlanLimitsConfig, PlanTargetsConfig } from './types';
 
 function asCadence(raw: unknown): PlanCadence {
@@ -195,6 +196,8 @@ export class DiscoveryPlanService {
     }
 
     const isMonitor = plan.planType === 'monitor';
+    const morning = resolveMorningPath(plan);
+    const cohort = !isMonitor && morning.dropRealWebsites ? cohortDatesForHarvest(now) : null;
     const run = await this.discovery.prepareRun({
       country: target.country,
       city: target.city,
@@ -206,6 +209,9 @@ export class DiscoveryPlanService {
       planTargetId: target.id,
       trigger: opts.trigger,
       allowWithoutProviders: isMonitor,
+      harvestDate: cohort?.harvestDate ?? null,
+      sellDate: cohort?.sellDate ?? null,
+      dropRealWebsites: !isMonitor && morning.dropRealWebsites,
     });
 
     if (isMonitor) {

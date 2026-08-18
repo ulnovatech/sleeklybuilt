@@ -12,6 +12,7 @@ import type { DiscoveredBusiness, DiscoveryProvider, DiscoverySearchParams } fro
 import { placeSearchResultToDiscoveredBusiness, placesIdFromExternalId } from './place-to-candidate';
 import { PlacesApiClient } from './places-client';
 import type { PlacesTextSearchResponse } from './places-types';
+import { keepOnMorningPath } from '../../lib/website-class';
 
 export type PlacesDiscoverResult = {
   businesses: DiscoveredBusiness[];
@@ -75,6 +76,7 @@ export class GooglePlacesDiscoveryProvider implements DiscoveryProvider {
         if (businesses.length >= target) return;
         const mapped = placeSearchResultToDiscoveredBusiness(place, params);
         if (!mapped) continue;
+        if (params.dropRealWebsites && !keepOnMorningPath(mapped)) continue;
         const pid =
           placesIdFromExternalId(mapped.externalId) ??
           (mapped.metadata?.placesId as string | undefined);

@@ -96,6 +96,13 @@ assert(queries.some((q) => q.includes('site:x.com')), 'queries include x.com');
 assert(!queries.some((q) => q.includes('facebook.com')), 'queries exclude facebook');
 assert(!queries.some((q) => q.includes('instagram.com')), 'queries exclude instagram');
 
+const tiktokOnly = buildSocialSearchQueries({ ...params, socialSearch: 'tiktok' }, 8);
+assert(tiktokOnly.length > 0, 'tiktok-only still emits queries');
+assert(tiktokOnly.every((q) => q.includes('site:tiktok.com')), 'tiktok-only has no LinkedIn/YouTube/X');
+
+const socialOff = buildSocialSearchQueries({ ...params, socialSearch: 'off' }, 8);
+assert(socialOff.length === 0, 'social off emits no CSE queries');
+
 async function runQueryLimitCheck() {
   await platformSettings.ensureLoaded();
   assert(getSocialSearchQueryLimit('economy') >= 4, 'economy social query limit configured');

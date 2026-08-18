@@ -15,3 +15,4 @@ export * from './segment-performance';
 export * from './market-hunter';
 export * from './operator-console';
 export * from './drafts';
+export * from './factory';

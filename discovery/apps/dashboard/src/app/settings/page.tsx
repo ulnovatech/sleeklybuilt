@@ -844,9 +844,9 @@ export default function SettingsPage() {
         <section id="settings-credentials" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">API credentials</h3>
           <p className="text-sm text-slate-600">
-            Leave blank to keep existing stored values. Set env vars to override without storing in
-            the database. Pitch keys (OpenRouter, OpenAI, Anthropic) are also on Channel pitches.
-            Market Hunter keys (OpenRouter, xAI, Anthropic) are configured in Live Market Hunter.
+            Factory harvest needs a Google Places key. CSE is optional overlay. Reddit demand uses{' '}
+            <code className="text-xs">CUSTOM_SCRAPE_ENABLED</code>. Leave blank to keep existing
+            stored values. Pitch keys are also on Channel pitches.
           </p>
           {credentials
             .filter(
@@ -863,6 +863,9 @@ export default function SettingsPage() {
                     : '(stored in database)'
                   : '(not configured)'}
               </span>
+              {c.hint && (
+                <span className="mt-0.5 block text-xs text-slate-500">{c.hint}</span>
+              )}
               <input
                 type={c.key === 'sleekly_dash_base_url' ? 'url' : 'password'}
                 autoComplete="off"

@@ -43,6 +43,32 @@ export class CrmService {
     return lead;
   }
 
+  /** Create a pursuit if none exists; return the active lead otherwise. */
+  async ensureLeadFromBusiness(data: {
+    businessId: string;
+    priority?: string;
+    owner?: string;
+    status?: 'NEW' | 'REVIEWED';
+  }) {
+    const business = await this.discoveryRepo.getBusiness(data.businessId);
+    if (!business) throw new Error('Business not found');
+    if (!business.accountId) throw new Error('Business has no linked account');
+
+    const activeLead = await this.repo.getActiveLeadByAccount(business.accountId);
+    if (activeLead) return activeLead;
+
+    const status: 'NEW' | 'REVIEWED' = data.status ?? 'NEW';
+    const lead = await this.repo.createLead({
+      accountId: business.accountId,
+      businessId: data.businessId,
+      priority: data.priority ?? 'high',
+      owner: data.owner,
+      status,
+    });
+    await this.repo.addActivity(lead.id, 'created', 'Lead created from Pitch today freeze');
+    return lead;
+  }
+
   async transition(leadId: string, toStatus: LeadStatus, note?: string) {
     const lead = await this.repo.getLead(leadId);
     if (!lead) throw new Error('Lead not found');
@@ -141,6 +167,10 @@ export class CrmService {
 
   listLeadsPaged(input: Parameters<CrmRepository['listLeadsPaged']>[0]) {
     return this.repo.listLeadsPaged(input);
+  }
+
+  getActiveLeadByAccount(accountId: string) {
+    return this.repo.getActiveLeadByAccount(accountId);
   }
 
   listFollowUps(owner?: string) {

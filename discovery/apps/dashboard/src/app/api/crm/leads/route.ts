@@ -1,4 +1,5 @@
 import { requireOperator } from '@/lib/api-auth';
+import { ensureFrozenKeepersReady } from '@/lib/factory-purify';
 import { resolveOwnerScope } from '@/lib/owner-scope';
 import { CrmService } from '@agency/crm';
 import { createLeadSchema, crmLeadsListQuerySchema, parseListSearchParams } from '@agency/validation';
@@ -15,6 +16,10 @@ export async function GET(request: Request) {
     }
 
     const owner = await resolveOwnerScope(searchParams.get('owner'));
+    const pitchToday = parsed.data.pitchToday === '1' || parsed.data.pitchToday === 'true';
+    if (pitchToday) {
+      await ensureFrozenKeepersReady(parsed.data.sellDate);
+    }
     const result = await crm.listLeadsPaged({ ...parsed.data, owner });
 
     return NextResponse.json({

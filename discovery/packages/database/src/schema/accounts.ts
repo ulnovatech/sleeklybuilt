@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   integer,
   jsonb,
   pgTable,
@@ -35,6 +36,8 @@ export const accounts = pgTable('accounts', {
   lastPlacesFetchAt: timestamp('last_places_fetch_at', { withTimezone: true }),
   lastCrawledAt: timestamp('last_crawled_at', { withTimezone: true }),
   crawlStatus: varchar('crawl_status', { length: 30 }),
+  harvestDate: date('harvest_date', { mode: 'string' }),
+  sellDate: date('sell_date', { mode: 'string' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });

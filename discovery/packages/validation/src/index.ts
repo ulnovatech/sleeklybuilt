@@ -60,6 +60,7 @@ export const crmLeadSortSchema = z.enum([
   'priority',
   'nextFollowUpAt',
   'name',
+  'rank',
 ]);
 
 export const crmLeadsListQuerySchema = listQuerySchema.extend({
@@ -67,9 +68,50 @@ export const crmLeadsListQuerySchema = listQuerySchema.extend({
   priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
   followUpDue: z.enum(['overdue', 'upcoming', 'any']).optional(),
   sort: crmLeadSortSchema.default('updatedAt'),
+  pitchToday: z.enum(['1', 'true']).optional(),
+  unpitched: z.enum(['1', 'true']).optional(),
+  sellDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'sellDate must be YYYY-MM-DD')
+    .optional(),
 });
 
 export type CrmLeadsListQuery = z.infer<typeof crmLeadsListQuerySchema>;
+
+export const factoryDumpsterSortSchema = z.enum(['rankScore', 'name', 'missReason', 'country']);
+
+export const factoryDumpsterListQuerySchema = listQuerySchema.extend({
+  sellDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'sellDate must be YYYY-MM-DD')
+    .optional(),
+  missReason: z
+    .enum(['suppressed', 'snoozed', 'already_pursued', 'has_website', 'no_phone', 'not_operational', 'over_cut'])
+    .optional(),
+  country: z.string().trim().max(100).optional(),
+  industry: z.string().trim().max(200).optional(),
+  source: z.string().trim().max(50).optional(),
+  includeSnoozed: z.enum(['1', 'true']).optional(),
+  sort: factoryDumpsterSortSchema.default('rankScore'),
+});
+
+export type FactoryDumpsterListQuery = z.infer<typeof factoryDumpsterListQuerySchema>;
+
+export const factoryDumpsterActionSchema = z.object({
+  action: z.enum(['restore', 'pitch_anyway', 'snooze', 'suppress', 'mark_has_website']),
+  memberIds: z.array(z.string().uuid()).min(1).max(100),
+  snoozeDays: z.number().int().min(1).max(90).optional(),
+  idempotencyKey: z.string().trim().min(8).max(100),
+});
+
+export type FactoryDumpsterAction = z.infer<typeof factoryDumpsterActionSchema>;
+
+export const factoryDemandJumpSchema = z.object({
+  businessId: z.string().uuid(),
+  signalId: z.string().uuid().optional(),
+});
+
+export type FactoryDemandJumpInput = z.infer<typeof factoryDemandJumpSchema>;
 
 /** Stages that carry an actionable follow-up date; closed and archived pursuits are excluded. */
 export const FOLLOW_UP_STAGES = [
@@ -170,6 +212,7 @@ export const discoveryPlanFiltersSchema = z.object({
   minReviews: z.number().int().min(0).optional(),
   requirePhone: z.boolean().optional(),
   requireEmail: z.boolean().optional(),
+  socialSearch: z.enum(['off', 'tiktok', 'all']).optional(),
 });
 
 export const discoveryPlanLimitsSchema = z.object({

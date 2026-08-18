@@ -1,5 +1,5 @@
 import { BudgetGovernor } from '@agency/acquisition';
-import { getAcquisitionModeLabel, getDiscoveryProviderStatus } from '@agency/discovery';
+import { getAcquisitionModeLabel, getDiscoveryProviderStatus, getFactoryCredentialHealth } from '@agency/discovery';
 import { IntentService } from '@agency/intent';
 import { platformSettings } from '@agency/settings';
 import { NextResponse } from 'next/server';
@@ -11,6 +11,7 @@ const governor = new BudgetGovernor();
 export async function GET() {
   await platformSettings.ensureLoaded();
   const sources = await getDiscoveryProviderStatus();
+  const factory = await getFactoryCredentialHealth();
   const customHealth = await new IntentService().customScrapeHealth();
   const customSource = {
     name: 'reddit_custom',
@@ -36,7 +37,10 @@ export async function GET() {
   const searchQueriesPerRun = platformSettings.getRunSearchQueryLimit();
 
   let message: string | undefined;
-  if (active.length === 0) {
+  if (!factory.ready) {
+    message =
+      'Factory harvest needs a Google Places API key. Add it in Settings → API credentials. CSE is optional overlay; Reddit demand is separate.';
+  } else if (active.length === 0) {
     message =
       'No discovery sources active. Add Google Places, search credentials (CSE/Bing), Meta Graph token, or a CSV import file.';
   } else if (mode === 'economy' && !cse?.canSpend && !sources.find((s) => s.name === 'csv_import')?.configured) {
@@ -48,6 +52,7 @@ export async function GET() {
   return NextResponse.json({
     sources: allSources,
     ready: active.length > 0,
+    factory,
     budget: {
       providers: budget,
       acquisitionMode: mode,

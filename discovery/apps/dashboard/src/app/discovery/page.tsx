@@ -68,6 +68,20 @@ type BudgetProvider = {
   canSpend: boolean;
 };
 
+type FactoryCredentialCheck = {
+  id: string;
+  label: string;
+  required: boolean;
+  configured: boolean;
+  ready: boolean;
+  reason?: string;
+};
+
+type FactoryCredentialHealth = {
+  ready: boolean;
+  checks: FactoryCredentialCheck[];
+};
+
 type SourceStatus = {
   name: string;
   label: string;
@@ -144,6 +158,7 @@ function DiscoveryPageContent() {
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<SourceStatus[]>([]);
   const [sourcesReady, setSourcesReady] = useState(false);
+  const [factoryHealth, setFactoryHealth] = useState<FactoryCredentialHealth | null>(null);
   const [options, setOptions] = useState<DiscoveryOptions | null>(null);
   const [budgetInfo, setBudgetInfo] = useState<{
     acquisitionMode: string;
@@ -207,6 +222,7 @@ function DiscoveryPageContent() {
         sources: SourceStatus[];
         ready: boolean;
         message?: string;
+        factory?: FactoryCredentialHealth;
         budget?: {
           acquisitionMode: string;
           searchQueriesPerRun?: number;
@@ -215,7 +231,9 @@ function DiscoveryPageContent() {
       }>('/api/discovery/sources').then((d) => {
         setSources(d.sources);
         setSourcesReady(d.ready);
+        setFactoryHealth(d.factory ?? null);
         if (d.budget) setBudgetInfo(d.budget);
+        if (d.factory && !d.factory.ready) setSourcesOpen(true);
         if (!d.ready && d.message) setError(d.message);
       }),
     [],
@@ -252,16 +270,18 @@ function DiscoveryPageContent() {
     );
   }, [loadSources]);
 
+  const factoryBlocked = factoryHealth != null && !factoryHealth.ready;
+
   useEffect(() => {
     const mq = window.matchMedia('(min-width: 1024px)');
     const sync = () => {
       setStartOpen(mq.matches);
-      setSourcesOpen(false);
+      if (!factoryBlocked) setSourcesOpen(false);
     };
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
-  }, []);
+  }, [factoryBlocked]);
 
   const currentDefinition = useMemo<SavedViewDefinition>(
     () => ({
@@ -352,6 +372,26 @@ function DiscoveryPageContent() {
         }
       />
 
+      {factoryHealth && !factoryHealth.ready && (
+        <div
+          role="alert"
+          className="rounded-lg border border-warning/30 bg-warning-muted p-4 text-sm text-warning-foreground"
+        >
+          <p className="font-medium text-ink">Factory harvest is waiting on Google Places</p>
+          <p className="mt-1">
+            {factoryHealth.checks.find((c) => c.id === 'places')?.reason ??
+              'Add a Google Places API key in Settings.'}{' '}
+            CSE and Reddit are overlays — they do not replace Places for the morning list.
+          </p>
+          <Link
+            href="/settings#settings-credentials"
+            className="mt-2 inline-flex min-h-11 items-center text-accent hover:underline"
+          >
+            Open API credentials
+          </Link>
+        </div>
+      )}
+
       <CollapsibleSection
         id="discovery-sources"
         className="rounded-lg border border-line bg-surface-raised px-4 py-3"
@@ -359,12 +399,38 @@ function DiscoveryPageContent() {
         open={sourcesOpen}
         onOpenChange={setSourcesOpen}
         trailing={
-          budgetInfo ? (
-            <span className="text-xs font-normal text-ink-muted">{budgetInfo.acquisitionMode}</span>
-          ) : undefined
+          <span className="flex flex-wrap items-center gap-2">
+            {factoryHealth ? (
+              <StatusBadge tone={factoryHealth.ready ? 'success' : 'warning'}>
+                {factoryHealth.ready ? 'Factory ready' : 'Factory blocked'}
+              </StatusBadge>
+            ) : null}
+            {budgetInfo ? (
+              <span className="text-xs font-normal text-ink-muted">{budgetInfo.acquisitionMode}</span>
+            ) : null}
+          </span>
         }
       >
-        <ul className="space-y-1 pt-2 text-sm">
+        {factoryHealth && (
+          <ul className="space-y-1 pt-2 text-sm">
+            {factoryHealth.checks.map((check) => (
+              <li key={check.id} className="flex flex-wrap items-center gap-2">
+                <StatusBadge
+                  tone={check.ready ? 'success' : check.required ? 'danger' : 'neutral'}
+                >
+                  {check.label}
+                </StatusBadge>
+                <span className="text-ink-muted">
+                  {check.ready ? 'ready' : check.required ? 'required' : 'optional'}
+                </span>
+                {check.reason && (
+                  <span className="text-xs text-warning-foreground">({check.reason})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <ul className={`${factoryHealth ? 'mt-3 border-t border-line' : ''} space-y-1 pt-2 text-sm`}>
           {sources.map((s) => (
             <li key={s.name} className="flex flex-wrap items-center gap-2">
               <StatusBadge
@@ -413,8 +479,8 @@ function DiscoveryPageContent() {
             Configure at least one source in{' '}
             <Link href="/settings#settings-credentials" className="text-accent hover:underline">
               Settings
-            </Link>
-            .
+            </Link>{' '}
+            to start a manual run. Factory harvest still needs Places even if CSV is ready.
           </p>
         )}
       </CollapsibleSection>
