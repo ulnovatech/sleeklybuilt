@@ -1,0 +1,303 @@
+---
+description: Mobile-first product design and implementation rules. Ensures every experience works from the smallest screen upward.
+alwaysApply: true
+---
+
+# MOBILE-FIRST RULES
+
+## Purpose
+
+This rule defines how all interfaces and products should be designed and implemented across devices.
+
+Mobile is not a reduced desktop experience.
+
+Mobile is the foundation from which larger experiences are expanded.
+
+---
+
+# Core Principle
+
+## Start Small. Expand Intelligently.
+
+The design process must follow:
+
+```text id="w4n7qa"
+Mobile Experience
+
+↓
+
+Tablet Enhancement
+
+↓
+
+Desktop Expansion
+```
+
+Never:
+
+```text id="p8m3vx"
+Desktop Layout
+
+↓
+
+Compressed Mobile Version
+```
+
+---
+
+# Mobile User Reality
+
+Design must consider:
+
+* smaller screens
+* touch interaction
+* limited attention
+* slower connections
+* variable devices
+* one-handed usage
+
+---
+
+# Content Priority
+
+Mobile forces prioritization.
+
+Every screen must identify:
+
+```text id="x6m9qa"
+What is essential?
+
+What is useful?
+
+What is optional?
+```
+
+Prioritize:
+
+1. Primary user goal
+2. Main action
+3. Required information
+4. Supporting content
+
+---
+
+# Layout Rules
+
+Mobile layouts should use:
+
+* vertical flow
+* clear grouping
+* intentional spacing
+* strong hierarchy
+
+Avoid:
+
+* desktop columns forced onto mobile
+* crowded interfaces
+* excessive scrolling without structure
+
+---
+
+# Touch Interaction Rules
+
+Design for fingers.
+
+Requirements:
+
+* comfortable touch targets
+* enough spacing between actions
+* clear pressed states
+* predictable gestures
+
+Avoid:
+
+* tiny buttons
+* precision-dependent controls
+* hidden interactions
+
+---
+
+# Navigation Rules
+
+Choose navigation based on user needs.
+
+Common patterns:
+
+* bottom navigation
+* tabs
+* drawers
+* contextual menus
+
+Navigation must be:
+
+* visible
+* predictable
+* easy to reach
+
+---
+
+# Mobile Components
+
+Every component must support mobile behavior.
+
+Consider:
+
+* size
+* spacing
+* readability
+* interaction states
+* orientation changes
+
+Required states:
+
+```text id="g7v2mq"
+Default
+
+↓
+
+Pressed
+
+↓
+
+Loading
+
+↓
+
+Success
+
+↓
+
+Error
+
+↓
+
+Disabled
+```
+
+---
+
+# Forms On Mobile
+
+Optimize input effort.
+
+Use:
+
+* correct keyboard types
+* autofill support
+* smart defaults
+* validation near errors
+
+Avoid:
+
+* unnecessary fields
+* long forms
+* repeated information requests
+
+---
+
+# Responsive Expansion
+
+When expanding to larger screens:
+
+Add:
+
+* more information visibility
+* improved workflows
+* enhanced productivity
+
+Do not simply enlarge:
+
+* text
+* cards
+* spacing
+
+---
+
+# Mobile Performance
+
+Prioritize:
+
+* fast loading
+* efficient assets
+* smooth scrolling
+* responsive interaction
+
+Consider:
+
+* older devices
+* limited bandwidth
+* battery impact
+
+---
+
+# Images And Media
+
+Optimize:
+
+* image sizes
+* loading strategy
+* responsive formats
+
+Avoid:
+
+* oversized assets
+* unnecessary background media
+
+---
+
+# Accessibility Requirements
+
+Mobile experiences must support:
+
+* readable text
+* sufficient contrast
+* screen readers
+* touch accessibility
+* reduced motion preferences
+
+---
+
+# Mobile Testing Checklist
+
+Validate:
+
+```text id="r5n8vx"
+✓ Small screen layout
+
+✓ Touch interactions
+
+✓ Navigation usability
+
+✓ Form completion
+
+✓ Loading behavior
+
+✓ Error handling
+
+✓ Accessibility
+
+✓ Performance
+```
+
+---
+
+# Anti-Patterns
+
+Never create:
+
+* desktop-first layouts
+* hidden mobile features
+* tiny touch controls
+* unreadable content
+* complex gestures without alternatives
+* mobile experiences that feel like compromises
+
+---
+
+# Final Rule
+
+Mobile-first is not a limitation.
+
+It is the discipline of discovering the essential experience and building upward from there.
+
+Every product should feel intentionally designed on every device.

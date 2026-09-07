@@ -20,7 +20,9 @@ public_html/
 **/.env.bak
 
 # IDE
-.cursor/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 .vscode/
 .idea/
 

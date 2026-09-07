@@ -1,0 +1,307 @@
+---
+description: Production engineering standards for clean, maintainable, scalable code.
+alwaysApply: true
+---
+
+# CODE QUALITY RULES
+
+## Purpose
+
+This rule defines the engineering standards required when writing, modifying, or reviewing code.
+
+Code is not considered successful merely because it runs.
+
+Production code must be:
+
+* understandable
+* maintainable
+* reliable
+* scalable
+* secure
+
+---
+
+# Core Engineering Principle
+
+## Optimize For The Next Developer
+
+Code should be written for:
+
+* future maintenance
+* collaboration
+* debugging
+* extension
+
+Avoid solutions that only make sense to the original author.
+
+---
+
+# Code Before Speed
+
+Do not prioritize fast output over quality.
+
+Before writing code:
+
+Understand:
+
+* existing architecture
+* project conventions
+* dependencies
+* data flow
+* expected behavior
+
+Avoid:
+
+* rewriting working systems unnecessarily
+* introducing duplicate patterns
+
+---
+
+# Clean Code Standards
+
+Code must have:
+
+## Clear Naming
+
+Names should explain intent.
+
+Prefer:
+
+```text id="9v5k2m"
+calculateOrderTotal()
+
+validateUserPermission()
+
+getCustomerProfile()
+```
+
+Avoid:
+
+```text id="x2m8qa"
+calc()
+
+data()
+
+handle()
+```
+
+---
+
+# Functions
+
+Functions should:
+
+* do one clear thing
+* have predictable inputs
+* return understandable outputs
+
+Avoid:
+
+* giant functions
+* hidden side effects
+* mixed responsibilities
+
+---
+
+# Components
+
+UI components must:
+
+* have clear responsibility
+* remain reusable
+* avoid unnecessary complexity
+
+Avoid:
+
+* massive components
+* duplicated UI logic
+* business logic mixed with presentation
+
+---
+
+# File Organization
+
+Maintain:
+
+* logical grouping
+* predictable naming
+* clear ownership
+
+Avoid:
+
+* random file placement
+* unnecessary nesting
+* unclear responsibilities
+
+---
+
+# Error Handling
+
+Errors are part of normal operation.
+
+Every system should:
+
+* detect failures
+* communicate clearly
+* recover safely
+
+Avoid:
+
+* silent failures
+* swallowed errors
+* confusing messages
+
+---
+
+# Data Handling
+
+Treat external data as unreliable.
+
+Always consider:
+
+* missing values
+* invalid formats
+* unexpected responses
+* permission issues
+
+Never assume data is perfect.
+
+---
+
+# Security Standards
+
+Never:
+
+* expose secrets
+* trust client-only validation
+* store sensitive data carelessly
+
+Always:
+
+* validate inputs
+* protect permissions
+* handle authentication securely
+
+---
+
+# Dependency Management
+
+Before adding dependencies:
+
+Ask:
+
+```text id="p7m3xq"
+Does this solve a real problem?
+
+Is the project already capable?
+
+Will this increase maintenance cost?
+```
+
+Avoid:
+
+* unnecessary packages
+* duplicate libraries
+* abandoned dependencies
+
+---
+
+# Performance Standards
+
+Consider:
+
+* rendering efficiency
+* network usage
+* memory consumption
+* bundle size
+
+Optimize where it improves user experience.
+
+Avoid:
+
+* premature optimization
+* complexity without benefit
+
+---
+
+# Testing Mindset
+
+Code should be designed so it can be verified.
+
+Consider:
+
+* expected behavior
+* edge cases
+* failure scenarios
+
+Test:
+
+* critical workflows
+* business logic
+* reusable components
+
+---
+
+# Refactoring Rules
+
+Improve code when:
+
+* complexity increases
+* duplication appears
+* maintenance becomes difficult
+
+Do not refactor only for personal preference.
+
+---
+
+# Forbidden Patterns
+
+Never introduce:
+
+```text id="m8q4va"
+❌ TODO for unfinished core features
+
+❌ Fake implementations
+
+❌ Placeholder logic
+
+❌ Hardcoded business rules
+
+❌ Duplicate functionality
+
+❌ Dead code
+
+❌ Unexplained hacks
+```
+
+---
+
+# Production Readiness Checklist
+
+Before completion:
+
+```text id="q5n8mw"
+✓ Code is readable
+
+✓ Structure is logical
+
+✓ Errors are handled
+
+✓ Security is considered
+
+✓ Performance is acceptable
+
+✓ Components are reusable
+
+✓ Edge cases are covered
+
+✓ No temporary shortcuts remain
+```
+
+---
+
+# Final Rule
+
+Good code is not code that works once.
+
+Good code is code that remains understandable and reliable as the product grows.

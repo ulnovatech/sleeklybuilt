@@ -1,0 +1,97 @@
+---
+description: Hard enforcement — Design OS must be read and followed before any UI/UX code. Strict execution order. Judgment constrained.
+alwaysApply: true
+---
+
+# DESIGN OS — HARD ENFORCEMENT
+
+This rule overrides convenience.
+
+You are building inside Design OS. Documentation is not optional background. It is the specification.
+
+---
+
+## Absolute requirement
+
+For **any** user-facing design or code (UI, layout, component, page, form, dashboard, marketing section, microcopy):
+
+1. **Read** `design-os/INDEX.md` and follow its routing for this task.
+2. **Read** the governing pattern file(s) under `design-os/patterns/` (open the file; do not rely on memory).
+3. **Read** the cited intelligence and systems documents as needed for decisions you will make.
+4. **State** (briefly, before coding) which docs govern this work.
+5. **Produce** UX gate artifacts when `ui-ux-gate` applies: User Journey, UX Flow, Screen Layout, Component Structure, plus Empty / Loading / Error.
+6. **Only then** write code.
+
+If you have not opened the governing pattern in this turn for a new screen, you are not allowed to implement that screen yet.
+
+---
+
+## Strict execution order (never reorder)
+
+```
+Classify
+→ INDEX routing
+→ Intelligence
+→ Pattern (complete solution + states)
+→ Systems / Components
+→ UX gate artifacts
+→ Implement
+→ Checklists / Reviews
+→ Final approval
+```
+
+Skipping a step is a defect.
+
+---
+
+## Prose must become product behavior
+
+- Patterns define layouts, states, and interactions — implement them, do not approximate vaguely.
+- Systems define tokens and rules — consume semantic roles; do not invent one-off hex or spacing.
+- Reviews define ship criteria — treat failed checklist items as blockers.
+
+---
+
+## Token enforcement
+
+When Design Tokens / Color System roles exist for the app:
+
+- Forbidden in new UI code: unexplained raw hex, magic spacing, one-off radii.
+- Marketing hub: use semantic CSS variables / Tailwind keys mapped in `marketing/src/index.css` and `marketing/DESIGN.md`.
+- Prefer `var(--color-surface-base)` / Tailwind semantic tokens over `#f8f4ec` in new work.
+
+---
+
+## Coverage rule
+
+If no pattern fits:
+
+1. Say so explicitly.
+2. Compose from the closest patterns + systems.
+3. Do not invent a new pattern silently.
+4. If a durable new pattern is required, write `design-os/patterns/<name>.md` to house standard **before** or **with** the feature — never leave the knowledge gap.
+
+Existing required patterns include file upload, multi-step form, data import, and error recovery — use them when applicable.
+
+---
+
+## Judgment constraint
+
+Your taste is subordinate to Design OS.
+
+When two designs both “work”:
+
+- Choose the one that matches the pattern and reduces cognitive load.
+- Choose one primary action.
+- Choose complete states over decorative extras.
+- Run the intelligence rulebook self-review before claiming done.
+
+A screen that merely works is unfinished.
+
+---
+
+## Repo entry
+
+Root `AGENTS.md` restates this contract. `.cursor/rules/*.mdc` and `design-os/` are the source of truth.
+
+On conflict between habit and Design OS: Design OS wins.

@@ -1,0 +1,311 @@
+---
+description: Core Design OS operating rules. Applies to every project, every file, and every interaction.
+alwaysApply: true
+---
+
+# DESIGN OS — CORE RULES
+
+## Purpose
+
+You are operating inside Design OS.
+
+Your responsibility is not to generate quick prototypes.
+
+Your responsibility is to create production-quality digital products that are:
+
+* usable
+* scalable
+* consistent
+* accessible
+* maintainable
+* commercially viable
+
+Every decision must prioritize real-world product quality.
+
+---
+
+# Core Philosophy
+
+## Build Complete Experiences
+
+Do not think in isolated screens.
+
+Think in:
+
+```
+User Goal
+
+↓
+
+Journey
+
+↓
+
+Interface
+
+↓
+
+Interaction
+
+↓
+
+System Behavior
+
+↓
+
+Outcome
+```
+
+A screen is only one part of a larger experience.
+
+---
+
+# Production Quality Standard
+
+Never produce:
+
+* placeholder implementations
+* fake functionality
+* incomplete flows
+* temporary architecture
+* demo-only solutions
+
+Avoid:
+
+* "for now"
+* "later"
+* "TODO" for core functionality
+* mock behavior presented as finished
+
+If a feature is required, implement the complete solution.
+
+---
+
+# Reality First Engineering
+
+Design for real users.
+
+Assume:
+
+* users make mistakes
+* data is incomplete
+* networks fail
+* devices vary
+* businesses have messy workflows
+
+Every feature must consider:
+
+```
+Normal State
+
+↓
+
+Empty State
+
+↓
+
+Loading State
+
+↓
+
+Error State
+
+↓
+
+Recovery Path
+```
+
+---
+
+# User Experience Priority
+
+The user experience comes before implementation convenience.
+
+Always ask:
+
+```
+What is the user trying to accomplish?
+
+What information do they need?
+
+What action should happen next?
+
+What could confuse them?
+```
+
+---
+
+# Design Quality Rules
+
+Every interface must have:
+
+## Clear Hierarchy
+
+Users should immediately understand:
+
+* importance
+* grouping
+* available actions
+
+---
+
+## Consistency
+
+Use:
+
+* shared patterns
+* reusable components
+* established interaction behavior
+
+Avoid:
+
+* one-off designs
+* random styling decisions
+
+---
+
+## Simplicity
+
+Reduce unnecessary complexity.
+
+Prefer:
+
+* fewer steps
+* clear decisions
+* progressive disclosure
+
+Avoid:
+
+* overwhelming users
+* unnecessary options
+
+---
+
+# Accessibility Is Mandatory
+
+Accessibility is not optional.
+
+Always consider:
+
+* readable typography
+* sufficient contrast
+* keyboard navigation
+* screen readers
+* touch accessibility
+* reduced motion
+
+---
+
+# Mobile First
+
+All products must consider mobile from the beginning.
+
+Do not:
+
+* design desktop first then shrink
+
+Instead:
+
+```
+Mobile Constraint
+
+↓
+
+Essential Experience
+
+↓
+
+Expanded Layout
+```
+
+---
+
+# Component Thinking
+
+Build systems, not isolated elements.
+
+Before creating UI:
+
+Ask:
+
+* Does this already exist?
+* Should this become a reusable component?
+* What states does it need?
+
+Components must support:
+
+* default
+* hover
+* focus
+* active
+* disabled
+* loading
+* error
+* success
+
+---
+
+# Code Quality Rules
+
+Code must prioritize:
+
+* readability
+* maintainability
+* predictable structure
+* clear naming
+
+Avoid:
+
+* unnecessary abstraction
+* duplicated logic
+* hidden complexity
+
+---
+
+# Decision Making
+
+When multiple solutions exist:
+
+Choose the solution that best balances:
+
+```
+User Value
+
++
+
+Maintainability
+
++
+
+Performance
+
++
+
+Scalability
+```
+
+Do not optimize only for speed of implementation.
+
+---
+
+# Before Writing Code
+
+Always understand:
+
+1. Product purpose
+2. User workflow
+3. Existing architecture
+4. Design system rules
+5. Technical constraints
+
+Do not immediately generate code without context.
+
+---
+
+# Final Authority Rule
+
+When uncertain, choose the option that creates the most professional, trustworthy, and scalable product experience.
+
+The goal is not to make something that works.
+
+The goal is to make something worth using.

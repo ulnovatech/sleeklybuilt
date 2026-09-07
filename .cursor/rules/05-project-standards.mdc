@@ -1,0 +1,358 @@
+---
+description: Project-wide standards for architecture, structure, delivery, and long-term maintainability.
+alwaysApply: true
+---
+
+# PROJECT STANDARDS RULES
+
+## Purpose
+
+This rule defines the standards every project must follow when being designed, built, reviewed, and maintained.
+
+A project is not successful because it compiles.
+
+A successful project is:
+
+* structured
+* understandable
+* maintainable
+* scalable
+* production-ready
+
+---
+
+# Core Principle
+
+## Build Systems, Not Features
+
+Every implementation decision must consider:
+
+```text id="x7m4qa"
+Current Requirement
+
++
+
+Future Growth
+
++
+
+Maintenance Cost
+
++
+
+User Experience
+```
+
+Avoid solutions that only work for the immediate task.
+
+---
+
+# Project Understanding
+
+Before making changes:
+
+Understand:
+
+* project purpose
+* existing architecture
+* technology stack
+* file structure
+* design system
+* business requirements
+
+Do not introduce patterns that conflict with the project.
+
+---
+
+# Architecture Standards
+
+Projects should have:
+
+* clear boundaries
+* logical organization
+* predictable structure
+* separation of concerns
+
+Prefer:
+
+```text id="m9v3qx"
+Presentation
+
+↓
+
+Business Logic
+
+↓
+
+Data Layer
+
+↓
+
+Infrastructure
+```
+
+---
+
+# File Organization
+
+Files should be:
+
+* named clearly
+* grouped logically
+* easy to locate
+
+Avoid:
+
+* random placement
+* duplicate files
+* unclear naming
+
+---
+
+# Naming Standards
+
+Use names that communicate purpose.
+
+Good:
+
+```text id="p4m8qa"
+UserProfileCard
+
+OrderService
+
+PaymentController
+```
+
+Avoid:
+
+```text id="k6v2mz"
+Component1
+
+HelperNew
+
+TempFile
+```
+
+---
+
+# Configuration Standards
+
+Configuration should be:
+
+* centralized
+* documented
+* secure
+
+Never:
+
+* hardcode secrets
+* duplicate environment values
+* expose private configuration
+
+---
+
+# Environment Management
+
+Separate:
+
+* development
+* testing
+* production
+
+Ensure:
+
+* environment variables are clear
+* deployment requirements are documented
+* sensitive values are protected
+
+---
+
+# Dependency Standards
+
+Before adding dependencies:
+
+Evaluate:
+
+```text id="v8m5qa"
+Need
+
+↓
+
+Security
+
+↓
+
+Maintenance
+
+↓
+
+Performance Impact
+```
+
+Avoid:
+
+* unnecessary packages
+* duplicate solutions
+* abandoned tools
+
+---
+
+# Documentation Standards
+
+Important systems should document:
+
+* purpose
+* setup
+* architecture
+* usage
+* limitations
+
+Documentation should help another developer continue the project.
+
+---
+
+# Feature Development Standards
+
+Every feature should define:
+
+## Purpose
+
+Why does this exist?
+
+---
+
+## User Value
+
+Who benefits?
+
+---
+
+## Technical Requirements
+
+How should it work?
+
+---
+
+## Completion Criteria
+
+How do we know it is finished?
+
+---
+
+# Quality Before Completion
+
+Before marking work complete:
+
+Verify:
+
+```text id="c8n4vx"
+✓ Feature works
+
+✓ Edge cases considered
+
+✓ Errors handled
+
+✓ Responsive behavior works
+
+✓ Accessibility considered
+
+✓ Code is maintainable
+
+✓ Documentation updated
+```
+
+---
+
+# Testing Standards
+
+Test:
+
+* important workflows
+* business-critical logic
+* reusable components
+* failure scenarios
+
+Do not assume:
+
+"it works on my machine."
+
+---
+
+# Security Standards
+
+Every project must consider:
+
+* authentication
+* authorization
+* data protection
+* input validation
+* secret management
+
+Security is part of quality.
+
+---
+
+# Performance Standards
+
+Consider:
+
+* loading speed
+* rendering efficiency
+* network usage
+* resource consumption
+
+Optimize based on user impact.
+
+---
+
+# Delivery Standards
+
+Before delivery:
+
+Confirm:
+
+```text id="z2m7qa"
+Production readiness
+
+↓
+
+Quality review
+
+↓
+
+Documentation
+
+↓
+
+Deployment confidence
+```
+
+---
+
+# Forbidden Practices
+
+Never introduce:
+
+```text id="f6q8mv"
+❌ Temporary hacks
+
+❌ Fake implementations
+
+❌ Untracked shortcuts
+
+❌ Unnecessary complexity
+
+❌ Broken conventions
+
+❌ Ignored errors
+```
+
+---
+
+# Final Rule
+
+Every project should be built as if it will be maintained, expanded, and trusted by real users.
+
+Do not create disposable code.
+
+Create durable products.

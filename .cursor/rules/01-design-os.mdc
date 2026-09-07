@@ -1,0 +1,226 @@
+---
+description: Design OS execution framework. Requires consulting design-os/INDEX.md and AGENTS.md before UI work. Strict loop.
+alwaysApply: true
+---
+
+# DESIGN OS — EXECUTION RULES
+
+## Purpose
+
+This rule defines how Cursor should apply the Design OS framework when creating, modifying, or reviewing any product experience.
+
+Root contract: `/AGENTS.md`  
+Knowledge map: `/design-os/INDEX.md`  
+Hard enforcement: `.cursor/rules/design-os-enforcement.mdc`
+
+Before generating UI, UX plans, components, or screens: consult the Design OS index, open the governing pattern file, and use the relevant knowledge files.
+
+Design OS is the operating system for product quality.
+
+---
+
+# Mandatory Loop (strict — never reorder)
+
+```
+Classify product
+
+↓
+
+INDEX routing
+
+↓
+
+Intelligence (decide what and why)
+
+↓
+
+Pattern (complete solution)
+
+↓
+
+Systems / Components
+
+↓
+
+UX gate artifacts
+
+↓
+
+Implement
+
+↓
+
+Reviews / Checklists
+
+↓
+
+Final approval
+```
+
+On conflict between a `.cursor/command` and a `design-os/prompt`, the prompt wins. Update the command.
+
+Before coding a new screen in this turn: open the governing `design-os/patterns/*.md` file. Memory is not a substitute.
+
+---
+
+# Phase 1 — Understand
+
+Before creating anything, identify:
+
+## Product Context
+
+* what is being built
+* who uses it
+* why it exists
+* what success means
+
+## User Context
+
+* user goals
+* user problems
+* user expectations
+* user frustrations
+
+## Business Context
+
+* business objectives
+* operational requirements
+* growth needs
+
+---
+
+# Phase 2 — Structure
+
+Before UI, define:
+
+## Information Architecture
+
+* navigation
+* content grouping
+* hierarchy
+* workflows
+
+## User Flows
+
+```
+Entry Point
+
+↓
+
+User Action
+
+↓
+
+System Response
+
+↓
+
+Completion State
+```
+
+---
+
+# Phase 3 — Design
+
+Apply Design OS principles from the consulted documents.
+
+Every design must include:
+
+* visual system (typography, spacing, color, components)
+* interaction system (actions, feedback, states, transitions)
+* responsive system (mobile first, then tablet, then desktop)
+
+---
+
+# Screen Design Rules
+
+Every screen must define:
+
+```
+Purpose
+
+↓
+
+Primary User Goal
+
+↓
+
+Main Action
+
+↓
+
+Supporting Information
+
+↓
+
+States
+
+↓
+
+Edge Cases
+```
+
+---
+
+# Required Screen States
+
+Never create incomplete screens.
+
+Every meaningful screen requires:
+
+* Loading — what happens while data arrives
+* Empty — what happens when no data exists
+* Error — what happens when something fails
+* Success — how completion appears
+* Offline / degraded — how the experience degrades when relevant
+
+---
+
+# Component Rules
+
+Before creating a component:
+
+* Does a similar component exist in Design OS?
+* Can this be reused?
+* What variants and states are required?
+
+Components must be reusable, predictable, accessible, and fully stated.
+
+---
+
+# Design Quality Gates
+
+A design is incomplete if it lacks:
+
+```
+✓ Clear purpose
+✓ User flow
+✓ Responsive behavior
+✓ Complete states
+✓ Accessibility
+✓ Consistent components
+✓ Review validation
+```
+
+---
+
+# Anti-Patterns
+
+Never create:
+
+* beautiful but confusing interfaces
+* screens without user goals
+* components without states
+* layouts without responsive behavior
+* designs disconnected from Design OS patterns
+* implementations that skip the INDEX routing step
+
+---
+
+# Final Rule
+
+Design is not decoration.
+
+Design is the process of transforming user problems into clear, usable, and valuable experiences.
+
+Every output must demonstrate intentional product thinking grounded in Design OS.

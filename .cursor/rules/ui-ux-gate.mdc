@@ -1,0 +1,36 @@
+---
+alwaysApply: true
+---
+# UI/UX Gate
+
+No user-facing feature may be implemented until:
+
+1. User goal is identified.
+2. User journey is mapped.
+3. Screen structure is designed.
+4. Component hierarchy is defined.
+5. Mobile experience is considered.
+6. Empty states are designed.
+7. Loading states are designed.
+8. Error states are designed.
+9. Governing Design OS pattern(s) have been opened and applied (`design-os/INDEX.md` → `patterns/*`).
+
+Implementation before UX approval is prohibited.
+
+For every feature first produce:
+
+- User Journey
+- UX Flow
+- Screen Layout
+- Component Structure
+- Named Design OS docs used (pattern + intelligence at minimum)
+
+Only then generate code.
+
+## Strict order
+
+```
+Classify → INDEX → Intelligence → Pattern → Systems/Components → Gate artifacts → Code → Reviews → Final approval
+```
+
+Do not reverse this order for speed.

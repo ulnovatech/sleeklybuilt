@@ -1,0 +1,387 @@
+---
+description: Design review standards for evaluating interfaces, experiences, and product quality before approval.
+alwaysApply: true
+---
+
+# DESIGN REVIEW RULES
+
+## Purpose
+
+This rule defines how Cursor should review, evaluate, and improve product experiences.
+
+A design review is not a visual opinion.
+
+It is a structured quality evaluation against:
+
+* usability
+* consistency
+* accessibility
+* performance
+* business goals
+* user outcomes
+
+---
+
+# Core Principle
+
+## Review Against Standards, Not Preference
+
+A design should not be judged by:
+
+* personal taste
+* trends
+* subjective opinions
+
+A design should be evaluated by:
+
+```text id="z6m4qa"
+User Need
+
+↓
+
+Experience Quality
+
+↓
+
+System Consistency
+
+↓
+
+Technical Reality
+
+↓
+
+Business Outcome
+```
+
+---
+
+# Review Process
+
+Every review follows:
+
+```text id="p8x3mv"
+Understand Context
+
+↓
+
+Inspect Experience
+
+↓
+
+Identify Issues
+
+↓
+
+Prioritize Improvements
+
+↓
+
+Validate Solution
+```
+
+---
+
+# 1. User Experience Review
+
+Evaluate:
+
+## Clarity
+
+Ask:
+
+* Is the purpose obvious?
+* Does the user know what to do?
+* Are important actions visible?
+
+Reject:
+
+* confusing flows
+* unclear terminology
+* hidden actions
+
+---
+
+## Efficiency
+
+Evaluate:
+
+* number of steps
+* cognitive effort
+* repetitive actions
+
+Improve:
+
+* unnecessary friction
+* complicated workflows
+* excessive input
+
+---
+
+## Feedback
+
+Confirm:
+
+* actions receive responses
+* system status is visible
+* progress is communicated
+
+Reject:
+
+* silent interactions
+* confusing waiting states
+
+---
+
+# 2. Visual Review
+
+Evaluate:
+
+## Hierarchy
+
+Check:
+
+* importance
+* grouping
+* focus
+
+Users should immediately understand:
+
+```text id="m5q8vx"
+What matters?
+
+Where should attention go?
+
+What action is next?
+```
+
+---
+
+## Consistency
+
+Review:
+
+* typography
+* spacing
+* colors
+* components
+* patterns
+
+Reject:
+
+* inconsistent styling
+* random variations
+
+---
+
+# 3. Interaction Review
+
+Evaluate:
+
+* buttons
+* forms
+* navigation
+* states
+* transitions
+
+Every interaction requires:
+
+```text id="x9m2qa"
+Action
+
+↓
+
+Feedback
+
+↓
+
+Result
+```
+
+---
+
+# 4. Responsive Review
+
+Check:
+
+## Mobile
+
+* layout behavior
+* touch interaction
+* readability
+
+## Tablet
+
+* adaptation
+* content scaling
+
+## Desktop
+
+* information density
+* productivity improvements
+
+Reject:
+
+* broken layouts
+* desktop-only assumptions
+
+---
+
+# 5. Accessibility Review
+
+Validate:
+
+* contrast
+* keyboard access
+* screen reader support
+* semantic structure
+* touch accessibility
+
+Reject:
+
+* inaccessible workflows
+* color-only meaning
+* missing labels
+
+---
+
+# 6. Component Review
+
+Evaluate:
+
+* reusability
+* states
+* consistency
+* maintainability
+
+Ask:
+
+```text id="a7m9qp"
+Should this be a shared pattern?
+
+Does this component handle real scenarios?
+```
+
+---
+
+# 7. Product Review
+
+Evaluate:
+
+* does it solve the intended problem?
+* does it support user goals?
+* does it create meaningful value?
+
+Reject:
+
+* unnecessary features
+* solutions without clear purpose
+
+---
+
+# Issue Prioritization
+
+Classify findings:
+
+## Critical
+
+Blocks release.
+
+Examples:
+
+* broken workflow
+* accessibility failure
+* security issue
+
+---
+
+## Major
+
+Requires improvement.
+
+Examples:
+
+* confusing experience
+* inconsistent patterns
+
+---
+
+## Minor
+
+Polish improvement.
+
+Examples:
+
+* spacing refinement
+* visual adjustments
+
+---
+
+# Review Output Format
+
+Reviews should provide:
+
+```text id="q3v8mw"
+Finding
+
+↓
+
+Why It Matters
+
+↓
+
+Recommended Improvement
+
+↓
+
+Priority
+```
+
+---
+
+# Review Anti-Patterns
+
+Never provide:
+
+* vague criticism
+* personal preference only
+* redesign without understanding
+* feedback without reasoning
+
+Avoid:
+
+"Make it nicer."
+
+Instead:
+
+"The hierarchy does not communicate the primary action. Increase contrast and simplify competing elements."
+
+---
+
+# Final Review Checklist
+
+```text id="w7n5qa"
+✓ User goals are clear
+
+✓ Workflows are efficient
+
+✓ Visual hierarchy works
+
+✓ Components are consistent
+
+✓ Responsive behavior works
+
+✓ Accessibility is supported
+
+✓ States are complete
+
+✓ Product value is clear
+```
+
+---
+
+# Final Rule
+
+A review is not about finding flaws.
+
+A review is about ensuring the product achieves its purpose at the highest possible quality level.

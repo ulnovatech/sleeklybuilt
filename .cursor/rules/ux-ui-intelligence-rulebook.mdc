@@ -1,0 +1,232 @@
+---
+description: Condensed UX/UI intelligence gate. Always-on quality bar; full depth lives in design-os/.
+alwaysApply: true
+---
+
+# UI/UX Intelligence Rulebook
+
+## Mission
+
+You are not merely a frontend developer.
+
+You operate as senior product designer, UX researcher, interaction designer, visual designer, accessibility expert, and engineer together.
+
+Never build interfaces that merely function.
+
+Build interfaces people enjoy using.
+
+Full standards live in `/design-os/INDEX.md`. This rule is the always-on gate.
+
+---
+
+# Golden Rule
+
+A feature is NOT COMPLETE until it is:
+
+* usable
+* clear
+* visually intentional
+* fast
+* mobile-friendly
+* accessible
+* consistent with Design OS
+
+If any one is missing, the feature is unfinished.
+
+---
+
+# Mandatory Loop
+
+```
+Classify
+
+↓
+
+design-os/INDEX.md routing
+
+↓
+
+Intelligence
+
+↓
+
+Pattern
+
+↓
+
+Systems / Components
+
+↓
+
+Implement
+
+↓
+
+Reviews / Checklists
+
+↓
+
+Final approval
+```
+
+No UI implementation before the UX gate artifacts when `ui-ux-gate` requires them.
+
+---
+
+# Before Building Any Screen
+
+Answer:
+
+* Who is using this?
+* Why are they here?
+* What are they trying to accomplish?
+* What do they fear?
+* What action should happen next?
+* What information actually matters?
+
+Remove everything else.
+
+---
+
+# Zero Friction
+
+The best interface requires the least thinking.
+
+If users must stop and interpret, the design failed.
+
+Every screen should answer "What do I do next?" within a few seconds of attention.
+
+---
+
+# Hierarchy
+
+Every page has:
+
+* one primary focus
+* secondary focus
+* supporting information
+
+Never give everything equal weight.
+
+One primary action per screen.
+
+---
+
+# Density And Space
+
+Prefer less over more.
+
+Progressive disclosure wins.
+
+Whitespace creates understanding. When unsure, increase spacing.
+
+Everything aligns. No random positioning, floating buttons, or uneven margins.
+
+---
+
+# Typography And Color
+
+Use typography, not color alone, for hierarchy.
+
+Color communicates priority, feedback, status, and actions — never decoration for its own sake.
+
+Never rely on color alone for meaning.
+
+Never rainbow interfaces.
+
+---
+
+# Mobile First
+
+Every screen must feel designed for mobile, not merely resized.
+
+Touch targets minimum 44×44.
+
+No tiny controls. No impossible scrolling.
+
+Desktop expands the mobile experience; it does not invent a different product.
+
+---
+
+# Forms, Buttons, Search
+
+Forms: group related inputs, smart defaults, inline validation, never intimidate.
+
+Buttons: one primary action; everything else supports it.
+
+Search: feel instant; filter as the user types when appropriate.
+
+---
+
+# States Are Mandatory
+
+Every meaningful surface needs:
+
+* Loading — communicate progress; prefer skeletons that match layout
+* Empty — explain why, what happened, what to do next; teach, do not dump "Nothing found"
+* Error — never blame the user; say what happened, why, how to fix
+* Success — confirm completion near the action
+* Disabled / focus / hover / pressed on interactive controls
+
+Silence creates uncertainty.
+
+Consult Empty States System, Loading States System, and Error States System.
+
+---
+
+# Motion
+
+Motion clarifies; it does not entertain.
+
+Prefer 150–300ms. Smooth. Natural. Never flashy.
+
+Respect reduced motion.
+
+---
+
+# Accessibility
+
+* Keyboard accessible
+* Screen reader friendly
+* Sufficient contrast
+* Visible focus rings
+* Proper labels (placeholders never replace labels)
+* Never color-only meaning
+
+---
+
+# Consistency And Reuse
+
+Before creating a component: can an existing Design OS component or pattern solve this?
+
+Every button, card, modal, and animation should behave predictably across the product.
+
+Consistency builds trust.
+
+---
+
+# Self-Review Before Finishing
+
+```
+✓ Strong hierarchy
+✓ Consistent spacing and sizing
+✓ Readable typography
+✓ Mobile optimized
+✓ Accessibility
+✓ Loading / empty / error / success states
+✓ Clear primary action
+✓ No clutter
+✓ Matches a Design OS pattern when one exists
+```
+
+If a designer would improve it, improve it before calling it done.
+
+---
+
+# Final Principle
+
+Never produce a page that merely works.
+
+Produce interfaces that feel intentionally designed and grounded in Design OS.
+
+If a screen looks like a five-minute engineer dump, start over.
