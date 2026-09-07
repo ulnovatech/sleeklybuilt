@@ -1,54 +1,54 @@
 import { useState } from 'react'
-import { FiChevronDown } from 'react-icons/fi'
 import { hubHref } from '../site.config'
 
 const faqData = [
   {
     question: 'What services does SleeklyBuilt offer?',
     answer:
-      'Website development, web apps, UI/UX design, mobile apps, software systems, pitch decks, dashboard UI, and SEO & performance work.',
+      'Websites, web apps, UI/UX, mobile apps, business systems, pitch decks, dashboards, and SEO & performance work — scoped to what your business actually needs.',
   },
   {
     question: "I don't have a design — can you build it?",
     answer:
-      "Yes. We'll collaborate on structure and visuals, then build a solution that fits your brand and goals.",
+      'Yes. We design and build from your goals and brand cues, then iterate with you until the layout and product feel right.',
   },
   {
     question: 'Do you offer custom solutions?',
-    answer: 'Yes. Custom software and websites tailored to your workflows — not one-size-fits-all templates sold as finished products.',
+    answer:
+      'Yes. Custom software and systems that match how your team works — not one-size-fits-all templates.',
   },
   {
     question: 'Do I need a website for my business?',
-    answer: 'If customers need to find you, trust you, or take action online — yes. We can help you decide the right scope.',
+    answer:
+      'If customers need to find you, trust you, or buy from you online, yes — a clear site is usually the cheapest sales channel you can own.',
   },
   {
     question: 'How long does a website take?',
     answer:
-      'Typical layouts take about 1–4 weeks; custom builds often 4–12 weeks, depending on scope. We agree a timeline before work starts.',
+      'Typical marketing sites land in about 1–4 weeks; custom builds often 4–12 weeks depending on scope. We set a realistic timeline before you commit.',
   },
   {
     question: 'How much does a website cost?',
     answer:
-      'It depends on features and integrations. Many projects start in the hundreds of thousands of UGX and scale from there. Request a quote for an exact estimate.',
+      'It depends on scope. Packages start in the low hundreds of thousands UGX and scale with features. Request a quote for a number tied to your brief.',
   },
 ]
 
-/**
- * FAQ accordion — soft-neutral tokens; one primary CTA (Wave 9 Phase E).
- */
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(null)
 
   return (
-    <section className="mt-16 border-t border-subtle bg-surface-sunken py-16">
-      <div className="mx-auto max-w-3xl px-0">
-        <div className="text-center">
+    <section className="section-light bg-surface-sunken">
+      <div className="mx-auto max-w-3xl px-5 lg:px-8">
+        <div className="mb-10">
           <p className="eyebrow">FAQ</p>
-          <h2 className="mt-3 font-display text-display-section text-emerald-deep">Questions clients ask</h2>
-          <p className="mt-3 text-body text-ink-soft">Quick answers about layouts, timelines, and custom work.</p>
+          <h2 className="display-section mt-4 text-emerald-deep">Questions clients ask</h2>
+          <p className="lead mt-3 text-content-secondary">
+            Quick answers about design, timelines, and delivery. Open a question for detail.
+          </p>
         </div>
 
-        <div className="mt-10 space-y-3">
+        <div className="space-y-3">
           {faqData.map((faq, index) => {
             const open = openIndex === index
             return (
@@ -56,18 +56,17 @@ export default function FAQ() {
                 <button
                   type="button"
                   onClick={() => setOpenIndex(open ? null : index)}
-                  aria-expanded={open}
                   className="flex min-h-14 w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-surface-sunken/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-dos"
+                  aria-expanded={open}
                 >
-                  <span className="font-display text-display-card text-emerald-deep">{faq.question}</span>
-                  <FiChevronDown
-                    className={`h-5 w-5 shrink-0 text-ink-soft transition ${open ? 'rotate-180' : ''}`}
-                    aria-hidden="true"
-                  />
+                  <span className="font-display text-base font-semibold text-emerald-deep">{faq.question}</span>
+                  <span className="text-content-muted" aria-hidden="true">
+                    {open ? '−' : '+'}
+                  </span>
                 </button>
                 {open ? (
                   <div className="border-t border-subtle px-5 py-4">
-                    <p className="text-body text-ink-soft">{faq.answer}</p>
+                    <p className="text-body text-content-secondary">{faq.answer}</p>
                   </div>
                 ) : null}
               </div>
@@ -75,12 +74,18 @@ export default function FAQ() {
           })}
         </div>
 
-        <div className="mt-10 text-center">
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <a
             href={hubHref('contact')}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-content-primary transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
           >
             Start a project
+          </a>
+          <a
+            href={hubHref('prices')}
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-subtle px-6 text-sm font-semibold text-emerald-deep transition hover:bg-action-secondary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+          >
+            See pricing
           </a>
         </div>
       </div>

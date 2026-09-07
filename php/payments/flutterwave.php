@@ -99,9 +99,14 @@ function uln_flutterwave_verify_by_reference(string $txRef): array
 function uln_flutterwave_verify_webhook(): array
 {
     $cfg = uln_flutterwave_config();
-    $signature = $_SERVER['HTTP_VERIF_HASH'] ?? '';
+    $secretHash = (string) ($cfg['secret_hash'] ?? '');
+    $signature = (string) ($_SERVER['HTTP_VERIF_HASH'] ?? '');
 
-    if ($cfg['secret_hash'] !== '' && !hash_equals($cfg['secret_hash'], $signature)) {
+    // Fail closed: never accept unsigned webhooks in any environment.
+    if ($secretHash === '') {
+        throw new RuntimeException('Webhook secret is not configured.');
+    }
+    if ($signature === '' || !hash_equals($secretHash, $signature)) {
         throw new RuntimeException('Invalid webhook signature.');
     }
 

@@ -1,9 +1,9 @@
 export async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...options,
+    credentials: 'same-origin',
     headers: {
       'Content-Type': 'application/json',
-      'X-Dev-User': 'operator',
       ...options?.headers,
     },
   });

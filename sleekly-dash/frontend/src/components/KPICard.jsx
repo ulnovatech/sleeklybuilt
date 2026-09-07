@@ -11,7 +11,15 @@ export default function KPICard({title, value, delta, icon}) {
       <div className="flex items-end justify-between">
         <div>
           <div className="kpi-value">{value}</div>
-          <div className="text-sm text-muted mt-1">{deltaIsPositive ? <span className="text-green-400">{delta} ↑</span> : <span className="text-rose-400">{delta} ↓</span>}</div>
+          {delta !== '' && delta != null ? (
+            <div className="text-sm text-muted mt-1">
+              {deltaIsPositive ? (
+                <span className="text-green-400">{delta} ↑</span>
+              ) : (
+                <span className="text-rose-400">{delta} ↓</span>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-# SleeklyBuilt infrastructure (GCE VM / Docker)
+# SleeklyBuilt infrastructure (Linode / Docker)
 
 ## Cloud-first default workflow
 
@@ -18,8 +18,8 @@ Notes:
 - Add `-StageAll` only when you intentionally want all working-tree changes included.
 - Override defaults when needed:
   - `-Workflow deploy.yml`
-  - `-HubUrl http://hub.34.66.94.12.nip.io/`
-  - `-DiscoveryUrl http://discovery.34.66.94.12.nip.io/api/health`
+  - `-HubUrl https://sleeklybuilt.pro/`
+  - `-DiscoveryUrl https://discovery.sleeklybuilt.pro/api/health`
 
 ## Quick start (local)
 
@@ -64,7 +64,7 @@ docker compose -f infra/docker-compose.full.yml up -d --build
 |----------|-----|
 | Main site | http://localhost:8080 |
 | Discovery UI (direct) | http://localhost:3000 |
-| Discovery via nginx | http://discovery.34.66.94.12.nip.io (prod) or hosts-file override for local |
+| Discovery via nginx | https://discovery.sleeklybuilt.pro (prod) or hosts-file override for local |
 
 Run migrations manually if needed:
 
@@ -94,15 +94,16 @@ Add Discovery to an already-running sleeklybuilt stack:
 npm run docker:discovery
 ```
 
-## Production (Google Compute Engine)
+## Production (Linode)
 
 | Step | Doc / script |
 |------|----------------|
-| Host bootstrap (Docker, UFW, `/opt/sleeklybuilt`) | [`gcloud/bootstrap.sh`](./gcloud/bootstrap.sh) |
+| Host env + Clerk fill | [`scripts/linode-setup-env.sh`](./scripts/linode-setup-env.sh), then fill Clerk |
 | Env templates + server layout | [`env/README.md`](./env/README.md) |
 | Cloudflare DNS | [`docs/CLOUDFLARE_DNS.md`](../docs/CLOUDFLARE_DNS.md) |
-| Operator runbook | [`docs/DEPLOY_GCLOUD.md`](../docs/DEPLOY_GCLOUD.md) |
-| CI / deploy | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) |
+| Operator runbook | [`docs/DEPLOY_LINODE.md`](../docs/DEPLOY_LINODE.md) |
+| CI / deploy | [`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml) |
+| Historical GCE | [`gcloud/bootstrap.sh`](./gcloud/bootstrap.sh), [`docs/DEPLOY_GCLOUD.md`](../docs/DEPLOY_GCLOUD.md) |
 | Legacy Oracle | [`oracle/bootstrap.sh`](./oracle/bootstrap.sh), [`docs/DEPLOY_ORACLE.md`](../docs/DEPLOY_ORACLE.md) |
 
 Production compose (full stack, port 80):
@@ -142,7 +143,7 @@ See [`env/README.md`](./env/README.md) for production checklists and `/opt/sleek
 | `PUBLIC_HTML_PATH` | `../public_html` | Build output (relative to `infra/`) |
 | `SLEEKLYBUILT_ENV_FILE` | `./env/docker.sleeklybuilt.env.example` | Mounted as `php/.env` + `sleekly-dash/backend/.env` |
 | `DISCOVERY_ENV_FILE` | `./env/docker.discovery.env.example` | Env for discovery-web, worker, migrate |
-| `DISCOVERY_BUILD_CONTEXT` | `../../lead discover - sleekly` | Docker build context for Discovery (sibling source of truth). On GCE after rsync: `../discovery` |
+| `DISCOVERY_BUILD_CONTEXT` | `../../lead discover - sleekly` | Docker build context for Discovery (sibling source of truth). On Linode after rsync: `../discovery` |
 | `HTTP_PORT` | `8080` | Host port for nginx |
 | `DISCOVERY_HTTP_PORT` | `3000` | Host port for discovery-web (direct access) |
 | `MYSQL_ROOT_PASSWORD` | `root_dev_change_me` | MySQL root |
@@ -172,13 +173,16 @@ infra/
 │   ├── docker.discovery.env.example
 │   └── sleeklybuilt.env.example    # naming alias doc
 ├── gcloud/
-│   └── bootstrap.sh              # Ubuntu AMD64 host prep (primary)
+│   └── bootstrap.sh              # Historical GCE host prep
 ├── oracle/
 │   └── bootstrap.sh              # Legacy Oracle ARM64/AMD64 host prep
 ├── mysql/init/
 ├── nginx/                        # see nginx/README.md
 ├── php/Dockerfile
 └── scripts/
+    ├── validate-prod-env.sh
+    ├── sleeklybuilt-backup.sh
+    ├── sleeklybuilt-restore.sh
     ├── smoke-sleeklybuilt.sh
     ├── smoke-discovery.sh
     ├── smoke-full.sh

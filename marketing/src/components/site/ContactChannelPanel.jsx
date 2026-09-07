@@ -43,38 +43,39 @@ export default function ContactChannelPanel({ className = '' }) {
   return (
     <aside className={className}>
       <p className="eyebrow">Faster options</p>
-      <h2 className="mt-3 display-card text-emerald-deep">Reach us directly</h2>
-      <p className="mt-2 text-body text-ink-soft">
-        Pick the channel that matches how soon you need a reply. Form submissions get a reference
-        code.
+      <h2 className="mt-3 text-xl font-semibold tracking-tight text-emerald-deep sm:text-2xl">
+        Reach us directly
+      </h2>
+      <p className="mt-2 text-sm text-ink-soft sm:text-body">
+        Prefer not to use the form? Pick a channel by how soon you need a reply.
       </p>
 
-      <ul className="mt-8 space-y-3">
+      <ul className="mt-6 space-y-2.5">
         {channels.map(({ id, label, detail, href, external, icon: Icon, response, bestFor }) => (
           <li key={id}>
             <a
               href={href}
               {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
-              className="flex min-h-14 items-start gap-4 rounded-2xl border border-cream-deep bg-surface-raised p-4 transition duration-fast ease-dos hover:border-emerald/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
+              className="flex min-h-12 items-start gap-3 rounded-xl border border-subtle bg-transparent px-3.5 py-3 transition duration-fast ease-dos hover:border-emerald/25 hover:bg-surface-raised/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
             >
               <span
-                className="mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-deep/10 text-emerald-deep"
+                className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-deep/8 text-emerald-deep"
                 aria-hidden="true"
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-4 w-4" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-meta font-semibold text-emerald-deep">{label}</span>
-                <span className="mt-0.5 block truncate text-body font-medium text-ink">{detail}</span>
+                <span className="mt-0.5 block truncate text-sm font-medium text-ink">{detail}</span>
                 <span className="mt-1 block text-sm text-ink-soft">{response}</span>
-                <span className="mt-0.5 block text-sm text-content-muted">Best for: {bestFor}</span>
+                <span className="mt-0.5 block text-xs text-content-muted">Best for: {bestFor}</span>
               </span>
             </a>
           </li>
         ))}
       </ul>
 
-      <p className="mt-6 text-sm text-content-muted">
+      <p className="mt-5 text-sm text-content-muted">
         Based in {siteConfig.location}
         {siteConfig.addressNote ? ` · ${siteConfig.addressNote}` : ''}.
       </p>

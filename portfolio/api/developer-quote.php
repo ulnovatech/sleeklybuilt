@@ -1,65 +1,85 @@
 <?php
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
+declare(strict_types=1);
+
+require_once __DIR__ . '/lib/cors.php';
+uln_portfolio_cors();
+
+require_once __DIR__ . '/../../php/leads/rate_limit.php';
+uln_rate_limit('developer_quote', 12, 3600);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    echo json_encode(['message' => 'Method not allowed']);
+    echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
     exit;
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
+$input = uln_json_input();
+$name = trim((string) ($input['name'] ?? ''));
+$email = trim((string) ($input['email'] ?? ''));
+$service = trim((string) ($input['service'] ?? ''));
+$messageBody = trim((string) ($input['message'] ?? ''));
+$company = trim((string) ($input['company'] ?? ''));
+$budget = trim((string) ($input['budget'] ?? ''));
+$timeline = trim((string) ($input['timeline'] ?? ''));
 
-if (!$input || empty($input['email']) || empty($input['name']) || empty($input['service'])) {
+if ($name === '' || $email === '' || $service === '' || $messageBody === '') {
     http_response_code(400);
-    echo json_encode(['message' => 'Missing required fields']);
+    echo json_encode(['status' => 'error', 'message' => 'Name, email, service, and message are required.']);
     exit;
 }
 
-// Process the form data
-$to = 'sales@sleeklybuilt.pro';
-$subject = 'New Developer Quote Request - ' . $input['name'];
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Invalid email format.']);
+    exit;
+}
+
+$to = getenv('MAIL_FROM') ?: 'sales@sleeklybuilt.pro';
+if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+    $to = 'sales@sleeklybuilt.pro';
+}
+
+$subject = 'New developer quote request — ' . $name;
+$fromAddr = getenv('MAIL_FROM') ?: 'noreply@sleeklybuilt.pro';
 $headers = [
-    'From: ' . $input['name'] . ' <' . $input['email'] . '>',
-    'Reply-To: ' . $input['email'],
-    'Content-Type: text/html; charset=UTF-8'
+    'From: SleeklyBuilt <' . $fromAddr . '>',
+    'Reply-To: ' . $email,
+    'Content-Type: text/html; charset=UTF-8',
 ];
 
-$message = '
-<html>
-<body>
-    <h2>New Developer Quote Request</h2>
-    <table style="border-collapse: collapse; width: 100%;">
-        <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . htmlspecialchars($input['name']) . '</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . htmlspecialchars($input['email']) . '</td></tr>
-';
-
-if (!empty($input['company'])) {
-    $message .= '<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Company:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . htmlspecialchars($input['company']) . '</td></tr>';
+$rows = [
+    'Name' => $name,
+    'Email' => $email,
+    'Service' => $service,
+    'Message' => $messageBody,
+];
+if ($company !== '') {
+    $rows['Company'] = $company;
+}
+if ($budget !== '') {
+    $rows['Budget'] = $budget;
+}
+if ($timeline !== '') {
+    $rows['Timeline'] = $timeline;
 }
 
-$message .= '
-        <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Service:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . htmlspecialchars($input['service']) . '</td></tr>
-';
-
-if (!empty($input['budget'])) {
-    $message .= '<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Budget:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . htmlspecialchars($input['budget']) . '</td></tr>';
+$message = '<html><body><h2>New developer quote request</h2><table style="border-collapse:collapse;width:100%">';
+foreach ($rows as $label => $value) {
+    $message .= '<tr><td style="padding:8px;border:1px solid #ddd"><strong>'
+        . htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
+        . ':</strong></td><td style="padding:8px;border:1px solid #ddd">'
+        . nl2br(htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8'))
+        . '</td></tr>';
 }
+$message .= '</table><p><em>Received: ' . htmlspecialchars(date('c'), ENT_QUOTES, 'UTF-8') . '</em></p></body></html>';
 
-$message .= '
-        <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timeline:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . htmlspecialchars($input['timeline']) . '</td></tr>
-        <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Message:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">' . nl2br(htmlspecialchars($input['message'])) . '</td></tr>
-    </table>
-    <p><em>Received: ' . date('Y-m-d H:i:s') . '</em></p>
-</body>
-</html>';
-
-if (mail($to, $subject, $message, $headers)) {
-    echo json_encode(['message' => 'Quote request sent successfully']);
-} else {
+if (!mail($to, $subject, $message, implode("\r\n", $headers))) {
     http_response_code(500);
-    echo json_encode(['message' => 'Failed to send email']);
+    echo json_encode(['status' => 'error', 'message' => 'Could not send the request. Email us or use WhatsApp.']);
+    exit;
 }
-?>
+
+echo json_encode([
+    'status' => 'success',
+    'message' => "{$name}, your quote request was emailed to the team. We will reply to {$email}.",
+]);

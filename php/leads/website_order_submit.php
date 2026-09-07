@@ -55,7 +55,11 @@ function uln_website_order_quote(array $fields): array
     }
 
     $fullPhone = preg_replace('/\s+/', '', $countryCode . $phone);
-    $details = "Package: {$package}\nTemplate: {$templateKey}\nSource: attendant";
+    $source = trim((string) ($fields['source'] ?? 'website'));
+    if ($source === '') {
+        $source = 'website';
+    }
+    $details = "Package: {$package}\nTemplate: {$templateKey}\nSource: {$source}";
     if ($businessName !== '') {
         $details .= "\nBusiness: {$businessName}";
     }
@@ -64,6 +68,15 @@ function uln_website_order_quote(array $fields): array
     }
 
     try {
+        $DB = uln_db_settings();
+        if ($DB['host'] === '' || $DB['name'] === '') {
+            return [
+                'ok' => false,
+                'success' => false,
+                'message' => 'Could not submit your request. Please try again.',
+                'http' => 500,
+            ];
+        }
         $host = $DB['host'] === 'localhost' ? '127.0.0.1' : $DB['host'];
         $pdo = new PDO(
             sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $DB['port'], $DB['name']),
@@ -98,7 +111,7 @@ function uln_website_order_quote(array $fields): array
             'package' => $package,
             'notes' => $notes,
             'quote_only' => 'yes',
-            'source' => 'attendant',
+            'source' => $source,
         ]);
 
         return [

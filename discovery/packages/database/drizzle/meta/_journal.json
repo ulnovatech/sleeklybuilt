@@ -197,6 +197,13 @@
       "when": 1755100000000,
       "tag": "0027_factory_cohorts",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1757000000000,
+      "tag": "0028_acquisition_job_queue_indexes",
+      "breakpoints": true
     }
   ]
 }

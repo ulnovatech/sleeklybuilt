@@ -24,11 +24,16 @@ if [[ -f "$NEW/env/docker.ulnovatech.env" && ! -f "$NEW/env/docker.sleeklybuilt.
   mv "$NEW/env/docker.ulnovatech.env" "$NEW/env/docker.sleeklybuilt.env"
 fi
 
-# Keep ulndash working until public_html is fully rebranded; optionally alias.
-if [[ -d "$NEW/public_html/ulndash" && ! -d "$NEW/public_html/sleekly-dash" ]]; then
-  ln -sfn ulndash "$NEW/public_html/sleekly-dash"
-  echo "Created sleekly-dash → ulndash symlink"
+# Require sleekly-dash; never reintroduce legacy ulndash into the HTTP tree.
+if [[ -d "$NEW/public_html/ulndash" ]]; then
+  rm -rf "$NEW/public_html/ulndash"
+  echo "Removed legacy public_html/ulndash"
 fi
+if [[ ! -d "$NEW/public_html/sleekly-dash" ]]; then
+  echo "ERROR: public_html/sleekly-dash missing after rename — aborting before start" >&2
+  exit 1
+fi
+rm -f "$NEW/public_html/sleekly-dash/backend/service-account.json" 2>/dev/null || true
 
 # Rewrite absolute paths in compose files currently on the VM
 echo "==> Rewriting compose absolute paths"
@@ -39,7 +44,7 @@ find "$NEW/repo/infra" -type f \( -name '*.yml' -o -name '*.yaml' -o -name '*.co
   -e 's|/var/lib/ulnovatech|/var/lib/sleeklybuilt|g' \
   -e 's|/var/log/ulnovatech|/var/log/sleeklybuilt|g' || true
 
-# Prefer sleekly-dash in nginx if conf still says ulndash — keep ulndash for compatibility
+# Prefer sleeklybuilt.conf if an old ulnovatech.conf still exists on the host
 if [[ -f "$NEW/repo/infra/nginx/conf.d/ulnovatech.conf" ]]; then
   cp -a "$NEW/repo/infra/nginx/conf.d/ulnovatech.conf" "$NEW/repo/infra/nginx/conf.d/sleeklybuilt.conf" || true
   sed -i 's|ulndash/backend/api.php|sleekly-dash/backend/api.php|g' \

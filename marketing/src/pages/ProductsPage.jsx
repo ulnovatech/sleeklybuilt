@@ -10,7 +10,7 @@ import Reveal from '../components/motion/Reveal'
 import { productLines } from '../config/products'
 import { productsIndexFaq } from '../config/productPages'
 import { siteConfig } from '../site.config'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 
 /**
  * Products index — guided catalogue.
@@ -22,7 +22,7 @@ import { usePageTitle } from '../lib/usePageTitle'
  * Named docs: ecommerce_catalog (narrowing), feature_sections, faq, content_intelligence.
  */
 export default function ProductsPage() {
-  usePageTitle('All Products')
+  usePageSeo()
 
   return (
     <>

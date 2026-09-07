@@ -1,4 +1,4 @@
-import React from 'react'
+import { useId } from 'react'
 import {
   LineChart,
   Line,
@@ -11,28 +11,31 @@ import {
 } from 'recharts'
 
 export default function LineChartNeon({
-  data,       // live data from parent
+  data,
   dataKey = 'value',
   stroke = '#8b5cf6',
-  yLabel = '', // <-- new prop for Y-axis label/unit
+  yLabel = '',
+  framed = true,
 }) {
+  const gradientId = useId().replace(/:/g, '')
+
   if (!Array.isArray(data) || data.length === 0) {
     return (
-      <div className="card chart-wrap flex items-center justify-center text-gray-500 h-[280px]">
+      <div className={`${framed ? 'card ' : ''}chart-wrap flex h-[280px] items-center justify-center text-gray-500`}>
         No data available
       </div>
     )
   }
 
   return (
-    <div className="card chart-wrap">
+    <div className={`${framed ? 'card ' : ''}chart-wrap`}>
       <ResponsiveContainer width="100%" height={280}>
         <LineChart
           data={data}
           margin={{ top: 20, right: 10, left: 0, bottom: 0 }}
         >
           <defs>
-            <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor={stroke} stopOpacity={0.3} />
               <stop offset="95%" stopColor={stroke} stopOpacity={0} />
             </linearGradient>
@@ -71,7 +74,7 @@ export default function LineChartNeon({
             type="monotone"
             dataKey={dataKey}
             stroke="none"
-            fill="url(#lineGradient)"
+            fill={`url(#${gradientId})`}
           />
 
           {/* Main line */}

@@ -73,10 +73,8 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
         {navItem('/requests', 'Requests', ChartBarIcon)}
         {navItem('/analytics', 'Analytics', PresentationChartBarIcon)}
         {navItem('/competitors', 'Competition', PresentationChartBarIcon)}
-        {navItem('/goal', 'Goals', PresentationChartBarIcon)}
         {navItem('/templates', 'Templates', BookOpenIcon)}
         {navItem('/settings', 'Settings', Cog6ToothIcon)}
-        {navItem('/blog', 'Blog', BookOpenIcon)}
       </nav>
 
       <div className="border-t border-gray-800 pt-4">

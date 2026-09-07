@@ -54,7 +54,6 @@ export function getEnv(): Env {
 }
 
 export function isDevAuthEnabled(): boolean {
-  // Next production builds inline NODE_ENV=production, so gating on NODE_ENV
-  // would disable interim GCE deploys that rely on ALLOW_DEV_AUTH without Clerk.
-  return process.env.ALLOW_DEV_AUTH === 'true';
+  // Dev bypass removed for admin consoles. Clerk + allowlist only.
+  return false;
 }

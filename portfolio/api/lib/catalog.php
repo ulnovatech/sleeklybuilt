@@ -157,7 +157,7 @@ function uln_is_gallery_shot(string $filename): bool
         return false;
     }
 
-    if ($base === 'main.png') {
+    if ($base === 'main.png' || $base === 'main-mobile.png') {
         return true;
     }
 
@@ -194,15 +194,35 @@ function uln_is_gallery_shot(string $filename): bool
     return false;
 }
 
+function uln_is_mobile_shot(string $filename): bool
+{
+    return strtolower(basename($filename)) === 'main-mobile.png';
+}
+
+/**
+ * Page shots for thumbnail strips — excludes the dedicated mobile homepage pair.
+ *
+ * @param list<string> $urls Absolute or root-relative image URLs
+ * @return list<string>
+ */
+function uln_page_gallery_shots(array $urls): array
+{
+    return array_values(array_filter($urls, static function ($url) {
+        if (!is_string($url) || $url === '') {
+            return false;
+        }
+        $base = basename(parse_url($url, PHP_URL_PATH) ?: $url);
+        return uln_is_gallery_shot($base) && !uln_is_mobile_shot($base);
+    }));
+}
+
 /**
  * @param list<string> $urls Absolute or root-relative image URLs
  * @return list<string>
  */
 function uln_order_gallery_shots(array $urls): array
 {
-    $urls = array_values(array_filter($urls, static function ($url) {
-        return is_string($url) && $url !== '' && uln_is_gallery_shot(basename(parse_url($url, PHP_URL_PATH) ?: $url));
-    }));
+    $urls = uln_page_gallery_shots($urls);
 
     usort($urls, static function (string $a, string $b): int {
         $ba = basename(parse_url($a, PHP_URL_PATH) ?: $a);
@@ -217,4 +237,17 @@ function uln_order_gallery_shots(array $urls): array
     });
 
     return $urls;
+}
+
+/**
+ * Absolute URL for images/main-mobile.png when present.
+ */
+function uln_mobile_image_url(string $imagesDir, string $templatesBaseUrl, string $dir): ?string
+{
+    $imagesDir = rtrim(str_replace('\\', '/', $imagesDir), '/') . '/';
+    if (!is_file($imagesDir . 'main-mobile.png')) {
+        return null;
+    }
+
+    return rtrim($templatesBaseUrl, '/') . '/' . rawurlencode($dir) . '/images/main-mobile.png';
 }

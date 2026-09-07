@@ -5,6 +5,7 @@ export const siteConfig = {
     'SleeklyBuilt crafts custom websites, mobile apps, graphics, and business systems for clients in Uganda and beyond.',
   email: 'sales@sleeklybuilt.pro',
   location: 'Kampala, Uganda',
+  addressNote: 'By appointment · Kampala',
   phones: ['+256 791779448', '+256 749594464', '+256 772169960'],
   primaryPhone: '+256791779448',
   whatsapp: 'https://wa.me/256749594464',
@@ -55,10 +56,13 @@ export const projectsFooterServices = [
 
 export const apiEndpoints = {
   contact: '/php/contactus.php',
+  /** @deprecated retired — unauthenticated reservation; use quote */
   order: `${import.meta.env.VITE_API_URL}/order.php`,
+  quote: `${import.meta.env.VITE_API_URL}/quote.php`,
   paymentInit: `${import.meta.env.VITE_API_URL}/payment-init.php`,
   paymentVerify: `${import.meta.env.VITE_API_URL}/payment-verify.php`,
   packages: `${import.meta.env.VITE_API_URL}/packages.php`,
   portfolioDetail: `${import.meta.env.VITE_API_URL}/portfolio-detail.php`,
   portfolios: `${import.meta.env.VITE_API_URL}/portfolios.php?collection=websites`,
+  developerQuote: `${import.meta.env.VITE_API_URL}/developer-quote.php`,
 }

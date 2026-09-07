@@ -1,14 +1,22 @@
-/**
- * Design OS: patterns/authentication_flow.md — Recover
- * Request reset → confirm message sent (never enumerate accounts).
- */
-
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import AuthLayout, { AuthError, AuthSuccess } from '../components/auth/AuthLayout'
 import { AuthAPI } from '../services/api'
+import { isClerkConfigured } from '../lib/clerkToken'
+
+/**
+ * Design OS: patterns/authentication_flow.md — Recover
+ * Under Clerk SSO, recovery is handled in Clerk — this page redirects.
+ */
 
 export default function ForgotPassword() {
+  if (isClerkConfigured()) {
+    return <Navigate to="/login" replace />
+  }
+  return <ForgotPasswordForm />
+}
+
+function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -39,66 +47,41 @@ export default function ForgotPassword() {
       title="Reset your password"
       subtitle="We will email a link that expires in 60 minutes."
       footer={
-        <>
-          Remembered it?{' '}
-          <Link to="/login" className="font-medium text-brand hover:underline">
-            Sign in
-          </Link>
-        </>
+        <Link to="/login" className="font-medium text-brand hover:underline">
+          Back to sign in
+        </Link>
       }
     >
-      <AuthError>{error}</AuthError>
-      <AuthSuccess>{success}</AuthSuccess>
-
+      <AuthError>{error || null}</AuthError>
+      <AuthSuccess>{success || null}</AuthSuccess>
       {debugLink ? (
-        <p className="mb-4 break-all rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100">
-          Dev reset link:{' '}
-          <a href={debugLink} className="underline">
-            {debugLink}
-          </a>
+        <p className="mb-4 break-all text-xs text-slate-500">
+          Debug reset URL: {debugLink}
         </p>
       ) : null}
-
-      {!success ? (
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div>
-            <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-300">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              inputMode="email"
-              autoCapitalize="none"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              readOnly={submitting}
-              required
-              className="w-full rounded-lg border border-gray-700 bg-[#0b1220] px-4 py-3 text-white outline-none focus:ring-2 focus:ring-brand"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting || !email.trim()}
-            className="min-h-11 w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
-          >
-            {submitting ? 'Sending link…' : 'Send reset link'}
-          </button>
-        </form>
-      ) : (
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <div>
+          <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-300">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full rounded-lg border border-gray-700 bg-[#0b1220] px-4 py-3 text-white outline-none focus:ring-2 focus:ring-brand"
+          />
+        </div>
         <button
-          type="button"
-          onClick={() => {
-            setSuccess('')
-            setDebugLink('')
-          }}
-          className="min-h-11 w-full rounded-lg border border-gray-700 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-white/5"
+          type="submit"
+          disabled={submitting || !email.trim()}
+          className="min-h-11 w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white disabled:opacity-60"
         >
-          Send another link
+          {submitting ? 'Sending…' : 'Send reset link'}
         </button>
-      )}
+      </form>
     </AuthLayout>
   )
 }

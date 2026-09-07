@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { BrandMark } from '@sleeklybuilt/design-foundation/react'
 import { FiArrowRight, FiMenu, FiSearch } from 'react-icons/fi'
 import { siteConfig } from '../../site.config'
 import NavMenu from './NavMenu'
@@ -14,36 +15,6 @@ import { cn } from '../../lib/utils'
  * uses PageHeader (obsidian) — do not list it here (Wave 9 Phase D).
  */
 const LIGHT_TOP_ROUTES = new Set([])
-
-function BrandMark({ tone }) {
-  const onDark = tone === 'hero'
-
-  return (
-    <Link
-      to={siteConfig.links.home}
-      className={cn(
-        'mr-auto flex items-center gap-2.5 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-        onDark
-          ? 'focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
-          : 'focus-visible:ring-dos focus-visible:ring-offset-surface-base',
-      )}
-      aria-label={`${siteConfig.name} home`}
-    >
-      <span
-        className={cn(
-          'grid h-7 w-7 place-items-center rounded-full font-display text-sm leading-none transition',
-          onDark ? 'bg-cream text-obsidian' : 'bg-emerald-deep text-cream',
-        )}
-        aria-hidden="true"
-      >
-        {siteConfig.name.charAt(0)}
-      </span>
-      <span className={cn('font-display text-lg font-semibold tracking-tight transition', onDark ? 'text-cream' : 'text-emerald-deep')}>
-        {siteConfig.name}
-      </span>
-    </Link>
-  )
-}
 
 export default function Header({ docked = false }) {
   const [scrolled, setScrolled] = useState(false)
@@ -101,7 +72,16 @@ export default function Header({ docked = false }) {
         )}
       >
         <div className="mx-auto flex h-14 max-w-content items-center gap-2 px-5 lg:gap-3 lg:px-8">
-          <BrandMark tone={tone} />
+          <BrandMark
+            name={siteConfig.name}
+            href={siteConfig.links.home}
+            tone={tone}
+            LinkComponent={({ href, className, children, ...rest }) => (
+              <Link to={href} className={className} {...rest}>
+                {children}
+              </Link>
+            )}
+          />
 
           <NavMenu tone={tone} />
 
@@ -110,9 +90,9 @@ export default function Header({ docked = false }) {
           <Link
             to={siteConfig.links.contact}
             className={cn(
-              'hidden h-9 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
+              'hidden h-9 items-center gap-1.5 whitespace-nowrap rounded-dos-lg px-4 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 sm:inline-flex',
               tone === 'hero'
-                ? 'bg-gold text-ink hover:bg-gold-soft focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
+                ? 'bg-emerald-deep text-cream hover:bg-emerald focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
                 : 'bg-emerald-deep text-cream hover:bg-emerald focus-visible:ring-dos focus-visible:ring-offset-cream',
             )}
           >

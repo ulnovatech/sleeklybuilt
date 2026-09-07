@@ -11,6 +11,16 @@ function Invoke-BuildStep([string]$label, [scriptblock]$step) {
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
+if (-not $env:SITE_URL -and -not $env:VITE_SITE_URL) {
+  $env:SITE_URL = 'https://sleeklybuilt.pro'
+} elseif (-not $env:SITE_URL -and $env:VITE_SITE_URL) {
+  $env:SITE_URL = $env:VITE_SITE_URL
+}
+
+Invoke-BuildStep 'SEO generate sitemap/robots' { node (Join-Path $root 'scripts\seo\generate-sitemap.mjs') }
+Invoke-BuildStep 'SEO smoke (marketing/public)' { node (Join-Path $root 'scripts\seo\smoke.mjs') --dir marketing/public }
+Invoke-BuildStep 'Performante auth static check' { node (Join-Path $root 'marketing\scripts\check-performante-auth.mjs') }
+
 Invoke-BuildStep 'Build marketing app' { npm --prefix marketing run build }
 Invoke-BuildStep 'Build blog app' { npm --prefix sleekly-blog run build }
 Invoke-BuildStep 'Build CRM dashboard' { npm --prefix sleekly-dash/frontend run build }
@@ -53,7 +63,7 @@ New-Item -ItemType Directory -Force -Path $attendantDest | Out-Null
 foreach ($part in @('schemas', 'prompts', 'rules', 'skills', 'company', 'expertise')) {
   $src = Join-Path $attendantSrc $part
   if (-not (Test-Path $src)) {
-    throw "attendant/$part missing — required for attendant runtime"
+    throw "attendant/$part missing - required for attendant runtime"
   }
   Copy-Item -Recurse -Force $src (Join-Path $attendantDest $part)
 }

@@ -73,6 +73,22 @@ function uln_contact_submit(array $fields): array
         $message = "[Intent: {$intent}]\n\n" . $message;
     }
 
+    $db = uln_db_settings();
+    $db_host = $db['host'];
+    $db_user = $db['user'];
+    $db_pass = $db['pass'];
+    $db_name = $db['name'];
+    $db_port = $db['port'];
+
+    if ($db_host === '' || $db_name === '') {
+        return [
+            'ok' => false,
+            'status' => 'error',
+            'message' => 'Failed to connect to database.',
+            'http' => 500,
+        ];
+    }
+
     $con = mysqli_connect($db_host, $db_user, $db_pass, $db_name, $db_port);
     if (!$con) {
         return [

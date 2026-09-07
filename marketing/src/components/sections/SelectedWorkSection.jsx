@@ -36,13 +36,13 @@ export default function SelectedWorkSection() {
               <button
                 type="button"
                 onClick={reload}
-                className="min-h-11 rounded-full border border-subtle px-5 py-2.5 text-meta font-semibold text-emerald-deep transition duration-fast ease-dos hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                className="min-h-11 rounded-dos-lg border border-subtle px-5 py-2.5 text-meta font-semibold text-emerald-deep transition duration-fast ease-dos hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
               >
                 Try again
               </button>
               <NavLink
                 item={{ href: siteConfig.links.portfolio }}
-                className="inline-flex min-h-11 items-center rounded-full bg-action-primary-hover px-5 py-2.5 text-meta font-semibold text-cream transition duration-fast ease-dos hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                className="inline-flex min-h-11 items-center rounded-dos-lg bg-action-primary-hover px-5 py-2.5 text-meta font-semibold text-cream transition duration-fast ease-dos hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
               >
                 Open gallery
               </NavLink>

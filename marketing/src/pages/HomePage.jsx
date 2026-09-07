@@ -7,7 +7,7 @@ import HowWeWorkSection from '../components/sections/HowWeWorkSection'
 import PeopleAskSection from '../components/sections/PeopleAskSection'
 import LetsTalkSection from '../components/sections/LetsTalkSection'
 import Reveal from '../components/motion/Reveal'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 import { homePeopleAsk } from '../config/peopleAsk'
 
 /**
@@ -16,7 +16,7 @@ import { homePeopleAsk } from '../config/peopleAsk'
  * Wave 9 Phase B: calm spatial rhythm; one primary focus per section.
  */
 export default function HomePage() {
-  usePageTitle()
+  usePageSeo()
 
   return (
     <>

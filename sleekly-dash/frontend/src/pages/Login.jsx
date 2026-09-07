@@ -1,21 +1,58 @@
 /**
  * Design OS: patterns/authentication_flow.md
+ * Single-operator admin gate — Clerk Sign-in only when VITE_CLERK_PUBLISHABLE_KEY is set.
  *
- * User journey: arrive at gate → enter email/password → land on destination
- * Empty: untouched form, no red. Loading: Signing in… fields read-only.
- * Error: generic message + reset link. Success: redirect via AuthContext.
+ * Journey: arrive → Clerk Sign-in → allowlist check via /api/auth/me → destination
+ * Empty: Clerk form. Loading: Checking session… Error: denyReason / Clerk errors.
+ * No public sign-up.
  */
 
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
+import { SignIn } from '@clerk/clerk-react'
 import { useAuth } from '../context/AuthContext'
 import AuthLayout, { AuthError } from '../components/auth/AuthLayout'
 import PasswordField from '../components/auth/PasswordField'
 import { AuthAPI } from '../services/api'
+import { isClerkConfigured } from '../lib/clerkToken'
 
-export default function Login() {
+function ClerkLogin({ from }) {
+  const { user, denyReason } = useAuth()
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
+  const forceRedirectUrl = `${window.location.origin}${base}${String(from || '/').replace(/^\//, '')}`
+
+  if (user) {
+    return <Navigate to={from} replace />
+  }
+
+  return (
+    <AuthLayout
+      title="Sign in"
+      subtitle="Operator access — one admin account."
+      footer={<span>Sign-up is closed. Contact the account owner if you need access.</span>}
+    >
+      {denyReason ? (
+        <AuthError>{denyReason}</AuthError>
+      ) : null}
+      <div className="flex justify-center [&_.cl-rootBox]:w-full [&_.cl-card]:w-full [&_.cl-card]:shadow-none [&_.cl-card]:border [&_.cl-card]:border-gray-700 [&_.cl-card]:bg-[#0b1220]">
+        <SignIn
+          routing="hash"
+          forceRedirectUrl={forceRedirectUrl}
+          signUpUrl={undefined}
+          appearance={{
+            elements: {
+              footerAction: { display: 'none' },
+              footer: { display: 'none' },
+            },
+          }}
+        />
+      </div>
+    </AuthLayout>
+  )
+}
+
+function PasswordLogin({ from }) {
   const { user, login } = useAuth()
-  const location = useLocation()
   const errorRef = useRef(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,13 +60,11 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false)
   const [signupOpen, setSignupOpen] = useState(null)
 
-  const from = location.state?.from || '/'
-
   useEffect(() => {
     let cancelled = false
     AuthAPI.capabilities()
       .then((data) => {
-        if (!cancelled) setSignupOpen(!!data.signup_open)
+        if (!cancelled) setSignupOpen(!!data.signup_open && data.auth_mode !== 'clerk')
       })
       .catch(() => {
         if (!cancelled) setSignupOpen(false)
@@ -139,4 +174,14 @@ export default function Login() {
       </form>
     </AuthLayout>
   )
+}
+
+export default function Login() {
+  const location = useLocation()
+  const from = location.state?.from || '/'
+
+  if (isClerkConfigured()) {
+    return <ClerkLogin from={from} />
+  }
+  return <PasswordLogin from={from} />
 }

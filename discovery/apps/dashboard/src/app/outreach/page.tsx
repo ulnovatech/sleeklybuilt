@@ -142,7 +142,7 @@ function OutreachQueuePageContent() {
       });
       if (confirmSkipped) params.set('confirmSkipped', 'true');
       const res = await fetch(`/api/outreach/export?${params}`, {
-        headers: { 'X-Dev-User': 'operator' },
+        credentials: 'same-origin',
       });
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
@@ -188,7 +188,7 @@ function OutreachQueuePageContent() {
         dryRun: 'true',
       });
       const res = await fetch(`/api/outreach/export?${params}`, {
-        headers: { 'X-Dev-User': 'operator' },
+        credentials: 'same-origin',
       });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) {

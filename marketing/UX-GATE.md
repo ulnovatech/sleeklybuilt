@@ -15,7 +15,19 @@ Active decision memo: [`REDESIGN-WAVE-9.md`](./REDESIGN-WAVE-9.md).
 
 # 0. Change motivation
 
-## 0A. Wave 9 motivation (active — 2026-08-08)
+## 0A. Meridian identity (active — 2026-09-07)
+
+Full visual identity reset for SleeklyBuilt as a calm systems studio:
+
+- Retires Clarity (cream / emerald / gold) and Forge (porcelain / indigo / ember) as brand authorities
+- Establishes **Meridian**: Halo · Meridian · Spark · Void
+- Typography: Sora (display) + IBM Plex Sans (body)
+- Shape language: engineered corners (no CTA pills); squared letter mark
+- Implementation SoT: `packages/design-foundation/DESIGN.md` + `tokens.css`
+
+Wave 9 layout/process decisions remain; color and type identity are superseded by Meridian.
+
+## 0B. Wave 9 motivation (historical — 2026-08-08)
 
 Legitimate reasons for this redesign wave:
 
@@ -27,7 +39,7 @@ Legitimate reasons for this redesign wave:
 
 Not a motivation: redesign for novelty alone. Phase 8 remains valid for prior scope; Wave 9 re-audits and supersedes only the decisions listed in §15.2 and `REDESIGN-WAVE-9.md`.
 
-## 0B. Phases 0–8 motivation (historical — 2026-08-07)
+## 0C. Phases 0–8 motivation (historical — 2026-08-07)
 
 1. The site cannot yet express the product line split (Sleek Pages vs Websites vs Apps vs Systems) — product pages are shells.
 2. Accessibility and honesty defects in shipped code (reduced motion, unverifiable stats, mixed icon libraries) block Design OS final approval.

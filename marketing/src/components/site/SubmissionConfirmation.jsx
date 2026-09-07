@@ -69,7 +69,7 @@ export default function SubmissionConfirmation({
         <button
           type="button"
           onClick={onSendAnother}
-          className={`inline-flex min-h-11 items-center justify-center rounded-full border border-subtle px-7 py-3.5 text-meta font-semibold text-action-primary-hover transition duration-fast ease-dos hover:border-action-primary/40 hover:bg-action-secondary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 ${
+          className={`inline-flex min-h-11 items-center justify-center rounded-dos-lg border border-subtle px-7 py-3.5 text-meta font-semibold text-action-primary-hover transition duration-fast ease-dos hover:border-action-primary/40 hover:bg-action-secondary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 ${
             reducedMotion ? '' : ''
           }`}
         >

@@ -20,12 +20,12 @@ export default function Footer() {
             <div className="mt-6 space-y-2 text-sm text-cream/85">
               <p>{siteConfig.location}</p>
               <p>
-                <a href={`mailto:${siteConfig.email}`} className="hover:text-gold focus:outline-none focus-visible:underline">
+                <a href={`mailto:${siteConfig.email}`} className="hover:text-cream focus:outline-none focus-visible:underline">
                   {siteConfig.email}
                 </a>
               </p>
               <p>
-                <a href={`tel:${siteConfig.primaryPhone}`} className="hover:text-gold focus:outline-none focus-visible:underline">
+                <a href={`tel:${siteConfig.primaryPhone}`} className="hover:text-cream focus:outline-none focus-visible:underline">
                   {siteConfig.primaryPhone}
                 </a>
               </p>
@@ -37,7 +37,7 @@ export default function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-cream/20 px-3 py-1 text-xs uppercase tracking-wide text-cream/80 transition hover:border-gold hover:text-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
+                  className="rounded-full border border-cream/20 px-3 py-1 text-xs uppercase tracking-wide text-cream/80 transition hover:border-cream/50 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
                 >
                   {key}
                 </a>
@@ -66,19 +66,19 @@ export default function Footer() {
           <p className="flex flex-wrap gap-x-4 gap-y-2">
             <Link
               to={siteConfig.links.policies}
-              className="hover:text-gold focus:outline-none focus-visible:underline"
+              className="hover:text-cream focus:outline-none focus-visible:underline"
             >
               Policies
             </Link>
             <Link
               to={`${siteConfig.links.policies}/privacy`}
-              className="hover:text-gold focus:outline-none focus-visible:underline"
+              className="hover:text-cream focus:outline-none focus-visible:underline"
             >
               Privacy
             </Link>
             <Link
               to={`${siteConfig.links.policies}/terms`}
-              className="hover:text-gold focus:outline-none focus-visible:underline"
+              className="hover:text-cream focus:outline-none focus-visible:underline"
             >
               Terms
             </Link>

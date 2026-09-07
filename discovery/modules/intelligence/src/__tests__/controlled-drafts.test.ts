@@ -46,6 +46,7 @@ const caseFile: CaseFile = {
     },
   ],
   pitchAngle: 'Launch a first professional site for local discovery',
+  opportunityType: 'greenfield',
   executiveSummary: 'Greenfield cafe lacks owned web presence.',
   recommendedServices: ['Website build'],
   purchaseReadiness: {
@@ -68,7 +69,7 @@ const caseFile: CaseFile = {
     complaintThemes: [{ id: 'c1', label: 'Hard to book', mentionCount: 2, sampleExcerpt: null }],
     praiseThemes: [],
   },
-  websiteGaps: [{ key: 'no_site', label: 'No owned website', severity: 'high' }],
+  websiteGaps: [{ key: 'no_website', label: 'No owned website', severity: 'high' }],
   techStack: null,
   projectValue: null,
   evidence: [{ id: 'ev1', label: 'No owned website', excerpt: null, url: null }],
@@ -105,9 +106,15 @@ assert.ok(emailFactPack.purchaseReadiness);
 assert.equal(emailFactPack.solutions.length, 1);
 assert.ok(emailFactPack.sentiment?.complaintThemes.length);
 assert.equal(emailFactPack.pursuitContext?.status, 'REVIEWED');
+assert.ok(emailFactPack.selectedOffer, 'selectedOffer resolved for greenfield cafe');
+assert.equal(emailFactPack.selectedOffer?.productLine, 'sleek_pages');
+assert.match(emailFactPack.selectedOffer?.url ?? '', /\/sleek-pages$/);
 assert.ok(buildDraftPrompt(emailFactPack).includes('Greenfield Cafe'));
 assert.ok(buildDraftPrompt(emailFactPack).includes('pain_discovery'));
 assert.ok(buildDraftPrompt(emailFactPack).includes('Platform: email'));
+assert.ok(buildDraftPrompt(emailFactPack).includes('selectedOffer'));
+assert.ok(buildDraftPrompt(emailFactPack).includes('/sleek-pages'));
+assert.ok(buildDraftPrompt(emailFactPack).includes('exactly one product URL'));
 assert.equal(hashFactPack(emailFactPack).length, 64);
 
 const phoneFactPack = buildDraftFactPack(caseFile, 'phone');
@@ -116,10 +123,12 @@ assert.ok(phonePrompt.includes('Platform: phone'));
 assert.ok(phonePrompt.includes('sections.opening15s'));
 assert.ok(phonePrompt.includes('spoken cadence'));
 assert.ok(phonePrompt.includes('objectionHandlers'));
+assert.ok(phonePrompt.includes('do not include URLs'));
 
 const waFactPack = buildDraftFactPack(caseFile, 'whatsapp');
 assert.ok(buildDraftPrompt(waFactPack).includes('Platform: WhatsApp'));
 assert.ok(buildDraftPrompt(waFactPack).includes('max 420'));
+assert.ok(buildDraftPrompt(waFactPack).includes('/sleek-pages'));
 
 const followUpFactPack = buildDraftFactPack(caseFile, 'follow_up');
 assert.ok(buildDraftPrompt(followUpFactPack).includes('Platform: follow-up'));

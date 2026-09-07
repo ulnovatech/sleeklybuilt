@@ -5,7 +5,7 @@ require_once __DIR__ . '/lib/cors.php';
 require_once __DIR__ . '/lib/schema.php';
 require_once __DIR__ . '/../../../php/payments/packages.php';
 
-uln_portfolio_cors();
+uln_portfolio_cors(true);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);

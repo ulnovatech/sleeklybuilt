@@ -17,6 +17,8 @@ export default function TeamUsersPanel({ currentUserId }) {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
+  const [teamManagement, setTeamManagement] = useState(true)
+  const [clerkMessage, setClerkMessage] = useState('')
   const [email, setEmail] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
@@ -31,6 +33,8 @@ export default function TeamUsersPanel({ currentUserId }) {
     try {
       const data = await AuthAPI.listUsers()
       setUsers(data.users || [])
+      setTeamManagement(data.team_management !== false)
+      setClerkMessage(data.message || '')
     } catch (err) {
       setLoadError(err.message || 'Could not load team members.')
     } finally {
@@ -88,8 +92,16 @@ export default function TeamUsersPanel({ currentUserId }) {
     <section className="rounded-2xl border border-gray-800 bg-bg-800/80 p-4 sm:p-6">
       <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-400">Team</h2>
       <p className="mt-1 text-sm text-slate-500">
-        Create dashboard accounts for colleagues. Public signup stays closed after the first admin unless you enable it in env.
+        {teamManagement
+          ? 'Create dashboard accounts for colleagues. Public signup stays closed after the first admin unless you enable it in env.'
+          : 'Single-operator Clerk SSO. Manage the allowlisted admin in the Clerk dashboard.'}
       </p>
+
+      {!teamManagement && clerkMessage ? (
+        <p className="mt-3 rounded-lg border border-sky-500/30 bg-sky-500/10 p-3 text-sm text-sky-100" role="status">
+          {clerkMessage}
+        </p>
+      ) : null}
 
       {loading ? (
         <div className="mt-4 h-24 animate-pulse rounded-xl bg-gray-800/60" aria-busy="true" />
@@ -122,7 +134,7 @@ export default function TeamUsersPanel({ currentUserId }) {
                     {u.email} · {u.role}
                   </p>
                 </div>
-                {u.is_active && u.id !== currentUserId ? (
+                {teamManagement && u.is_active && u.id !== currentUserId ? (
                   <button
                     type="button"
                     onClick={() => onDeactivate(u.id)}
@@ -137,6 +149,7 @@ export default function TeamUsersPanel({ currentUserId }) {
         </ul>
       ) : null}
 
+      {teamManagement ? (
       <form onSubmit={onCreate} className="mt-6 space-y-4 border-t border-gray-800 pt-6" noValidate>
         <h3 className="text-sm font-medium text-slate-200">Add account</h3>
         {formError ? (
@@ -207,6 +220,7 @@ export default function TeamUsersPanel({ currentUserId }) {
           {saving ? 'Creating…' : 'Create account'}
         </button>
       </form>
+      ) : null}
     </section>
   )
 }

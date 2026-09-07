@@ -169,9 +169,12 @@ class PushNotificationService
 
     private function credentialsPath(): string
     {
-        $relative = getenv('FCM_CREDENTIALS_PATH') ?: getenv('GA_CREDENTIALS_PATH') ?: 'service-account.json';
-
-        return __DIR__ . '/../' . ltrim($relative, '/\\');
+        require_once __DIR__ . '/../lib/google_credentials.php';
+        $path = sleeklybuilt_google_credentials_path();
+        if ($path === null) {
+            throw new RuntimeException('Google credentials file is not configured');
+        }
+        return $path;
     }
 
     private function buildTitle(string $type): string

@@ -5,10 +5,14 @@ import { Section, SectionHeading } from '../components/site/Section'
 import { SurfaceCard } from '../components/site/ui'
 import { productEntries } from '../config/searchIndex'
 import { siteConfig } from '../site.config'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 
 export default function NotFoundPage() {
-  usePageTitle('Page not found')
+  usePageSeo({
+    title: 'Page not found — SleeklyBuilt',
+    description: 'That page has moved or never existed. Browse SleeklyBuilt products, pricing, and contact.',
+    noindex: true,
+  })
 
   return (
     <>

@@ -20,6 +20,7 @@ function normalizeLayout(item) {
     /** Deep link into the portfolio app for this layout */
     orderUrl: `/portfolio-app/order?template=${encodeURIComponent(item.name)}`,
     image: item.mainImage || null,
+    mobileImage: item.mobileImage || null,
   }
 }
 

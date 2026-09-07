@@ -140,6 +140,5 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Could not look up your order. Please try again.',
-        'error' => $e->getMessage(),
     ]);
 }

@@ -1,5 +1,7 @@
 # Rebrand cutover checklist (SleeklyBuilt)
 
+> Current public URLs: [`ACCESS.md`](./ACCESS.md) (`https://sleeklybuilt.pro`). GCE IP notes below are historical.
+
 ## Done
 
 ### Local code

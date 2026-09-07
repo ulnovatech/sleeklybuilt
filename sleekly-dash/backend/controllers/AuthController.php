@@ -2,22 +2,52 @@
 
 require_once __DIR__ . '/../auth/SessionAuth.php';
 require_once __DIR__ . '/../auth/MobileTokenAuth.php';
+require_once __DIR__ . '/../auth/ClerkTokenAuth.php';
+require_once __DIR__ . '/../auth/ApiAuth.php';
 
 class AuthController
 {
     public function __construct(
         private SessionAuth $auth,
         private MobileTokenAuth $mobileAuth,
+        private ?ApiAuth $apiAuth = null,
     ) {
     }
 
     public function capabilities(): void
     {
-        echo json_encode($this->auth->users()->signupStatus());
+        $status = $this->auth->users()->signupStatus();
+        if (ClerkTokenAuth::passwordLoginDisabled()) {
+            $status['auth_mode'] = 'clerk';
+            $status['public_signup_open'] = false;
+            $status['password_login'] = false;
+            $status['message'] = 'Sign in with the operator Clerk account.';
+        } else {
+            $status['auth_mode'] = 'password';
+            $status['password_login'] = true;
+        }
+        echo json_encode($status);
+    }
+
+    private function rejectPasswordAuth(string $message = 'Password sign-in is disabled. Use Clerk.'): bool
+    {
+        if (!ClerkTokenAuth::passwordLoginDisabled()) {
+            return false;
+        }
+        http_response_code(403);
+        echo json_encode([
+            'error' => $message,
+            'auth_mode' => 'clerk',
+        ]);
+        return true;
     }
 
     public function login(): void
     {
+        if ($this->rejectPasswordAuth()) {
+            return;
+        }
+
         $this->rateLimit('dash_auth_login', 20, 3600);
 
         $data = json_decode(file_get_contents('php://input'), true);
@@ -53,6 +83,10 @@ class AuthController
 
     public function register(): void
     {
+        if ($this->rejectPasswordAuth('Public registration is closed. Admin access is Clerk SSO only.')) {
+            return;
+        }
+
         $this->rateLimit('dash_auth_register', 8, 3600);
 
         $users = $this->auth->users();
@@ -105,6 +139,10 @@ class AuthController
 
     public function forgotPassword(): void
     {
+        if ($this->rejectPasswordAuth('Password reset is disabled. Recover access in Clerk.')) {
+            return;
+        }
+
         $this->rateLimit('dash_auth_forgot', 8, 3600);
 
         $data = json_decode(file_get_contents('php://input'), true);
@@ -127,6 +165,10 @@ class AuthController
 
     public function resetPassword(): void
     {
+        if ($this->rejectPasswordAuth('Password reset is disabled. Recover access in Clerk.')) {
+            return;
+        }
+
         $this->rateLimit('dash_auth_reset', 10, 3600);
 
         $data = json_decode(file_get_contents('php://input'), true);
@@ -173,12 +215,40 @@ class AuthController
 
     public function listUsers(): void
     {
+        if (ClerkTokenAuth::passwordLoginDisabled()) {
+            $user = $this->apiAuth?->user();
+            if ($user === null) {
+                http_response_code(401);
+                echo json_encode(['error' => 'Unauthorized', 'auth_mode' => 'clerk']);
+                return;
+            }
+            echo json_encode([
+                'users' => [[
+                    'id' => $user['id'],
+                    'email' => $user['email'] ?? '',
+                    'username' => $user['username'] ?? '',
+                    'display_name' => $user['display_name'] ?? '',
+                    'role' => 'admin',
+                    'is_active' => 1,
+                    'auth_via' => 'clerk',
+                ]],
+                'auth_mode' => 'clerk',
+                'team_management' => false,
+                'message' => 'Single-operator mode: manage the allowlisted Clerk user in the Clerk dashboard.',
+            ]);
+            return;
+        }
+
         $this->auth->requireAuth();
         echo json_encode(['users' => $this->auth->users()->listUsers()]);
     }
 
     public function createUser(): void
     {
+        if ($this->rejectPasswordAuth('Team invites are disabled under Clerk SSO. Use the Clerk allowlist.')) {
+            return;
+        }
+
         $this->auth->requireAuth();
         $actor = $this->auth->user();
         if (($actor['role'] ?? '') !== 'admin') {
@@ -214,6 +284,10 @@ class AuthController
 
     public function deactivateUser(int $id): void
     {
+        if ($this->rejectPasswordAuth('Team management is disabled under Clerk SSO.')) {
+            return;
+        }
+
         $this->auth->requireAuth();
         $actor = $this->auth->user();
         if (($actor['role'] ?? '') !== 'admin') {
@@ -239,10 +313,15 @@ class AuthController
 
     public function me(): void
     {
-        $user = $this->auth->user();
+        $this->rateLimit('dash_auth_me', 120, 3600);
+
+        $user = $this->apiAuth !== null ? $this->apiAuth->user() : $this->auth->user();
         if (!$user) {
             http_response_code(401);
-            echo json_encode(['error' => 'Unauthorized']);
+            echo json_encode([
+                'error' => 'Unauthorized',
+                'auth_mode' => ClerkTokenAuth::passwordLoginDisabled() ? 'clerk' : 'password',
+            ]);
             return;
         }
         echo json_encode(['user' => $user]);
@@ -250,6 +329,10 @@ class AuthController
 
     public function mobileLogin(): void
     {
+        if ($this->rejectPasswordAuth('Mobile password login is disabled. Use Clerk Sign-in.')) {
+            return;
+        }
+
         $this->rateLimit('mobile_admin_login', 10, 3600);
 
         $data = json_decode(file_get_contents('php://input'), true);
@@ -295,6 +378,21 @@ class AuthController
 
     public function mobileMe(): void
     {
+        if ($this->apiAuth !== null) {
+            $user = $this->apiAuth->user();
+            if ($user !== null) {
+                echo json_encode(['success' => true, 'user' => $user]);
+                return;
+            }
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Unauthorized',
+                'auth_mode' => ClerkTokenAuth::passwordLoginDisabled() ? 'clerk' : 'password',
+            ]);
+            return;
+        }
+
         if (!$this->mobileAuth->authenticateRequest()) {
             http_response_code(401);
             echo json_encode(['success' => false, 'error' => 'Unauthorized']);

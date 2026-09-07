@@ -1,12 +1,80 @@
-import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import { SignIn } from '@clerk/clerk-react'
 import toast from 'react-hot-toast'
+import { useState } from 'react'
 import { HiLockClosed, HiUser } from 'react-icons/hi'
 import { useAuth } from '../context/AuthContext'
 import { ApiError } from '../services/api'
+import { isClerkConfigured } from '../lib/clerkToken'
 import { SITE } from '../site.config'
 
-export default function LoginPage() {
+function ClerkLogin() {
+  const { isAuthenticated, loading, denyReason, sessionWarning } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface text-white/70">
+        Checking operator session…
+      </div>
+    )
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col bg-surface">
+      <div className="relative overflow-hidden px-6 pb-8 pt-[max(env(safe-area-inset-top),2.5rem)]">
+        <div
+          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-30 blur-3xl"
+          style={{ background: SITE.brandColor }}
+        />
+        <div className="relative mx-auto max-w-md">
+          <p className="text-sm font-semibold uppercase tracking-widest text-brand">
+            Ulnova
+          </p>
+          <h1 className="mt-2 text-3xl font-bold text-white">{SITE.name}</h1>
+          <p className="mt-2 text-white/60">
+            Operator SSO — sign in with the single admin Clerk account
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col px-6 pb-8">
+        <div className="mx-auto w-full max-w-md rounded-2xl border border-white/10 bg-surface-card p-4 shadow-2xl shadow-black/40">
+          {denyReason ? (
+            <p className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {denyReason}
+            </p>
+          ) : null}
+          {sessionWarning ? (
+            <p className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+              {sessionWarning}
+            </p>
+          ) : null}
+          <SignIn
+            routing="hash"
+            forceRedirectUrl="/"
+            appearance={{
+              elements: {
+                footerAction: { display: 'none' },
+                footer: { display: 'none' },
+                card: {
+                  background: 'transparent',
+                  boxShadow: 'none',
+                  border: 'none',
+                },
+              },
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PasswordLogin() {
   const { login, isAuthenticated, loading } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -109,4 +177,11 @@ export default function LoginPage() {
       </div>
     </div>
   )
+}
+
+export default function LoginPage() {
+  if (isClerkConfigured()) {
+    return <ClerkLogin />
+  }
+  return <PasswordLogin />
 }

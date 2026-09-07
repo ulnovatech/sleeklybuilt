@@ -8,7 +8,7 @@ import { trustCommitments } from '../../config/proof'
  * Hero Variant C — text + real proof (design-os/patterns/hero_sections.md + UX-GATE §15.3.2).
  * First viewport: brand, one headline, one support, one CTA group, quiet proof.
  * Never 100vh; compact padding so primary action clears ~667px fold.
- * One gold accent: Start a project.
+ * One spark accent: Start a project.
  */
 export default function HeroSection() {
   return (

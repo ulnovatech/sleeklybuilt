@@ -8,6 +8,7 @@ import { GmailReplyService, SleeklyDashBridgeService, isGmailConnected } from '@
 import { QualificationService } from '@agency/qualification';
 import { ProposalService } from '@agency/proposal';
 import type { LeadStatus } from '@agency/types';
+import { requireOperator } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 const crm = new CrmService();
@@ -26,6 +27,9 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const operator = await requireOperator();
+  if (operator instanceof NextResponse) return operator;
+
   try {
     const { id } = await params;
     const { lead, notes, activities } = await crm.getLeadWithDetails(id);

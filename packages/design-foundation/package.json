@@ -1,0 +1,32 @@
+{
+  "name": "@sleeklybuilt/design-foundation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared public Design OS tokens and primitives for SleeklyBuilt customer apps (marketing, portfolio, blog).",
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./styles/base.css": "./styles/base.css",
+    "./styles/components.css": "./styles/components.css",
+    "./styles/foundation.css": "./styles/foundation.css",
+    "./styles/surface-obsidian.css": "./styles/surface-obsidian.css",
+    "./tailwind-preset": "./tailwind.preset.js",
+    "./react": "./src/index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "tokens.css",
+    "styles",
+    "tailwind.preset.js",
+    "src",
+    "README.md",
+    "DESIGN.md"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}

@@ -1,85 +1,59 @@
 <?php
+/**
+ * Shared MySQL settings for public PHP handlers (contact, inquiries, portfolio APIs).
+ * Production / Docker: DB_* from the environment (php/.env bind-mount).
+ * Local XAMPP fallback only when DB_HOST is unset and the request is localhost.
+ */
+
 require_once __DIR__ . '/env.php';
 
-// =====================================
-// CONFIG INDEX
-// 1. Environment Detection
-// 2. Base URL
-// 3. Database Settings
-// 4. Database Connection
-// 5. Debug Settings
-// =====================================
+$db_host = getenv('DB_HOST') ?: '';
+$db_user = getenv('DB_USER') ?: '';
+$db_pass = getenv('DB_PASS') !== false ? (string) getenv('DB_PASS') : '';
+$db_name = getenv('DB_NAME') ?: '';
+$db_port = (int) (getenv('DB_PORT') ?: '3306');
 
-// 1️⃣ Environment Detection
-$httpHost = $_SERVER['HTTP_HOST'] ?? '';
-$baseUrl = getenv('BASE_URL') ?: '';
-$isLocalHost = $httpHost === 'localhost'
-    || str_starts_with($httpHost, '127.0.0.1')
-    || str_starts_with($httpHost, 'localhost:');
-$isLocalBaseUrl = str_contains($baseUrl, 'localhost') || str_contains($baseUrl, '127.0.0.1');
-$ENV = ($isLocalHost || $isLocalBaseUrl) ? 'local' : 'production';
+$hostHeader = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+$isLocalHost = $hostHeader === 'localhost'
+    || str_starts_with($hostHeader, 'localhost:')
+    || $hostHeader === '127.0.0.1'
+    || str_starts_with($hostHeader, '127.0.0.1:');
 
-/** Customer-facing brand name (override via BRAND_NAME env). */
-$BRAND_NAME = getenv('BRAND_NAME') ?: 'SleeklyBuilt';
+if ($db_host === '' && $isLocalHost) {
+    $db_host = 'localhost';
+    $db_user = $db_user !== '' ? $db_user : 'root';
+    $db_name = $db_name !== '' ? $db_name : 'ulnovatech';
+    $db_port = getenv('DB_PORT') ? $db_port : 3310;
+}
 
-// 2️⃣ Base URL
-$BASE_URL = getenv('BASE_URL') ?: ($ENV === 'local' ? 'http://localhost/sleeklybuilt' : 'https://sleeklybuilt.pro');
-
-// 3️⃣ Database Settings
 $DB = [
-    'host' => getenv('DB_HOST') ?: ($ENV === 'local' ? 'localhost' : ''),
-    'user' => getenv('DB_USER') ?: ($ENV === 'local' ? 'root' : ''),
-    'pass' => getenv('DB_PASS') ?: ($ENV === 'local' ? '' : ''),
-    'name' => getenv('DB_NAME') ?: ($ENV === 'local' ? 'sleeklybuilt' : ''),
-    'port' => getenv('DB_PORT') ?: 3306,
+    'host' => $db_host,
+    'user' => $db_user,
+    'pass' => $db_pass,
+    'name' => $db_name,
+    'port' => $db_port,
 ];
 
-// Back-compat variables expected by legacy handlers (e.g. contactus.php)
-$db_host = $DB['host'];
-$db_user = $DB['user'];
-$db_pass = $DB['pass'];
-$db_name = $DB['name'];
-$db_port = (int)$DB['port'];
+$GLOBALS['DB'] = $DB;
+$GLOBALS['db_host'] = $db_host;
+$GLOBALS['db_user'] = $db_user;
+$GLOBALS['db_pass'] = $db_pass;
+$GLOBALS['db_name'] = $db_name;
+$GLOBALS['db_port'] = $db_port;
 
-/**
- * Exit with JSON for API form handlers that include this config.
- */
-function uln_config_fail(int $code, string $message): void
-{
-    if (!headers_sent()) {
-        header('Content-Type: application/json; charset=UTF-8');
+if (!function_exists('uln_db_settings')) {
+    /**
+     * @return array{host:string,user:string,pass:string,name:string,port:int}
+     */
+    function uln_db_settings(): array
+    {
+        $db = $GLOBALS['DB'] ?? [];
+        return [
+            'host' => (string) ($db['host'] ?? ''),
+            'user' => (string) ($db['user'] ?? ''),
+            'pass' => (string) ($db['pass'] ?? ''),
+            'name' => (string) ($db['name'] ?? ''),
+            'port' => (int) ($db['port'] ?? 3306),
+        ];
     }
-    http_response_code($code);
-    echo json_encode(['status' => 'error', 'message' => $message]);
-    exit;
-}
-
-// Fail fast in production if env vars are missing (avoid hardcoded secrets in source)
-if ($ENV !== 'local') {
-    $missing = [];
-    foreach (['DB_HOST', 'DB_USER', 'DB_NAME'] as $key) {
-        if (getenv($key) === false || getenv($key) === '') {
-            $missing[] = $key;
-        }
-    }
-    // Empty password is valid (e.g. some local setups); only fail when unset
-    if (getenv('DB_PASS') === false) {
-        $missing[] = 'DB_PASS';
-    }
-    if (!empty($missing)) {
-        uln_config_fail(500, 'Server configuration error. Please contact support.');
-    }
-}
-
-// 4️⃣ Database Connection
-$conn = new mysqli($DB['host'], $DB['user'], $DB['pass'], $DB['name'], $DB['port']);
-if ($conn->connect_error) {
-    $detail = $ENV === 'local' ? $conn->connect_error : 'Database unavailable.';
-    uln_config_fail(500, 'Database connection failed: ' . $detail);
-}
-
-// 5️⃣ Debug Settings (only local)
-if ($ENV === 'local') {
-    ini_set('display_errors', 1);
-    error_reporting(E_ALL);
 }

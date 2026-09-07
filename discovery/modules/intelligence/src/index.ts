@@ -91,6 +91,13 @@ export {
   type BoIIntentSignalInput,
 } from './boi/build-structured-pains';
 export { mapPainsToSolutions } from './boi/map-pains-to-solutions';
+export {
+  normalizeGapId,
+  resolveSelectedOffer,
+  type ResolveSelectedOfferInput,
+  type SelectedOffer,
+  type SelectedOfferProductLine,
+} from './boi/resolve-selected-offer';
 export { computePurchaseReadiness } from './boi/compute-purchase-readiness';
 export { buildSalesBrief } from './boi/build-sales-brief';
 export { buildSentimentSummary } from './boi/build-sentiment-summary';
@@ -138,6 +145,7 @@ export {
   getDraftBudgetStatus,
   hashFactPack,
   parseDraftResponse,
+  selectedOfferForCaseFile,
   DraftGenerationError,
   type DraftChannel,
   type DraftFactPack,

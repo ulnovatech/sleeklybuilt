@@ -171,8 +171,10 @@ jobs:
       - name: Hub smoke (3H gate)
         run: php php/attendant/scripts/smoke_hub.php
 
-      - name: Widget static checks
-        run: node marketing/scripts/check-attendant-widget.mjs
+      - name: Widget + Performante static checks
+        run: |
+          node marketing/scripts/check-attendant-widget.mjs
+          node marketing/scripts/check-performante-auth.mjs
 
       - name: Marketing production build
         working-directory: marketing

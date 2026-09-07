@@ -1,16 +1,16 @@
-/** Public site URL — interim nip.io host until custom domain is live */
+/** Public site URL — production apex (override with VITE_SITE_URL if needed) */
 export const siteUrl =
-  import.meta.env.VITE_SITE_URL?.replace(/\/$/, '') || 'http://hub.34.66.94.12.nip.io'
+  import.meta.env.VITE_SITE_URL?.replace(/\/$/, '') || 'https://sleeklybuilt.pro'
 
 export const siteConfig = {
   name: 'SleeklyBuilt',
   legalName: 'SleeklyBuilt',
   tagline: 'Websites, apps & systems — built sleek, built right',
   description:
-    'SleeklyBuilt crafts custom websites, mobile apps, graphics, and business systems for clients in Uganda and beyond.',
+    'Custom websites, mobile apps, and business systems for companies in Uganda and beyond. Clear pricing, live portfolio, and builds you can click through.',
   email: 'sales@sleeklybuilt.pro',
   location: 'Kampala, Uganda',
-  addressNote: 'Office under development',
+  addressNote: 'By appointment · Kampala',
   phones: ['+256 791779448', '+256 749594464', '+256 772169960'],
   primaryPhone: '+256791779448',
   whatsapp: 'https://wa.me/256749594464',

@@ -60,6 +60,8 @@ export type {
   AgencySettings,
   AgencyPackage,
   AgencyService,
+  AgencyProductLine,
+  AgencyProductLineId,
   AgencyPresetId,
   LocalePack,
   LocalePackToken,

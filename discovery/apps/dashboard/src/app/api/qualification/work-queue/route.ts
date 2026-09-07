@@ -1,3 +1,4 @@
+import { requireOperator } from '@/lib/api-auth';
 import {
   QualificationService,
   type VerificationFilter,
@@ -32,6 +33,9 @@ const OPPORTUNITY_TYPES: OpportunityType[] = [
 ];
 
 export async function GET(request: Request) {
+  const operator = await requireOperator();
+  if (operator instanceof NextResponse) return operator;
+
   try {
     const { searchParams } = new URL(request.url);
     const oppType = searchParams.get('opportunityType');

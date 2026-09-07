@@ -12,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
     "@heroicons/react": "^2.2.0",
     "mysql2": "^3.14.3",
     "react": "^19.1.0",

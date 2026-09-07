@@ -181,7 +181,7 @@ Tool names the model may emit are an allow-list. Unknown tools fail closed.
 | --- | --- |
 | Behaviour, prompts, skills | `attendant/` (this tree) |
 | HTTP + Gemini + tools | `php/attendant/` |
-| Widget | `marketing/src/components/attendant/` |
+| Widget | `packages/attendant` (`@sleeklybuilt/attendant`); marketing mounts via Layout |
 | Screen pattern | `design-os/patterns/attendant.md` |
 | Schema of wire objects | `attendant/schemas/` |
 

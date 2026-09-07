@@ -1,54 +1,74 @@
-# Temporary public access (no custom domain)
+# Public access — SleeklyBuilt production
 
-InfinityFree / `sleeklybuilt.pro` names are **abandoned**. Production origin is GCE **`34.66.94.12`**.
+**Canonical host:** `https://sleeklybuilt.pro`  
+**Discovery:** `https://discovery.sleeklybuilt.pro`  
+**Origin:** Linode `172.238.122.106` (Frankfurt) behind **Cloudflare** (Flexible SSL → origin HTTP `:80`)
 
-Until a new domain is purchased, use **IP + [nip.io](https://nip.io)** hostnames (DNS that resolves any `*.A.B.C.D.nip.io` to `A.B.C.D`).
+Legacy GCE IP / nip.io access is retired for public SEO. Keep Linode nip.io Host headers only as emergency smoke fallbacks on the VM.
 
 | Surface | URL |
 |---------|-----|
-| Hub (marketing, `/dash`, PHP APIs) | http://34.66.94.12/ |
-| Hub (named) | http://hub.34.66.94.12.nip.io/ |
-| Hub health | http://hub.34.66.94.12.nip.io/health |
-| Discovery UI / API | http://discovery.34.66.94.12.nip.io/ |
-| Discovery health | http://discovery.34.66.94.12.nip.io/api/health |
+| Hub (marketing, `/dash`, PHP APIs) | https://sleeklybuilt.pro/ |
+| Hub (www) | https://www.sleeklybuilt.pro/ (prefer 301 → apex in Cloudflare) |
+| Hub health | https://sleeklybuilt.pro/health |
+| Operator bridge (noindex, Clerk) | https://sleeklybuilt.pro/performante — **Alt+P** (or **Alt+Shift+P**); destinations only after allowlisted sign-in |
+| Discovery UI / API | https://discovery.sleeklybuilt.pro/ |
+| Discovery health | https://discovery.sleeklybuilt.pro/api/health |
+| Sitemap | https://sleeklybuilt.pro/sitemap.xml |
+| robots.txt | https://sleeklybuilt.pro/robots.txt |
 
-nginx: hub is `default_server` (bare IP → hub). Discovery only matches `discovery.34.66.94.12.nip.io`.
+nginx: hub is `default_server` for apex, `www`, and bare IP. Discovery matches `discovery.sleeklybuilt.pro` only.
 
 ## Env on the VM
 
 `/opt/sleeklybuilt/env/docker.sleeklybuilt.env`:
 
 ```env
-BASE_URL=http://hub.34.66.94.12.nip.io
-ALLOWED_ORIGINS=http://hub.34.66.94.12.nip.io,http://34.66.94.12,http://discovery.34.66.94.12.nip.io
+BASE_URL=https://sleeklybuilt.pro
+ALLOWED_ORIGINS=https://sleeklybuilt.pro,https://www.sleeklybuilt.pro,https://discovery.sleeklybuilt.pro,http://172.238.122.106
 ```
 
 `/opt/sleeklybuilt/env/docker.discovery.env`:
 
 ```env
-NEXT_PUBLIC_APP_URL=http://discovery.34.66.94.12.nip.io
+NEXT_PUBLIC_APP_URL=https://discovery.sleeklybuilt.pro
 ```
 
 After changing Discovery `NEXT_PUBLIC_*`, rebuild `discovery-web` (baked at image build time).
 
+Marketing builds should use:
+
+```env
+VITE_SITE_URL=https://sleeklybuilt.pro
+VITE_GA_MEASUREMENT_ID=G-ER55WHMLGZ
+VITE_CLERK_PUBLISHABLE_KEY=pk_live_...
+VITE_CLERK_ADMIN_USER_ID=user_...
+```
+
+GA4 is injected by `marketing/src/components/seo/Analytics.jsx` at build time when that ID is set. Do **not** also paste Google’s manual `<head>` snippet — that would double-count.
+
 ## Smoke
 
-```bash
-curl -sI http://hub.34.66.94.12.nip.io/health
-curl -sI http://34.66.94.12/health
-curl -s http://discovery.34.66.94.12.nip.io/api/health
-```
-
-On the VM (localhost):
+From the public internet (after Cloudflare DNS):
 
 ```bash
-SMOKE_HOST=hub.34.66.94.12.nip.io bash infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1
+curl -sI https://sleeklybuilt.pro/health
+curl -sI https://www.sleeklybuilt.pro/health
+curl -s https://discovery.sleeklybuilt.pro/api/health
+curl -s https://sleeklybuilt.pro/sitemap.xml | head
 ```
 
-## Later: real domain
+On the VM (localhost, Host headers):
 
-1. Buy a domain; create A records → `34.66.94.12` for apex + `discovery` (or path-based split).
-2. Update nginx `server_name`, env `BASE_URL` / `NEXT_PUBLIC_APP_URL` / `ALLOWED_ORIGINS`.
-3. Optional: Cloudflare Free + Flexible SSL while origin stays HTTP `:80`.
+```bash
+curl -sf -H 'Host: sleeklybuilt.pro' http://127.0.0.1/health
+SMOKE_HOST=sleeklybuilt.pro bash infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1
+curl -sf -H 'Host: discovery.sleeklybuilt.pro' http://127.0.0.1/api/health
+# Unsigned /performante must be 200 and must not include "Operator destinations" in HTML.
+```
 
-See [`DEPLOY_GCLOUD.md`](./DEPLOY_GCLOUD.md). Legacy InfinityFree notes are obsolete for production cutover.
+## DNS / TLS
+
+See [`CLOUDFLARE_DNS.md`](./CLOUDFLARE_DNS.md). SEO automation: [`PERFORMANTE.md`](./PERFORMANTE.md).
+
+GCE-era runbook (historical): [`DEPLOY_GCLOUD.md`](./DEPLOY_GCLOUD.md). Linode runbook: [`DEPLOY_LINODE.md`](./DEPLOY_LINODE.md).

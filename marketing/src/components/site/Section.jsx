@@ -22,7 +22,10 @@ export function Eyebrow({ children, className = '', tone = 'default' }) {
         On invert (obsidian), the hairline stays gold; label uses cream so the primary
         CTA can own the gold accent in that viewport (DESIGN.md 60-30-10 / one gold).
       */}
-      <span className={cn('h-px w-8 bg-gold')} aria-hidden="true" />
+      <span
+        className={cn('h-px w-8', invert ? 'bg-cream/40' : 'bg-emerald/50')}
+        aria-hidden="true"
+      />
       <span className={invert ? 'eyebrow-invert' : 'eyebrow'}>{children}</span>
     </div>
   )

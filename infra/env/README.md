@@ -1,4 +1,4 @@
-# Environment files (GCE VM / Docker)
+# Environment files (Linode VM / Docker)
 
 Secrets and runtime configuration live **outside git**. Copy the `.example` templates on the server, then edit values for production.
 
@@ -46,20 +46,20 @@ See also [`sleeklybuilt.env.example`](./sleeklybuilt.env.example) — naming ali
 
 ## Production checklist (sleeklybuilt)
 
-1. `BASE_URL=http://hub.34.66.94.12.nip.io` (or future custom domain)
+1. `BASE_URL=https://sleeklybuilt.pro` (see [`docs/ACCESS.md`](../../docs/ACCESS.md))
 2. `APP_DEBUG=false`
-3. `ALLOWED_ORIGINS` — hub + discovery temporary hosts (see [`docs/ACCESS.md`](../../docs/ACCESS.md))
+3. `ALLOWED_ORIGINS` — hub + www + discovery HTTPS hosts (see [`docs/ACCESS.md`](../../docs/ACCESS.md))
 4. `DASH_ADMIN_PASS_HASH` — bcrypt hash; **unset** `DASH_ADMIN_PASS`
 5. Run `php sleekly-dash/backend/scripts/apply_dash_users_migration.php` so `dash_users` is created and the env admin is seeded
 6. Prefer creating additional operators in Dash → Settings → Team (keep `DASH_ALLOW_PUBLIC_SIGNUP` off in production)
 7. `MOBILE_JWT_SECRET` — `openssl rand -hex 32`
 8. `DB_PASS` / `MYSQL_PASSWORD` — strong password, must match in compose env
-9. Copy `secrets/service-account.json` → `public_html/sleekly-dash/backend/service-account.json` (or mount via volume)
+9. Place `service-account.json` in `/opt/sleeklybuilt/secrets/` once. Deploy mounts it at `/var/www/secrets/` and restores a copy into `public_html` after every rsync — do not keep the JSON in git.
 10. Set `FCM_PROJECT_ID` when using admin mobile push
 
 ## Production checklist (discovery)
 
-1. `NEXT_PUBLIC_APP_URL=http://discovery.34.66.94.12.nip.io` (rebuild discovery-web after change)
+1. `NEXT_PUBLIC_APP_URL=https://discovery.sleeklybuilt.pro` (rebuild discovery-web after change)
 2. `ALLOW_DEV_AUTH=false`
 3. `CLERK_SECRET_KEY` and `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 4. `POSTGRES_PASSWORD` / `DATABASE_URL` — strong credentials

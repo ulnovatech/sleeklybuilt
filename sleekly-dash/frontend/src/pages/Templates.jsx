@@ -98,28 +98,52 @@ function EmptyState({ onImport }) {
 }
 
 function TemplateCard({ template, onEditMetadata, onEditContent }) {
-  const initial = template.title?.trim()?.charAt(0)?.toUpperCase() || 'T';
+  const initial = template.title?.trim()?.charAt(0)?.toUpperCase() || 'T'
   const cover = template.entry
     ? `${String(template.entry).replace(/\/?$/, '/') }images/main.png`
-    : null;
-  const [coverFailed, setCoverFailed] = useState(false);
+    : null
+  const mobileCover = template.entry
+    ? `${String(template.entry).replace(/\/?$/, '/') }images/main-mobile.png`
+    : null
+  const [coverFailed, setCoverFailed] = useState(false)
+  const [mobileFailed, setMobileFailed] = useState(false)
+  const dual = Boolean(cover && mobileCover && !coverFailed && !mobileFailed)
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-800 bg-[#111318] transition hover:-translate-y-0.5 hover:border-slate-700 hover:shadow-2xl hover:shadow-violet-950/20">
-      <div className="relative flex h-36 items-end overflow-hidden bg-gradient-to-br from-violet-600/30 via-blue-600/10 to-cyan-500/20 p-5">
-        {cover && !coverFailed ? (
-          <img
-            src={cover}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover object-top opacity-90 transition duration-300 group-hover:scale-[1.02]"
-            onError={() => setCoverFailed(true)}
-          />
-        ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#111318] via-black/20 to-transparent" />
-        <div className="absolute -right-10 -top-14 h-40 w-40 rounded-full bg-violet-400/15 blur-3xl" />
-        {(!cover || coverFailed) && (
-          <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-2xl font-bold text-white backdrop-blur">
-            {initial}
+      <div className="relative overflow-hidden bg-gradient-to-br from-violet-600/30 via-blue-600/10 to-cyan-500/20">
+        {dual ? (
+          <div className="grid grid-cols-[1.55fr_0.7fr] gap-2 p-3">
+            <img
+              src={cover}
+              alt=""
+              className="h-32 w-full rounded-lg object-cover object-top opacity-90"
+              onError={() => setCoverFailed(true)}
+            />
+            <img
+              src={mobileCover}
+              alt=""
+              className="mx-auto h-32 w-auto rounded-lg object-cover object-top opacity-90"
+              onError={() => setMobileFailed(true)}
+            />
+          </div>
+        ) : (
+          <div className="relative flex h-36 items-end p-5">
+            {cover && !coverFailed ? (
+              <img
+                src={cover}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover object-top opacity-90 transition duration-300 group-hover:scale-[1.02]"
+                onError={() => setCoverFailed(true)}
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#111318] via-black/20 to-transparent" />
+            <div className="absolute -right-10 -top-14 h-40 w-40 rounded-full bg-violet-400/15 blur-3xl" />
+            {(!cover || coverFailed) && (
+              <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-2xl font-bold text-white backdrop-blur">
+                {initial}
+              </div>
+            )}
           </div>
         )}
         <span className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-200 backdrop-blur">
@@ -386,11 +410,14 @@ function ScreenshotStatus({ shots, busyAction, onRecapture }) {
     },
     running: {
       title: 'Capturing main pages',
-      body: 'Homepage becomes main.png. Inner pages are limited to the primary nav (max 6 total).',
+      body: 'Homepage → main.png (desktop) + main-mobile.png. Inner pages stay desktop-only (max 6 total).',
     },
     ready: {
       title: 'Gallery shots ready',
-      body: `${files.length || pages.length || 0} page shot${(files.length || pages.length) === 1 ? '' : 's'} saved for the portfolio card strip.`,
+      body:
+        `${files.length || pages.length || 0} shot${(files.length || pages.length) === 1 ? '' : 's'} saved` +
+        (shots?.mobile ? ' · dual desktop/mobile homepage' : '') +
+        '.',
     },
     failed: {
       title: 'Gallery shots failed',
@@ -701,6 +728,8 @@ export default function Templates() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [collection, setCollection] = useState('all');
+  const [catalogPage, setCatalogPage] = useState(1);
+  const CATALOG_PAGE_SIZE = 24;
   const [panel, setPanel] = useState(null);
   const [selectedJobId, setSelectedJobId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -761,6 +790,16 @@ export default function Templates() {
       return matchesCategory && matchesCollection && matchesSearch;
     });
   }, [templates, search, category, collection]);
+
+  useEffect(() => {
+    setCatalogPage(1);
+  }, [search, category, collection]);
+
+  const catalogPageCount = Math.max(1, Math.ceil(filtered.length / CATALOG_PAGE_SIZE));
+  const pagedTemplates = useMemo(() => {
+    const start = (catalogPage - 1) * CATALOG_PAGE_SIZE;
+    return filtered.slice(start, start + CATALOG_PAGE_SIZE);
+  }, [filtered, catalogPage]);
 
   const openJob = (job) => {
     setError('');
@@ -924,25 +963,50 @@ export default function Templates() {
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-white">Published templates</h2>
-            <p className="mt-1 text-xs text-slate-500">{filtered.length} shown</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {filtered.length} match{filtered.length === 1 ? '' : 'es'}
+              {filtered.length > CATALOG_PAGE_SIZE
+                ? ` · page ${catalogPage}/${catalogPageCount}`
+                : ''}
+            </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <label className="relative">
+            <label className="relative" htmlFor="templates-search">
+              <span className="sr-only">Search templates</span>
               <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-600" />
               <input
+                id="templates-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search templates"
-                className="form-input mt-0 py-2 pl-9 sm:w-60"
+                className="form-input mt-0 min-h-11 py-2 pl-9 sm:w-60"
               />
             </label>
-            <select value={collection} onChange={(event) => setCollection(event.target.value)} className="form-input mt-0 py-2 sm:w-44">
+            <label htmlFor="templates-collection" className="sr-only">
+              Collection
+            </label>
+            <select
+              id="templates-collection"
+              value={collection}
+              onChange={(event) => setCollection(event.target.value)}
+              className="form-input mt-0 min-h-11 py-2 sm:w-44"
+              aria-label="Collection"
+            >
               <option value="all">All collections</option>
               {COLLECTIONS.map((item) => (
                 <option key={item.id} value={item.id}>{item.label}</option>
               ))}
             </select>
-            <select value={category} onChange={(event) => setCategory(event.target.value)} className="form-input mt-0 py-2 sm:w-44">
+            <label htmlFor="templates-category" className="sr-only">
+              Category
+            </label>
+            <select
+              id="templates-category"
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              className="form-input mt-0 min-h-11 py-2 sm:w-44"
+              aria-label="Category"
+            >
               {categories.map((value) => (
                 <option key={value} value={value}>{value === 'all' ? 'All categories' : value}</option>
               ))}
@@ -955,7 +1019,7 @@ export default function Templates() {
             ? Array.from({ length: 6 }, (_, index) => (
                 <div key={index} className="h-80 animate-pulse rounded-2xl border border-slate-800 bg-slate-900/60" />
               ))
-            : filtered.map((template) => (
+            : pagedTemplates.map((template) => (
                 <TemplateCard
                   key={template.slug}
                   template={template}
@@ -978,6 +1042,30 @@ export default function Templates() {
             </div>
           )}
         </div>
+
+        {!loading && filtered.length > CATALOG_PAGE_SIZE ? (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              disabled={catalogPage <= 1}
+              onClick={() => setCatalogPage((p) => Math.max(1, p - 1))}
+              className="inline-flex min-h-11 items-center rounded-lg bg-slate-800 px-4 text-sm text-white disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-slate-400">
+              Page {catalogPage} of {catalogPageCount}
+            </span>
+            <button
+              type="button"
+              disabled={catalogPage >= catalogPageCount}
+              onClick={() => setCatalogPage((p) => Math.min(catalogPageCount, p + 1))}
+              className="inline-flex min-h-11 items-center rounded-lg bg-slate-800 px-4 text-sm text-white disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        ) : null}
       </section>
 
       {panel === 'import' && (

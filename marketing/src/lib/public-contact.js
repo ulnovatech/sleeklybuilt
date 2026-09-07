@@ -6,7 +6,7 @@
 const DEFAULT_URL =
   import.meta.env.VITE_SITE_CONTACT_URL ||
   (import.meta.env.DEV
-    ? 'http://localhost/ulnovatech/api/public/site-contact'
+    ? 'http://localhost/sleeklybuilt/api/public/site-contact'
     : '/api/public/site-contact')
 
 export async function fetchPublicContact(url = DEFAULT_URL) {

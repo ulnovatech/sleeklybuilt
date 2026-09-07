@@ -187,6 +187,8 @@ export default function SettingsPage() {
         location: '',
         senderName: '',
         signature: '',
+        siteUrl: '',
+        productLines: [],
         packages: [],
         services: [],
       },
@@ -367,7 +369,7 @@ export default function SettingsPage() {
             </span>
           </label>
           <label className="block text-sm">
-            <span className="text-slate-700 font-medium">Default minimum score (0 = none)</span>
+            <span className="text-slate-700 font-medium">Default minimum score (0 = disable floor)</span>
             <input
               type="number"
               min={0}
@@ -381,6 +383,10 @@ export default function SettingsPage() {
                 })
               }
             />
+            <span className="block text-slate-500 text-xs mt-0.5">
+              Applied when review/work queues omit minScore. Set 0 to turn the floor off. Env:{' '}
+              <code className="text-[11px]">QUALIFICATION_MIN_SCORE_DEFAULT</code> (default 25).
+            </span>
           </label>
           <div className="border-t border-slate-100 pt-4 space-y-3">
             <h4 className="text-sm font-medium text-slate-900">ICP scoring</h4>

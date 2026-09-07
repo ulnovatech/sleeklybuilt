@@ -20,7 +20,7 @@ export default function CategoryStoryStrip({ businessTypeId, layoutFitId }) {
     <aside
       id="category-story"
       aria-live="polite"
-      className="mb-8 border-l-2 border-gold pl-5 md:pl-6"
+      className="mb-8 border-l-2 border-emerald/40 pl-5 md:pl-6"
     >
       <p className="text-meta font-semibold uppercase tracking-[0.08em] text-emerald">
         {story.label}

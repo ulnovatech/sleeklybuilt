@@ -10,9 +10,9 @@ docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml
 
 sleep 4
 echo "== discovery via nginx =="
-curl -sI -H 'Host: discovery.34.66.94.12.nip.io' http://127.0.0.1/ | head -15
+curl -sI -H 'Host: discovery.sleeklybuilt.pro' http://127.0.0.1/ | head -15
 echo "== health =="
-curl -sf -H 'Host: discovery.34.66.94.12.nip.io' http://127.0.0.1/api/health
+curl -sf -H 'Host: discovery.sleeklybuilt.pro' http://127.0.0.1/api/health
 echo
 echo "== discovery-web IP =="
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' infra-discovery-web-1

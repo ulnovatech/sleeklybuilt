@@ -117,6 +117,10 @@ function summarizeStagePayload(stage: string, payload: Record<string, unknown> |
     case 'score':
       return `Scored ${payload.scored ?? 0} businesses`;
     case 'browser_enrich': {
+      if (payload.skipped) {
+        const reason = String(payload.reason || 'skipped');
+        return `Browser enrich skipped (${reason})`;
+      }
       const biRefresh = payload.biRefresh as { refreshed?: number } | undefined;
       const rescore = payload.rescore as { rescored?: number; scoreIncreased?: number } | undefined;
       const boiSynth = payload.boiSynth as { synthesized?: number } | undefined;

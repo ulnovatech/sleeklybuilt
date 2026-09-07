@@ -63,10 +63,10 @@ docker compose -f infra/docker-compose.full.yml -f infra/docker-compose.prod.yml
 sleep 3
 
 echo "== auth status =="
-curl -s -H 'Host: discovery.34.66.94.12.nip.io' -H 'X-Dev-User: operator' http://127.0.0.1/api/auth/status; echo
+curl -s -H 'Host: discovery.sleeklybuilt.pro' -H 'X-Dev-User: operator' http://127.0.0.1/api/auth/status; echo
 echo "== POST with X-Dev-User =="
 curl -s -o /tmp/post.json -w 'HTTP %{http_code}\n' \
-  -X POST -H 'Host: discovery.34.66.94.12.nip.io' -H 'Content-Type: application/json' \
+  -X POST -H 'Host: discovery.sleeklybuilt.pro' -H 'Content-Type: application/json' \
   -H 'X-Dev-User: operator' \
   -d '{"country":"Uganda","city":"Kampala","industry":"Restaurant","runProfile":"micro"}' \
   http://127.0.0.1/api/discovery/runs

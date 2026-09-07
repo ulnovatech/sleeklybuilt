@@ -20,9 +20,15 @@ export default function Prospects() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [openForm, setOpenForm] = useState(false);
   const [editing, setEditing] = useState(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
 
   async function loadStats() {
     try {
@@ -37,7 +43,7 @@ export default function Prospects() {
     setLoading(true);
     try {
       const params = { page, per_page: meta.per_page, sort: 'created_at', dir: 'desc' };
-      if (q.trim()) params.q = q.trim();
+      if (debouncedQ) params.q = debouncedQ;
       if (statusFilter) params.status = statusFilter;
       const res = await ProspectsAPI.list(params);
       setRows(res.data || []);
@@ -59,7 +65,8 @@ export default function Prospects() {
 
   useEffect(() => {
     load(1);
-  }, [q, statusFilter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload when search/status change
+  }, [debouncedQ, statusFilter]);
 
   async function handleSubmit(payload) {
     if (editing?.id) {

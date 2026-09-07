@@ -9,7 +9,7 @@
   },
   "scripts": {
     "db:seed": "tsx src/seed.ts",
-    "test": "tsx src/__tests__/settings.test.ts && tsx src/__tests__/locale-packs.test.ts",
+    "test": "tsx src/__tests__/settings.test.ts && tsx src/__tests__/locale-packs.test.ts && tsx src/__tests__/agency-presets.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

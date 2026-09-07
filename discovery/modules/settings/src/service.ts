@@ -27,6 +27,8 @@ function deepMergeAgency(base: AgencySettings, patch: Partial<AgencySettings>): 
   return {
     ...base,
     ...patch,
+    siteUrl: patch.siteUrl ?? base.siteUrl,
+    productLines: patch.productLines ?? base.productLines,
     packages: patch.packages ?? base.packages,
     services: patch.services ?? base.services,
   };

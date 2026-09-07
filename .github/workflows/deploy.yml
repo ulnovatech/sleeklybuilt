@@ -1,4 +1,4 @@
-name: Deploy to GCE
+name: Deploy to Linode
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: gce-production
+  group: linode-production
   cancel-in-progress: false
 
 jobs:
   deploy:
-    name: Build and deploy to GCE VM
+    name: Build and deploy to Linode
     runs-on: ubuntu-latest
     environment: production
 
@@ -31,7 +31,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y composer php-cli php-mysql php-mbstring php-xml php-zip
 
+      - name: Performante auth + SEO smoke
+        env:
+          SITE_URL: https://sleeklybuilt.pro
+        run: |
+          npm run test:performante:auth
+          npm run seo:generate
+          npm run seo:smoke -- --dir marketing/public
+
       - name: Build public_html
+        env:
+          VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_CLERK_ADMIN_USER_ID: ${{ secrets.VITE_CLERK_ADMIN_USER_ID }}
         run: |
           npm ci
           npm run build:linux
@@ -58,31 +70,36 @@ jobs:
         working-directory: ${{ steps.discovery.outputs.src }}
         env:
           DATABASE_URL: postgresql://build:build@127.0.0.1:5432/build
-          NEXT_PUBLIC_APP_URL: http://discovery.34.66.94.12.nip.io
+          NEXT_PUBLIC_APP_URL: https://discovery.sleeklybuilt.pro
         run: |
           pnpm install --frozen-lockfile
           pnpm build
 
       - name: Configure SSH
         env:
+          LINODE_SSH_HOST: ${{ secrets.LINODE_SSH_HOST }}
+          LINODE_SSH_PRIVATE_KEY: ${{ secrets.LINODE_SSH_PRIVATE_KEY }}
+          LINODE_SSH_USER: ${{ secrets.LINODE_SSH_USER }}
           GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
           GCE_SSH_PRIVATE_KEY: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
-        run: |
-          test -n "$GCE_SSH_HOST"
-          test -n "$GCE_SSH_PRIVATE_KEY"
-          mkdir -p ~/.ssh
-          printf '%s\n' "$GCE_SSH_PRIVATE_KEY" > ~/.ssh/gce_deploy_key
-          chmod 600 ~/.ssh/gce_deploy_key
-          ssh-keyscan -H "$GCE_SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Reset public_html ownership for rsync
-        env:
-          GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
           GCE_SSH_USER: ${{ secrets.GCE_SSH_USER }}
         run: |
-          DEPLOY_USER="${GCE_SSH_USER:-deploy}"
-          DEPLOY_HOST="${DEPLOY_USER}@${GCE_SSH_HOST}"
-          SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
+          HOST="${LINODE_SSH_HOST:-$GCE_SSH_HOST}"
+          KEY="${LINODE_SSH_PRIVATE_KEY:-$GCE_SSH_PRIVATE_KEY}"
+          USER="${LINODE_SSH_USER:-${GCE_SSH_USER:-deploy}}"
+          test -n "$HOST"
+          test -n "$KEY"
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "DEPLOY_SSH_HOST=$HOST" >> "$GITHUB_ENV"
+          echo "DEPLOY_SSH_USER=$USER" >> "$GITHUB_ENV"
+
+      - name: Reset public_html ownership for rsync
+        run: |
+          DEPLOY_HOST="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
           # php-fpm (www-data) can own bind-mounted files after runtime writes;
           # rsync then cannot update attendant/ or delete leftover ulndash/.
           ssh $SSH_OPTS "$DEPLOY_HOST" 'bash -s' <<'REMOTE'
@@ -99,14 +116,10 @@ jobs:
           true
           REMOTE
 
-      - name: Rsync artifacts to GCE VM
-        env:
-          GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
-          GCE_SSH_USER: ${{ secrets.GCE_SSH_USER }}
+      - name: Rsync artifacts to Linode
         run: |
-          DEPLOY_USER="${GCE_SSH_USER:-deploy}"
-          DEPLOY_HOST="${DEPLOY_USER}@${GCE_SSH_HOST}"
-          SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
+          DEPLOY_HOST="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
 
           ssh $SSH_OPTS "$DEPLOY_HOST" 'mkdir -p /opt/sleeklybuilt/public_html /opt/sleeklybuilt/repo'
 
@@ -161,26 +174,17 @@ jobs:
             "${DISCOVERY_SRC}/" "${DEPLOY_HOST}:/opt/sleeklybuilt/repo/discovery/"
 
       - name: Deploy Docker stack and run migrations
-        env:
-          GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
-          GCE_SSH_USER: ${{ secrets.GCE_SSH_USER }}
         run: |
-          DEPLOY_USER="${GCE_SSH_USER:-deploy}"
-          DEPLOY_HOST="${DEPLOY_USER}@${GCE_SSH_HOST}"
-          SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
+          DEPLOY_HOST="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
           ssh $SSH_OPTS "$DEPLOY_HOST" \
             'chmod +x /opt/sleeklybuilt/repo/infra/scripts/prod-deploy-stack.sh && bash /opt/sleeklybuilt/repo/infra/scripts/prod-deploy-stack.sh'
 
       - name: Smoke test (HTTP on VM)
-        env:
-          GCE_SSH_HOST: ${{ secrets.GCE_SSH_HOST }}
-          GCE_SSH_USER: ${{ secrets.GCE_SSH_USER }}
         run: |
-          DEPLOY_USER="${GCE_SSH_USER:-deploy}"
-          DEPLOY_HOST="${DEPLOY_USER}@${GCE_SSH_HOST}"
-          SSH_OPTS="-i ~/.ssh/gce_deploy_key -o StrictHostKeyChecking=accept-new"
-          # Hub smoke with temporary nip.io Host (see docs/ACCESS.md).
+          DEPLOY_HOST="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new"
           ssh $SSH_OPTS "$DEPLOY_HOST" \
-            'curl -sf -H "Host: hub.34.66.94.12.nip.io" http://127.0.0.1/health && SMOKE_HOST=hub.34.66.94.12.nip.io bash /opt/sleeklybuilt/repo/infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1'
+            'curl -sf -H "Host: sleeklybuilt.pro" http://127.0.0.1/health && SMOKE_HOST=sleeklybuilt.pro bash /opt/sleeklybuilt/repo/infra/scripts/smoke-sleeklybuilt.sh http://127.0.0.1'
           ssh $SSH_OPTS "$DEPLOY_HOST" \
-            'curl -sf -H "Host: discovery.34.66.94.12.nip.io" http://127.0.0.1/api/health'
+            'curl -sf -H "Host: discovery.sleeklybuilt.pro" http://127.0.0.1/api/health'

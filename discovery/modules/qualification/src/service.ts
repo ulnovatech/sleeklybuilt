@@ -405,28 +405,51 @@ export class QualificationService {
       }
     }
 
-    const [demandCountResult, opportunityCountResult] = await Promise.all([
-      filters.kind === 'opportunity'
-        ? Promise.resolve({ total: 0 })
-        : queryWorkQueueCandidates({
-            ...filters,
-            acquisitionLane,
-            kind: 'demand',
-            page: 1,
-            limit: 1,
-            cursor: undefined,
-          }),
-      filters.kind === 'demand'
-        ? Promise.resolve({ total: 0 })
-        : queryWorkQueueCandidates({
-            ...filters,
-            acquisitionLane,
-            kind: 'opportunity',
-            page: 1,
-            limit: 1,
-            cursor: undefined,
-          }),
-    ]);
+    const [demandCountResult, opportunityCountResult, verifiedOppCount, unverifiedOppCount] =
+      await Promise.all([
+        filters.kind === 'opportunity'
+          ? Promise.resolve({ total: 0 })
+          : queryWorkQueueCandidates({
+              ...filters,
+              acquisitionLane,
+              kind: 'demand',
+              page: 1,
+              limit: 1,
+              cursor: undefined,
+            }),
+        filters.kind === 'demand'
+          ? Promise.resolve({ total: 0 })
+          : queryWorkQueueCandidates({
+              ...filters,
+              acquisitionLane,
+              kind: 'opportunity',
+              page: 1,
+              limit: 1,
+              cursor: undefined,
+            }),
+        filters.kind === 'demand'
+          ? Promise.resolve({ total: 0 })
+          : queryWorkQueueCandidates({
+              ...filters,
+              acquisitionLane,
+              kind: 'opportunity',
+              verification: 'verified',
+              page: 1,
+              limit: 1,
+              cursor: undefined,
+            }),
+        filters.kind === 'demand'
+          ? Promise.resolve({ total: 0 })
+          : queryWorkQueueCandidates({
+              ...filters,
+              acquisitionLane,
+              kind: 'opportunity',
+              verification: 'unverified',
+              page: 1,
+              limit: 1,
+              cursor: undefined,
+            }),
+      ]);
 
     return {
       items,
@@ -443,8 +466,8 @@ export class QualificationService {
       counts: {
         demand: demandCountResult.total,
         opportunity: opportunityCountResult.total,
-        verifiedOpportunity: opportunityCountResult.total,
-        unverifiedOpportunity: 0,
+        verifiedOpportunity: verifiedOppCount.total,
+        unverifiedOpportunity: unverifiedOppCount.total,
       },
     };
   }

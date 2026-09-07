@@ -5,9 +5,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-HUB_URL="${HUB_URL:-http://hub.34.66.94.12.nip.io}"
-BLOG_URL="${BLOG_URL:-http://hub.34.66.94.12.nip.io/blog/}"
-PORTFOLIO_URL="${PORTFOLIO_URL:-http://hub.34.66.94.12.nip.io/portfolio-app/}"
+HUB_URL="${HUB_URL:-https://sleeklybuilt.pro}"
+BLOG_URL="${BLOG_URL:-https://sleeklybuilt.pro/blog/}"
+PORTFOLIO_URL="${PORTFOLIO_URL:-https://sleeklybuilt.pro/portfolio-app/}"
 
 fail=0
 

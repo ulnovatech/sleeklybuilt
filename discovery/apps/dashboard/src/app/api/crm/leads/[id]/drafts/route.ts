@@ -9,6 +9,7 @@ import {
   getDraftBudgetStatus,
   IntelligenceService,
   normalizeBusinessIntelligenceProfile,
+  selectedOfferForCaseFile,
   type DraftChannel,
 } from '@agency/intelligence';
 import { OutreachService } from '@agency/outreach';
@@ -89,7 +90,7 @@ export async function GET(
       );
     }
     const channel = channelParsed.data as DraftChannel;
-    const { lead } = await crm.getLeadWithDetails(id);
+    const { lead, caseFile } = await loadCaseFileForLead(id);
     if (!lead) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
 
     await platformSettings.ensureLoaded();
@@ -107,7 +108,12 @@ export async function GET(
           : 'openrouter_api_key';
     const credential = platformSettings.getCredentialStatuses().find((item) => item.key === credentialKey);
 
-    const storedFactPack = draft?.factPack as { phoneSections?: unknown } | undefined;
+    const storedFactPack = draft?.factPack as
+      | { phoneSections?: unknown; selectedOffer?: unknown }
+      | undefined;
+    const selectedOffer = caseFile
+      ? selectedOfferForCaseFile(caseFile)
+      : ((storedFactPack?.selectedOffer as object | undefined) ?? null);
 
     return NextResponse.json({
       draft: draft
@@ -123,8 +129,10 @@ export async function GET(
             updatedAt: draft.updatedAt,
             cached: true,
             phoneSections: storedFactPack?.phoneSections ?? null,
+            selectedOffer,
           }
         : null,
+      selectedOffer,
       budget,
       drafts: settings.drafts,
       credentialConfigured: Boolean(credential?.configured),

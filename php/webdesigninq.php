@@ -1,49 +1,18 @@
 <?php
-ob_start(); // Start output buffering to capture any unintended output
+ob_start();
 header('Content-Type: application/json; charset=UTF-8');
 
-// Load database config
-require_once(__DIR__ . '/config.php');
-require_once(__DIR__ . '/leads/notify.php');
-require_once(__DIR__ . '/leads/rate_limit.php');
+require_once __DIR__ . '/leads/inquiry_submit.php';
 
-uln_rate_limit('webdesigninq');
-
-// Connect to database
-$con = mysqli_connect($db_host, $db_user, $db_pass, $db_name, $db_port);
-if (!$con) {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Failed to connect to database.']);
-    ob_end_flush();
-    exit;
+$result = uln_inquiry_submit('webdesigninq', 'your message has been sent.');
+http_response_code((int) ($result['http'] ?? 500));
+$payload = [
+    'status' => $result['status'],
+    'message' => $result['message'],
+];
+if (!empty($result['reference'])) {
+    $payload['reference'] = $result['reference'];
 }
-
-// Sanitize inputs
-$name    = mysqli_real_escape_string($con, $_POST['name'] ?? '');
-$phone   = mysqli_real_escape_string($con, $_POST['phone'] ?? '');
-$description   = mysqli_real_escape_string($con, $_POST['description'] ?? '');
-
-// Insert data
-$query = "INSERT INTO webdesigninq (name, phone, description)
-          VALUES ('$name', '$phone', '$description')";
-$insert = mysqli_query($con, $query);
-
-if ($insert) {
-    $sourceId = (int) mysqli_insert_id($con);
-    uln_notify_lead('webdesign', [
-        'source_id' => $sourceId,
-        'name' => $name,
-        'phone' => $phone,
-        'description' => $description,
-    ]);
-    http_response_code(200);
-    echo json_encode(['status' => 'success', 'message' => "$name, your message has been sent. Thank you!"]);
-} else {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Something went wrong. Please try again later.']);
-}
-
-mysqli_close($con);
+echo json_encode($payload);
 ob_end_flush();
 exit;
-?>

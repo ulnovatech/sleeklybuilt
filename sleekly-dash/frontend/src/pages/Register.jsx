@@ -1,54 +1,65 @@
-/**
- * Design OS: patterns/authentication_flow.md — Sign up
- * Minimum fields: email + password. Signs in immediately on success.
- */
-
-import { useEffect, useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import AuthLayout, { AuthError } from '../components/auth/AuthLayout'
 import PasswordField, { passwordIsValid } from '../components/auth/PasswordField'
 import { AuthAPI } from '../services/api'
+import { isClerkConfigured } from '../lib/clerkToken'
 
 export default function Register() {
+  if (isClerkConfigured()) {
+    return <Navigate to="/login" replace />
+  }
+  return <RegisterPassword />
+}
+
+function RegisterPassword() {
   const { user, register } = useAuth()
-  const navigate = useNavigate()
+  const errorRef = useRef(null)
   const [email, setEmail] = useState('')
-  const [displayName, setDisplayName] = useState('')
   const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [status, setStatus] = useState(null)
-  const [loadingStatus, setLoadingStatus] = useState(true)
+  const [signupOpen, setSignupOpen] = useState(null)
 
   useEffect(() => {
     let cancelled = false
     AuthAPI.capabilities()
       .then((data) => {
-        if (!cancelled) setStatus(data)
+        if (!cancelled) setSignupOpen(!!data.signup_open)
       })
       .catch(() => {
-        if (!cancelled) {
-          setStatus({ signup_open: false, message: 'Could not check signup availability.' })
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingStatus(false)
+        if (!cancelled) setSignupOpen(false)
       })
     return () => {
       cancelled = true
     }
   }, [])
 
-  if (user) {
-    return <Navigate to="/" replace />
+  useEffect(() => {
+    if (error && errorRef.current) errorRef.current.focus()
+  }, [error])
+
+  if (user) return <Navigate to="/" replace />
+
+  if (signupOpen === false) {
+    return (
+      <AuthLayout title="Registration closed" subtitle="Ask an administrator for access.">
+        <p className="text-sm text-slate-400">
+          <Link to="/login" className="font-medium text-brand hover:underline">
+            Back to sign in
+          </Link>
+        </p>
+      </AuthLayout>
+    )
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     if (!passwordIsValid(password)) {
-      setError('Choose a stronger password using the checklist below.')
+      setError('Choose a stronger password.')
       return
     }
     setSubmitting(true)
@@ -58,7 +69,6 @@ export default function Register() {
         password,
         display_name: displayName.trim(),
       })
-      navigate('/', { replace: true })
     } catch (err) {
       setError(err.message || 'Could not create account.')
     } finally {
@@ -66,40 +76,10 @@ export default function Register() {
     }
   }
 
-  if (loadingStatus) {
-    return (
-      <AuthLayout title="Create account" subtitle="Checking availability…">
-        <div className="h-40 animate-pulse rounded-xl bg-gray-800/60" aria-busy="true" />
-      </AuthLayout>
-    )
-  }
-
-  if (!status?.signup_open) {
-    return (
-      <AuthLayout
-        title="Account creation is closed"
-        subtitle={status?.message || 'Ask an administrator to create your account.'}
-        footer={
-          <>
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-brand hover:underline">
-              Sign in
-            </Link>
-          </>
-        }
-      >
-        <p className="text-sm text-slate-400">
-          For security, Sleekly Dash does not allow open registration after the first admin exists.
-          An admin can add you under Settings → Team.
-        </p>
-      </AuthLayout>
-    )
-  }
-
   return (
     <AuthLayout
-      title={status?.reason === 'first_user' ? 'Create the first admin' : 'Create account'}
-      subtitle={status?.message || 'Email and password are enough to get started.'}
+      title="Create account"
+      subtitle="Dashboard access for your team."
       footer={
         <>
           Already have an account?{' '}
@@ -109,9 +89,21 @@ export default function Register() {
         </>
       }
     >
-      <AuthError>{error}</AuthError>
-
+      <div ref={errorRef} tabIndex={-1}>
+        <AuthError>{error || null}</AuthError>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <div>
+          <label htmlFor="display_name" className="mb-2 block text-sm font-medium text-slate-300">
+            Name
+          </label>
+          <input
+            id="display_name"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            className="w-full rounded-lg border border-gray-700 bg-[#0b1220] px-4 py-3 text-white outline-none focus:ring-2 focus:ring-brand"
+          />
+        </div>
         <div>
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-300">
             Email
@@ -120,45 +112,19 @@ export default function Register() {
             id="email"
             type="email"
             autoComplete="email"
-            inputMode="email"
-            autoCapitalize="none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            readOnly={submitting}
             required
             className="w-full rounded-lg border border-gray-700 bg-[#0b1220] px-4 py-3 text-white outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
-
-        <div>
-          <label htmlFor="display_name" className="mb-2 block text-sm font-medium text-slate-300">
-            Display name <span className="text-slate-500">(optional)</span>
-          </label>
-          <input
-            id="display_name"
-            type="text"
-            autoComplete="name"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            readOnly={submitting}
-            className="w-full rounded-lg border border-gray-700 bg-[#0b1220] px-4 py-3 text-white outline-none focus:ring-2 focus:ring-brand"
-          />
-        </div>
-
-        <PasswordField
-          value={password}
-          onChange={setPassword}
-          autoComplete="new-password"
-          readOnly={submitting}
-          showRequirements
-        />
-
+        <PasswordField value={password} onChange={setPassword} autoComplete="new-password" />
         <button
           type="submit"
-          disabled={submitting || !email.trim() || !password}
-          className="min-h-11 w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white transition hover:bg-brand-dark focus:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
+          disabled={submitting || signupOpen === null}
+          className="min-h-11 w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white disabled:opacity-60"
         >
-          {submitting ? 'Creating account…' : 'Create account'}
+          {submitting ? 'Creating…' : 'Create account'}
         </button>
       </form>
     </AuthLayout>

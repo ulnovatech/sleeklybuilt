@@ -1,92 +1,13 @@
+@import '@sleeklybuilt/design-foundation/styles/foundation.css';
+@import '@sleeklybuilt/attendant/styles/highlight.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Projects SPA token mirror — keep in sync with marketing/src/index.css brand primitives.
- * Semantic roles enable shared visual grammar without cross-SPA React coupling.
- */
-:root {
-  --cream: #f4f3ef;
-  --cream-deep: #e6e4de;
-  --emerald-deep: #2d5346;
-  --emerald: #3f7a62;
-  --emerald-soft: #5f9a82;
-  --gold: #d4a84b;
-  --gold-soft: #e4c47a;
-  --ink: #2f2d2a;
-  --ink-soft: #5a5752;
-  --obsidian: #0a0b0a;
-  --obsidian-raised: #131614;
-  --obsidian-line: #232823;
-
-  --color-surface-base: var(--cream);
-  --color-surface-raised: #ffffff;
-  --color-surface-sunken: var(--cream-deep);
-  --color-surface-inverse: var(--obsidian);
-  --color-content-primary: var(--ink);
-  --color-content-secondary: var(--ink-soft);
-  --color-content-inverse: var(--cream);
-  --color-content-link: var(--emerald);
-  --color-action-primary: var(--emerald);
-  --color-action-primary-hover: var(--emerald-deep);
-  --color-accent: var(--gold);
-  --color-accent-hover: var(--gold-soft);
-  --color-focus-ring: #2a322e;
-  --color-focus-ring-inverse: var(--cream);
-  --color-status-danger: #a33b2b;
-  --color-status-danger-surface: #f7e8e4;
-  --color-status-success: #2f6f4e;
-  --color-status-success-surface: #e7f2ec;
-  --color-status-warning: #b8860b;
-  --color-status-warning-surface: #f7f0de;
-  --color-border-subtle: var(--cream-deep);
-  --color-content-secondary: var(--ink-soft);
-
-  --motion-fast: 150ms;
-  --motion-normal: 250ms;
-  --ease-default: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-html,
-body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  background-color: var(--color-surface-base);
-  color: var(--color-content-primary);
-  font-family: 'Work Sans', system-ui, sans-serif;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-@layer components {
-  .eyebrow {
-    @apply text-eyebrow font-semibold uppercase tracking-[0.12em] text-emerald;
-  }
-
-  .eyebrow-invert {
-    @apply text-eyebrow font-semibold uppercase tracking-[0.12em] text-cream/70;
-  }
-
-  .field-input {
-    @apply w-full min-h-[2.75rem] rounded-lg border border-cream-deep bg-surface-base px-3.5 py-2.5 text-body text-ink
-      placeholder:text-ink-soft
-      focus:outline-none focus-visible:ring-2 focus-visible:ring-dos;
-  }
-
-  .field-input-error {
-    @apply border-status-danger;
-  }
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

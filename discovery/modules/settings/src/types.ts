@@ -241,6 +241,19 @@ export type AgencyService = {
   description?: string;
 };
 
+/** Marketing product line for offer router deep links (paths relative to siteUrl). */
+export type AgencyProductLineId =
+  | 'sleek_pages'
+  | 'websites'
+  | 'mobile_apps'
+  | 'business_systems';
+
+export type AgencyProductLine = {
+  id: AgencyProductLineId;
+  label: string;
+  path: string;
+};
+
 export type AgencyPresetId = 'generic' | 'sleeklybuilt' | 'custom';
 
 /** Single-deploy agency identity + sellable catalog (not multi-tenant). */
@@ -255,6 +268,9 @@ export interface AgencySettings {
   location: string;
   senderName: string;
   signature: string;
+  /** Public marketing origin for product deep links (no trailing slash). */
+  siteUrl: string;
+  productLines: AgencyProductLine[];
   packages: AgencyPackage[];
   services: AgencyService[];
 }

@@ -1,6 +1,6 @@
 # Deploy SleeklyBuilt to Oracle Cloud (Docker)
 
-> **Legacy.** Primary production target is **Google Compute Engine** — see [`DEPLOY_GCLOUD.md`](./DEPLOY_GCLOUD.md). This Oracle runbook is kept for historical reference and ARM64 Always Free attempts.
+> **Legacy.** Current production is **Linode** — see [`DEPLOY_LINODE.md`](./DEPLOY_LINODE.md). This Oracle runbook is kept for historical reference and ARM64 Always Free attempts.
 
 Operator runbook for production on an **Oracle Cloud ARM64 VM** (Ubuntu 22.04/24.04) with **Cloudflare DNS** and **GitHub Actions** deploy.
 

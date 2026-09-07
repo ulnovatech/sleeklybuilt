@@ -99,6 +99,5 @@ try {
             ? 'Payment is still processing. Refresh in a moment or contact us with your reference.'
             : 'Could not verify payment. Contact us with reference: ' . $txRef,
         'tx_ref' => $txRef,
-        'error' => $message,
     ]);
 }

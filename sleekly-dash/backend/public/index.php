@@ -1,12 +1,35 @@
 <?php
-// Handle preflight requests immediately
+// Preflight uses the same origin allowlist as bootstrap (never reflect arbitrary Origin).
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header('Content-Type: application/json; charset=utf-8');
+    $envFile = dirname(__DIR__) . '/.env';
+    if (is_file($envFile)) {
+        foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+            if (trim($line) === '' || str_starts_with(trim($line), '#')) {
+                continue;
+            }
+            [$k, $v] = array_map('trim', explode('=', $line, 2) + [1 => '']);
+            if ($k !== '' && getenv($k) === false) {
+                putenv("$k=$v");
+            }
+        }
+    }
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-    header("Access-Control-Allow-Origin: $origin");
-    header('Access-Control-Allow-Headers: Content-Type, Authorization');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Credentials: true');
+    $allowed = array_filter(array_map('trim', explode(',', getenv('ALLOWED_ORIGINS') ?: '')));
+    if ($origin !== '' && in_array($origin, $allowed, true)) {
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Vary: Origin');
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        http_response_code(204);
+        exit;
+    }
+    if ($origin !== '') {
+        http_response_code(403);
+        echo json_encode(['error' => 'Origin not allowed']);
+        exit;
+    }
     http_response_code(204);
     exit;
 }

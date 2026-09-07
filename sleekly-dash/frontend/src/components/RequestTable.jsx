@@ -37,7 +37,9 @@ export default function RequestTable({ rows = [], loading = false, onRowClick = 
                 />
               </td>
               <td className="p-3 text-right">
-                <button className="px-2 py-1 bg-gray-800 rounded">View</button>
+                <button type="button" className="inline-flex min-h-11 items-center rounded bg-gray-800 px-3">
+                  View
+                </button>
               </td>
             </tr>
           ))}

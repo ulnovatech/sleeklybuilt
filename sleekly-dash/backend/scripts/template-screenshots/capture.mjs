@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
  * Capture viewport screenshots for selected template pages.
+ * Desktop (1280×720 → main.png + inner pages) then mobile homepage (390×844 → main-mobile.png).
  * Usage: node capture.mjs --input=job.json --output=result.json
  */
 import fs from 'node:fs';
@@ -25,6 +26,21 @@ function pageUrl(baseUrl, relativePath) {
   }
   const root = base.endsWith('/') ? base : `${base}/`;
   return new URL(rel.split('/').map(encodeURIComponent).join('/'), root).href;
+}
+
+async function hidePreviewChrome(page) {
+  await page
+    .addStyleTag({
+      content: '#uln-preview-root,#uln-preview-dock,#uln-preview-fab{display:none!important;}',
+    })
+    .catch(() => {});
+}
+
+async function capturePage(page, target, outFile) {
+  await page.goto(target, { waitUntil: 'networkidle2' });
+  await page.waitForTimeout(1200);
+  await hidePreviewChrome(page);
+  await page.screenshot({ path: outFile, fullPage: false, type: 'png' });
 }
 
 async function main() {
@@ -56,6 +72,7 @@ async function main() {
   const captured = [];
   const skipped = [];
   let error = null;
+  let homeUrl = null;
 
   try {
     const page = await browser.newPage();
@@ -71,27 +88,57 @@ async function main() {
       const outFile = path.join(imagesDir, filename);
 
       try {
-        await page.goto(target, { waitUntil: 'networkidle2' });
-        await page.waitForTimeout(1200);
-        // Hide our purchase dock so cards show the layout, not chrome.
-        await page.addStyleTag({
-          content: '#uln-preview-root,#uln-preview-dock,#uln-preview-fab{display:none!important;}',
-        }).catch(() => {});
-        await page.screenshot({ path: outFile, fullPage: false, type: 'png' });
+        await capturePage(page, target, outFile);
+        if (filename === 'main.png') {
+          homeUrl = target;
+        }
         captured.push({
           path: relative,
           filename,
           file: path.join('images', filename).replace(/\\/g, '/'),
           url: target,
+          viewport: 'desktop',
         });
       } catch (pageError) {
         skipped.push({
           path: relative,
           reason: pageError?.message || String(pageError),
+          viewport: 'desktop',
         });
         if (filename === 'main.png') {
           error = pageError?.message || String(pageError);
         }
+      }
+    }
+
+    // Pass 2 — mobile homepage thumb (gallery dual layout). Not required for ok.
+    if (homeUrl) {
+      const mobileFilename = 'main-mobile.png';
+      const mobileOut = path.join(imagesDir, mobileFilename);
+      const mobileViewport = job.mobileViewport || { width: 390, height: 844 };
+      try {
+        await page.setViewport({
+          width: Number(mobileViewport.width) || 390,
+          height: Number(mobileViewport.height) || 844,
+          isMobile: true,
+          hasTouch: true,
+          deviceScaleFactor: Number(mobileViewport.deviceScaleFactor) || 2,
+        });
+        await capturePage(page, homeUrl, mobileOut);
+        captured.push({
+          path: 'index.html',
+          filename: mobileFilename,
+          file: path.join('images', mobileFilename).replace(/\\/g, '/'),
+          url: homeUrl,
+          viewport: 'mobile',
+        });
+      } catch (mobileError) {
+        skipped.push({
+          path: 'index.html',
+          filename: mobileFilename,
+          reason: mobileError?.message || String(mobileError),
+          viewport: 'mobile',
+        });
       }
     }
   } finally {
@@ -104,13 +151,19 @@ async function main() {
     captured,
     skipped,
     error,
+    mobile: captured.some((item) => item.filename === 'main-mobile.png')
+      ? 'images/main-mobile.png'
+      : null,
   };
   fs.writeFileSync(outputPath, JSON.stringify(result, null, 2));
   if (!result.ok) {
     console.error(error || 'main.png was not captured');
     process.exit(1);
   }
-  console.log(`Captured ${captured.length} page(s) for ${job.slug}`);
+  console.log(
+    `Captured ${captured.length} shot(s) for ${job.slug}` +
+      (result.mobile ? ' (desktop + mobile)' : ' (desktop only)'),
+  );
 }
 
 main().catch((err) => {

@@ -31,6 +31,12 @@ composer_install_backend() {
   composer install --no-dev --optimize-autoloader --working-dir="$ROOT/sleekly-dash/backend"
 }
 
+# --- Performante: regenerate sitemap + robots before marketing build ---
+export SITE_URL="${SITE_URL:-${VITE_SITE_URL:-https://sleeklybuilt.pro}}"
+run_step "SEO generate sitemap/robots" node "$ROOT/scripts/seo/generate-sitemap.mjs"
+run_step "SEO smoke (marketing/public)" node "$ROOT/scripts/seo/smoke.mjs" --dir marketing/public
+run_step "Performante auth static check" node "$ROOT/marketing/scripts/check-performante-auth.mjs"
+
 # --- Build frontends (production mode uses each app's .env.production) ---
 npm_install_if_needed marketing
 run_step "Build marketing app" npm --prefix marketing run build

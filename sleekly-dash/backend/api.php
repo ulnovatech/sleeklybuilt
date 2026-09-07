@@ -5,6 +5,7 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/auth/SessionAuth.php';
 require_once __DIR__ . '/auth/MobileTokenAuth.php';
 require_once __DIR__ . '/auth/ServiceTokenAuth.php';
+require_once __DIR__ . '/auth/ClerkTokenAuth.php';
 require_once __DIR__ . '/auth/ApiAuth.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/CompanyController.php';
@@ -23,12 +24,16 @@ require_once __DIR__ . '/controllers/AttendantOperatorController.php';
 $auth = new SessionAuth($pdo);
 $mobileAuth = new MobileTokenAuth($pdo);
 $serviceAuth = new ServiceTokenAuth($pdo);
-$apiAuth = new ApiAuth($auth, $mobileAuth, $serviceAuth);
-$authController = new AuthController($auth, $mobileAuth);
+$clerkAuth = new ClerkTokenAuth();
+$apiAuth = new ApiAuth($auth, $mobileAuth, $serviceAuth, $clerkAuth);
+$authController = new AuthController($auth, $mobileAuth, $apiAuth);
 
 // Ensure env bootstrap admin lands in dash_users on first request after migration.
+// Skip when Clerk SSO is the only admin path — no local mother password account.
 try {
-    $auth->users()->ensureMotherAccount();
+    if (!ClerkTokenAuth::passwordLoginDisabled()) {
+        $auth->users()->ensureMotherAccount();
+    }
 } catch (Throwable $e) {
     if (getenv('APP_DEBUG') === 'true') {
         error_log('dash_users mother ensure: ' . $e->getMessage());

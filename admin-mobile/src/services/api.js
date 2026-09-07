@@ -1,5 +1,6 @@
 import { Preferences } from '@capacitor/preferences'
 import { API_BASE } from '../site.config'
+import { getClerkBearerToken, isClerkConfigured } from '../lib/clerkToken'
 
 const TOKEN_KEY = 'uln_admin_token'
 
@@ -26,7 +27,14 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch(path, options = {}) {
-  const token = await getToken()
+  let token = null
+  if (isClerkConfigured()) {
+    // Never fall back to Preferences JWT when Clerk SSO is the auth mode.
+    token = await getClerkBearerToken()
+  } else {
+    token = await getToken()
+  }
+
   const headers = {
     Accept: 'application/json',
     ...options.headers,

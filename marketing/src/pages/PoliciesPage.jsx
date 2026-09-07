@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { FiArrowRight } from 'react-icons/fi'
 import PageHeader from '../components/site/PageHeader'
 import { fetchPolicyList } from '../lib/policiesApi'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 import { siteConfig } from '../site.config'
 
 /**
@@ -13,7 +13,7 @@ import { siteConfig } from '../site.config'
  * Journey: Footer/Attendant → list → open one policy → read or Contact.
  */
 export default function PoliciesPage() {
-  usePageTitle('Policies')
+  usePageSeo()
   const [state, setState] = useState({ status: 'loading', policies: [], error: '' })
 
   const load = () => {

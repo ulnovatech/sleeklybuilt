@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
-# Run on the GCE VM after rsync (from /opt/sleeklybuilt/repo).
+# Run on the Linode VM after rsync (from /opt/sleeklybuilt/repo).
 set -euo pipefail
 
 cd /opt/sleeklybuilt/repo
 
+# Google credentials stay under /opt/sleeklybuilt/secrets (mounted :ro at /var/www/secrets).
+# Never copy service-account.json into public_html — nginx must not be able to serve it.
 if [[ -f /opt/sleeklybuilt/secrets/service-account.json ]]; then
-  install -m 600 -D /opt/sleeklybuilt/secrets/service-account.json \
-    /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json
+  chmod 600 /opt/sleeklybuilt/secrets/service-account.json || true
+  echo "==> Google credentials present at /opt/sleeklybuilt/secrets (not in docroot)"
+else
+  echo "WARN: /opt/sleeklybuilt/secrets/service-account.json missing — dash Analytics/FCM will stay disconnected"
 fi
+# Remove any legacy copy left under the web root from older deploys
+rm -f /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json \
+  /opt/sleeklybuilt/public_html/ulndash/backend/service-account.json 2>/dev/null || true
+rm -rf /opt/sleeklybuilt/public_html/ulndash 2>/dev/null || true
 
 export PUBLIC_HTML_PATH=/opt/sleeklybuilt/public_html
 export SLEEKLYBUILT_ENV_FILE=/opt/sleeklybuilt/env/docker.sleeklybuilt.env
@@ -29,9 +37,16 @@ chmod 644 "$DISCOVERY_ENV_FILE" 2>/dev/null || true
 test -r "$SLEEKLYBUILT_ENV_FILE"
 test -r "$DISCOVERY_ENV_FILE"
 
+echo "==> validate production env"
+chmod +x /opt/sleeklybuilt/repo/infra/scripts/validate-prod-env.sh
+bash /opt/sleeklybuilt/repo/infra/scripts/validate-prod-env.sh "$SLEEKLYBUILT_ENV_FILE" "$DISCOVERY_ENV_FILE"
+
+# Empty host stubs so Docker can bind-mount real env into php-fpm.
+# Nginx denies /.env and /php/*.non-php — stubs must stay empty on the host.
 mkdir -p /opt/sleeklybuilt/public_html/php /opt/sleeklybuilt/public_html/sleekly-dash/backend
 : > /opt/sleeklybuilt/public_html/php/.env
 : > /opt/sleeklybuilt/public_html/sleekly-dash/backend/.env
+chmod 600 /opt/sleeklybuilt/public_html/php/.env /opt/sleeklybuilt/public_html/sleekly-dash/backend/.env || true
 
 if [[ -f /opt/sleeklybuilt/repo/.env && ! -f /opt/sleeklybuilt/repo/infra/.env ]]; then
   install -m 600 /opt/sleeklybuilt/repo/.env /opt/sleeklybuilt/repo/infra/.env
@@ -48,9 +63,12 @@ mkdir -p /opt/sleeklybuilt/data/template-imports \
 
 CRON_MARKER='# sleeklybuilt-template-import-maintenance'
 CRON_JOB="17 3 * * * /bin/bash /opt/sleeklybuilt/repo/infra/scripts/run-template-import-maintenance.sh 2>&1 | /usr/bin/logger -t sleeklybuilt-template-import-maintenance ${CRON_MARKER}"
+BACKUP_MARKER='# sleeklybuilt-db-backup'
+BACKUP_JOB="12 2 * * * /bin/bash /opt/sleeklybuilt/repo/infra/scripts/sleeklybuilt-backup.sh 2>&1 | /usr/bin/logger -t sleeklybuilt-backup ${BACKUP_MARKER}"
 {
-  crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" || true
+  crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" | grep -vF "$BACKUP_MARKER" || true
   printf '%s\n' "$CRON_JOB"
+  printf '%s\n' "$BACKUP_JOB"
 } | crontab -
 
 dc() {

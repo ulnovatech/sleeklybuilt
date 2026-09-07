@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams } from 'react-router-dom'
 import { useReducedMotion } from 'framer-motion'
 import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import PhoneInput from './PhoneInput'
@@ -50,7 +50,7 @@ const PROMPTS = [
     id: 'email',
     field: 'email',
     question: 'Where should we reply?',
-    hint: 'Optional — add your email if you want a reply there within one working day.',
+    hint: 'We’ll use this to confirm your enquiry and reply within one working day.',
     input: 'email',
     autoComplete: 'email',
     inputMode: 'email',
@@ -125,7 +125,7 @@ function fieldError(field, form, selectedIntent) {
     case 'phone':
       return form.phone.trim() ? null : 'Enter your phone number.'
     case 'email':
-      if (!form.email.trim()) return null
+      if (!form.email.trim()) return 'Enter your email.'
       if (!EMAIL_RE.test(form.email.trim())) return 'Enter a valid email.'
       return null
     case 'message':
@@ -147,10 +147,13 @@ export default function GamifiedContactForm() {
   const siteConfig = useSiteConfig()
   const reducedMotion = useReducedMotion()
   const [searchParams] = useSearchParams()
+  const { pathname } = useLocation()
   const formId = useId()
   const statusId = `${formId}-status`
+  const questionId = `${formId}-question`
   const headingRef = useRef(null)
   const inputRef = useRef(null)
+  const focusStepRef = useRef(null)
 
   const [submissionKey] = useState(() => makeSubmissionKey())
   const [form, setForm] = useState(empty)
@@ -160,12 +163,19 @@ export default function GamifiedContactForm() {
   const [hydrated, setHydrated] = useState(false)
   const [attempted, setAttempted] = useState(false)
 
+  const isContactRoute = pathname === '/contact' || pathname.endsWith('/contact')
+
   const { submit, loading } = useFormSubmit({
     url: apiEndpoints.contact,
     successToast: false,
+    analyticsMethod: 'contact_form',
     onSuccess: (result) => {
       clearDraft()
-      const reference = result.reference || `MSG-${Date.now().toString(36).toUpperCase()}`
+      if (!result?.reference || typeof result.reference !== 'string') {
+        setError('We received your message but could not confirm a reference. Please try again or WhatsApp us.')
+        return
+      }
+      const reference = result.reference
       try {
         sessionStorage.setItem(
           `${SUCCESS_KEY_PREFIX}${submissionKey}`,
@@ -221,13 +231,22 @@ export default function GamifiedContactForm() {
     writeDraft(form, safeIndex)
   }, [form, safeIndex, hydrated, done])
 
+  // Focus the active prompt for a11y when stepping — but never on homepage first paint
+  // (browser scrolls focused nodes into view and jumps past the hero).
   useEffect(() => {
     if (!hydrated || done) return
+
+    const stepKey = `${safeIndex}:${current?.id ?? ''}`
+    const isFirstFocusPass = focusStepRef.current === null
+    focusStepRef.current = stepKey
+
+    if (isFirstFocusPass && !isContactRoute) return
+
     queueMicrotask(() => {
       headingRef.current?.focus()
       inputRef.current?.focus?.()
     })
-  }, [safeIndex, hydrated, done, current?.id])
+  }, [safeIndex, hydrated, done, current?.id, isContactRoute])
 
   const setField = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -287,7 +306,7 @@ export default function GamifiedContactForm() {
   }
 
   const send = async () => {
-    const required = ['intentId', 'name', 'phone', 'message']
+    const required = ['intentId', 'name', 'phone', 'email', 'message']
     if (selectedIntent?.extraField) required.splice(1, 0, 'orderRef')
     for (const field of required) {
       const message = fieldError(field, form, selectedIntent)
@@ -315,8 +334,8 @@ export default function GamifiedContactForm() {
         intent: selectedIntent?.id || 'other',
         submission_key: submissionKey,
       })
-    } catch {
-      /* toast + draft kept */
+    } catch (err) {
+      setError(err?.message || 'Something went wrong. Please try again.')
     }
   }
 
@@ -389,6 +408,7 @@ export default function GamifiedContactForm() {
 
       <div className="mt-6">
         <h2
+          id={questionId}
           ref={headingRef}
           tabIndex={-1}
           className="field-label outline-none focus-visible:ring-2 focus-visible:ring-dos"
@@ -402,7 +422,7 @@ export default function GamifiedContactForm() {
         {current.id === 'intent' ? (
           <div
             role="radiogroup"
-            aria-labelledby={statusId}
+            aria-labelledby={questionId}
             className="grid gap-2"
           >
             {contactIntents.map((intent) => {
@@ -437,6 +457,7 @@ export default function GamifiedContactForm() {
             value={form.orderRef}
             onChange={(e) => setField('orderRef', e.target.value)}
             onKeyDown={onKeyDownAdvance}
+            aria-labelledby={questionId}
             aria-invalid={attempted && error ? true : undefined}
             aria-describedby={error ? `${formId}-err` : undefined}
             placeholder="FLW-… or invoice number"
@@ -455,9 +476,10 @@ export default function GamifiedContactForm() {
             value={form[current.field]}
             onChange={(e) => setField(current.field, e.target.value)}
             onKeyDown={onKeyDownAdvance}
+            aria-labelledby={questionId}
             aria-invalid={attempted && error ? true : undefined}
             aria-describedby={error ? `${formId}-err` : undefined}
-            placeholder={current.id === 'email' ? 'Enter your most convenient email' : undefined}
+            placeholder={current.id === 'email' ? 'name@company.com' : undefined}
             className={cn('field-input', attempted && error && 'field-input-error')}
           />
         ) : null}
@@ -486,6 +508,7 @@ export default function GamifiedContactForm() {
             value={form.message}
             onChange={(e) => setField('message', e.target.value)}
             onKeyDown={onKeyDownAdvance}
+            aria-labelledby={questionId}
             aria-invalid={attempted && error ? true : undefined}
             aria-describedby={error ? `${formId}-err` : undefined}
             className={cn('field-input min-h-[6.5rem] resize-y', attempted && error && 'field-input-error')}
@@ -537,7 +560,7 @@ export default function GamifiedContactForm() {
           type="button"
           onClick={goBack}
           disabled={safeIndex === 0 || loading}
-          className="inline-flex h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-ink-soft transition hover:text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-30"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-dos-lg px-3 text-sm font-semibold text-ink-soft transition hover:text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-30"
         >
           <FiArrowLeft aria-hidden="true" className="h-4 w-4" />
           Back
@@ -548,7 +571,7 @@ export default function GamifiedContactForm() {
             type="button"
             onClick={send}
             disabled={loading}
-            className="inline-flex h-10 min-w-[8.5rem] items-center justify-center rounded-full bg-action-primary-hover px-5 text-sm font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 disabled:opacity-60"
+            className="inline-flex min-h-11 min-w-[8.5rem] items-center justify-center rounded-dos-lg bg-action-primary-hover px-5 text-sm font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 disabled:opacity-60"
           >
             {loading ? 'Sending…' : 'Send'}
           </button>
@@ -558,7 +581,7 @@ export default function GamifiedContactForm() {
           <button
             type="button"
             onClick={tryAdvance}
-            className="inline-flex h-10 items-center rounded-full px-3 text-sm font-semibold text-emerald-deep transition hover:bg-action-primary-hover/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+            className="inline-flex min-h-11 items-center rounded-dos-lg px-4 text-sm font-semibold text-emerald-deep transition hover:bg-action-primary-hover/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
           >
             Next
             <span className="ml-2 hidden text-content-muted font-normal sm:inline">

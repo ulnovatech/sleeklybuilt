@@ -64,7 +64,7 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
               onClose()
               onOpenSearch?.()
             }}
-            className="flex min-h-11 w-full items-center gap-3 rounded-full border border-cream/20 bg-cream/5 px-4 py-2.5 text-meta text-cream/70 transition hover:border-cream/35 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
+            className="flex min-h-11 w-full items-center gap-3 rounded-dos-lg border border-cream/20 bg-cream/5 px-4 py-2.5 text-meta text-cream/70 transition hover:border-cream/35 hover:text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse"
           >
             <FiSearch aria-hidden="true" className="text-cream/70" />
             Search
@@ -90,7 +90,7 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
                     <span className="flex items-center gap-2">
                       {item.label}
                       {item.badge ? (
-                        <span className="rounded-full bg-gold px-1.5 py-px text-[0.5625rem] font-sans font-bold uppercase tracking-wide text-ink">
+                        <span className="rounded-dos-lg bg-cream/15 px-1.5 py-px text-[0.5625rem] font-sans font-bold uppercase tracking-wide text-cream">
                           {item.badge}
                         </span>
                       ) : null}
@@ -122,14 +122,14 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
           <NavLink
             item={{ href: siteConfig.links.contact, label: 'Start a project' }}
             onNavigate={onClose}
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-gold px-5 py-3 text-meta font-semibold text-ink transition hover:bg-gold-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-dos-lg bg-emerald-deep px-5 py-3 text-meta font-semibold text-cream transition hover:bg-emerald focus:outline-none focus-visible:ring-2 focus-visible:ring-dos-inverse focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian"
           >
             Start a project
             <FiArrowRight aria-hidden="true" />
           </NavLink>
           <a
             href={`tel:${siteConfig.primaryPhone}`}
-            className="mt-3 block min-h-11 text-center text-meta leading-[2.75rem] text-cream/60 transition hover:text-gold focus:outline-none focus-visible:underline"
+            className="mt-3 block min-h-11 text-center text-meta leading-[2.75rem] text-cream/60 transition hover:text-cream focus:outline-none focus-visible:underline"
           >
             {siteConfig.primaryPhone}
           </a>

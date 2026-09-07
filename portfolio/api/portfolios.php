@@ -1,35 +1,10 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-header('Content-Type: application/json; charset=utf-8');
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Access-Control-Max-Age: 86400");
-
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
+require_once __DIR__ . '/lib/cors.php';
+uln_portfolio_cors(true);
 
 require_once __DIR__ . '/lib/catalog.php';
 
 try {
-    $collectionFilter = null;
-    $rawCollection = isset($_GET['collection']) ? trim((string) $_GET['collection']) : '';
-    if ($rawCollection !== '') {
-        $collectionFilter = uln_normalize_collection($rawCollection);
-        if ($collectionFilter === null) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'error' => 'Invalid collection. Use one of: ' . implode(', ', uln_known_collections()) . '.',
-            ]);
-            exit();
-        }
-    }
-
     $portfolioDir = uln_portfolio_dir();
     $baseUrl = "/portfolio/portfolio";
 
@@ -37,15 +12,18 @@ try {
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
     if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-        $domainBase = $scheme . '://' . $host . '/sleeklybuilt';
+        $domainBase = $scheme . '://' . $host . '/ulnovatech';
     } else {
         $domainBase = $scheme . '://' . $host;
     }
 
     $templatesBaseUrl = $domainBase . $baseUrl;
+    $collectionFilter = uln_normalize_collection(
+        isset($_GET['collection']) ? (string) $_GET['collection'] : null
+    );
 
     $templates = [];
-    $dirs = array_diff(scandir($portfolioDir), ['.', '..']);
+    $dirs = array_diff(scandir($portfolioDir) ?: [], ['.', '..']);
 
     foreach ($dirs as $dir) {
         $fullPath = $portfolioDir . '/' . $dir;
@@ -70,7 +48,7 @@ try {
                 if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
                     continue;
                 }
-                if (!uln_is_gallery_shot($file)) {
+                if (!uln_is_gallery_shot($file) || uln_is_mobile_shot($file)) {
                     continue;
                 }
                 $screenshots[] = $templatesBaseUrl . "/" . $dir . "/images/" . $file;
@@ -90,6 +68,9 @@ try {
             $mainImage = $screenshots[0];
         }
 
+        $mobileImage = uln_mobile_image_url($imagesDir, $templatesBaseUrl, $dir);
+        $thumbnails = array_slice($screenshots, 0, 6);
+
         $templates[] = [
             "name" => $dir,
             "title" => $meta['title'],
@@ -101,20 +82,20 @@ try {
             "entry" => $entry,
             "screenshots" => $screenshots,
             "mainImage" => $mainImage,
-            "thumbnails" => array_slice($screenshots, 0, 6),
+            "mobileImage" => $mobileImage,
+            "thumbnails" => $thumbnails,
         ];
     }
 
     echo json_encode([
         "success" => true,
         "count" => count($templates),
-        "collection" => $collectionFilter,
         "templates" => $templates,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([
         "success" => false,
-        "error" => $e->getMessage(),
+        "error" => "Could not load layouts. Please try again.",
     ]);
 }

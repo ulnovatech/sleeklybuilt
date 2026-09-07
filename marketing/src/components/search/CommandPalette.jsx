@@ -308,7 +308,7 @@ export default function CommandPalette({ open, onClose }) {
                 <button
                   type="button"
                   onClick={() => select({ href: '/contact' })}
-                  className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-deep px-5 py-2.5 text-meta font-semibold text-cream transition hover:bg-emerald focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
+                  className="mt-5 inline-flex items-center gap-2 rounded-dos-lg bg-emerald-deep px-5 py-2.5 text-meta font-semibold text-cream transition hover:bg-emerald focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
                 >
                   Talk to us
                   <FiArrowRight aria-hidden="true" />

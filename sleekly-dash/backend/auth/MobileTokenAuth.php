@@ -92,11 +92,10 @@ class MobileTokenAuth
     {
         $secret = getenv('MOBILE_JWT_SECRET') ?: '';
         if ($secret !== '') {
+            if (strlen($secret) < 32) {
+                throw new RuntimeException('MOBILE_JWT_SECRET must be at least 32 characters.');
+            }
             return $secret;
-        }
-
-        if (getenv('APP_DEBUG') === 'true') {
-            return 'sleeklybuilt-mobile-dev-secret-change-me';
         }
 
         throw new RuntimeException('MOBILE_JWT_SECRET is not configured.');

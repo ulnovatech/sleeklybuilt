@@ -17,7 +17,7 @@ import {
   websitePackages,
 } from '../config/pricing'
 import { siteConfig } from '../site.config'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 import { cn } from '../lib/utils'
 
 const CATEGORIES = [
@@ -58,7 +58,7 @@ function PlanCard({ pkg }) {
       aria-label={`${pkg.title}, ${price}, one-time project price in UGX`}
     >
       {pkg.badge ? (
-        <span className="absolute -top-2.5 left-6 rounded-full bg-accent px-2.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-ink">
+        <span className="absolute -top-2.5 left-6 rounded-dos-lg bg-accent px-2.5 py-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-ink">
           {pkg.badge}
         </span>
       ) : null}
@@ -171,7 +171,7 @@ function WebsiteFeatureMatrix({ plans }) {
                 aria-pressed={on}
                 onClick={() => togglePlan(plan.id)}
                 className={cn(
-                  'min-h-11 rounded-full border px-4 py-2 text-meta font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-dos',
+                  'min-h-11 rounded-dos-lg border px-4 py-2 text-meta font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-dos',
                   on
                     ? 'border-emerald/40 bg-emerald-deep text-cream'
                     : 'border-cream-deep bg-surface-raised text-ink-soft',
@@ -252,7 +252,7 @@ function WebsiteFeatureMatrix({ plans }) {
  * Category control stands in for SaaS period toggle; currency is UGX-only (honest).
  */
 export default function PricesPage() {
-  usePageTitle('Pricing')
+  usePageSeo()
   const [searchParams, setSearchParams] = useSearchParams()
   const category = CATEGORIES.some((c) => c.id === searchParams.get('category'))
     ? searchParams.get('category')

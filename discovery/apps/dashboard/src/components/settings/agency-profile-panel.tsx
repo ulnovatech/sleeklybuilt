@@ -22,6 +22,12 @@ export type AgencyService = {
   description?: string;
 };
 
+export type AgencyProductLine = {
+  id: 'sleek_pages' | 'websites' | 'mobile_apps' | 'business_systems';
+  label: string;
+  path: string;
+};
+
 export type AgencySettings = {
   presetId: 'generic' | 'sleeklybuilt' | 'custom';
   brandName: string;
@@ -33,6 +39,8 @@ export type AgencySettings = {
   location: string;
   senderName: string;
   signature: string;
+  siteUrl?: string;
+  productLines?: AgencyProductLine[];
   packages: AgencyPackage[];
   services: AgencyService[];
 };

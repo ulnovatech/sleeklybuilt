@@ -2,7 +2,7 @@
 
 Product plan for daily rotational discovery, overnight purify, a frozen morning list, a recoverable dumpster, and overlay pitching by channel.
 
-Related: [V1_CHARTER.md](V1_CHARTER.md) · [OPERATING_MODEL.md](OPERATING_MODEL.md) · [DISCOVERY_PLANS.md](DISCOVERY_PLANS.md) · [P5_DISCOVERY_CHARTER.md](P5_DISCOVERY_CHARTER.md) · [ACQUISITION_TIERS.md](ACQUISITION_TIERS.md) · [SETUP_RESOURCES.md](SETUP_RESOURCES.md)
+Related: [V1_CHARTER.md](V1_CHARTER.md) · [OPERATING_MODEL.md](OPERATING_MODEL.md) · [DISCOVERY_PLANS.md](DISCOVERY_PLANS.md) · [P5_DISCOVERY_CHARTER.md](P5_DISCOVERY_CHARTER.md) · [ACQUISITION_TIERS.md](ACQUISITION_TIERS.md) · [SETUP_RESOURCES.md](SETUP_RESOURCES.md) · [OFFER_ROUTER.md](OFFER_ROUTER.md) (product line + deep link for pitches)
 
 Status: **locked direction** — factory loop F0–F5 implemented.
 
@@ -41,7 +41,7 @@ If no → unfinished.
 | Dumpster | Remainder after the cut. Recoverable inventory with **miss reasons**. |
 | Pitch surface | Stay on the list. **Overlay.** Primary action = Pitch. |
 | Channels | **WhatsApp, Phone, Email, Follow-up** — rewrite per channel, no auto-send, then **Record**. |
-| Intelligence | Case File first, then AI writer. Partial evidence → conservative copy. |
+| Intelligence | Case File first, then **offer router** ([OFFER_ROUTER.md](OFFER_ROUTER.md)), then AI writer. Partial evidence → conservative copy. One product URL — never homepage. |
 | Auto-send | Never. Copy / wa.me / mailto / call, then record. |
 
 ---

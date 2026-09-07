@@ -3,8 +3,8 @@ param(
   [string]$Message,
 
   [string]$Workflow = "deploy.yml",
-  [string]$HubUrl = "http://hub.34.66.94.12.nip.io/",
-  [string]$DiscoveryUrl = "http://discovery.34.66.94.12.nip.io/api/health",
+  [string]$HubUrl = "https://sleeklybuilt.pro/",
+  [string]$DiscoveryUrl = "https://discovery.sleeklybuilt.pro/api/health",
   [switch]$StageAll
 )
 

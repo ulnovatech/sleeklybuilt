@@ -229,6 +229,12 @@ const agencyServiceSchema = z.object({
   description: z.string().max(500).optional(),
 });
 
+const agencyProductLineSchema = z.object({
+  id: z.enum(['sleek_pages', 'websites', 'mobile_apps', 'business_systems']),
+  label: z.string().min(1).max(120),
+  path: z.string().min(1).max(200),
+});
+
 const agencyPatchSchema = z
   .object({
     presetId: z.enum(['generic', 'sleeklybuilt', 'custom']).optional(),
@@ -241,6 +247,8 @@ const agencyPatchSchema = z
     location: z.string().max(200).optional(),
     senderName: z.string().max(200).optional(),
     signature: z.string().max(2000).optional(),
+    siteUrl: z.string().max(300).optional(),
+    productLines: z.array(agencyProductLineSchema).max(20).optional(),
     packages: z.array(agencyPackageSchema).max(50).optional(),
     services: z.array(agencyServiceSchema).max(100).optional(),
   })
@@ -300,6 +308,9 @@ function factoryCredentialHint(key: CredentialKey, configured: boolean, cseReaso
 }
 
 export async function GET() {
+  const operator = await requireOperator();
+  if (operator instanceof NextResponse) return operator;
+
   try {
     const settings = await platformSettings.ensureLoaded();
     const credentialStatuses = platformSettings.getCredentialStatuses(settings);

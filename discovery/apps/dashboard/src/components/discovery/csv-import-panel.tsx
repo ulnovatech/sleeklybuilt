@@ -13,9 +13,7 @@ type UploadResponse = {
 };
 
 async function fetchCsvStatus(): Promise<CsvImportFileInfo> {
-  const res = await fetch('/api/discovery/csv', {
-    headers: { 'X-Dev-User': 'operator' },
-  });
+  const res = await fetch('/api/discovery/csv', { credentials: 'same-origin' });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? 'Failed to load CSV status');
   return data.csv as CsvImportFileInfo;
@@ -53,7 +51,7 @@ export function CsvImportPanel({ onUploaded }: { onUploaded?: () => void }) {
       form.append('file', file);
       const res = await fetch('/api/discovery/csv/upload', {
         method: 'POST',
-        headers: { 'X-Dev-User': 'operator' },
+        credentials: 'same-origin',
         body: form,
       });
       const data = (await res.json()) as UploadResponse & { error?: string };

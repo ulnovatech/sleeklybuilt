@@ -1,29 +1,12 @@
 RewriteEngine On
 
-# Legacy HTML → React routes
-RewriteRule ^about\.html$ /about [R=301,L]
-RewriteRule ^prices\.html$ /prices [R=301,L]
+# Proxy API requests to sleekly-dash (legacy ulndash must not serve /api)
+RewriteRule ^api/(.*)$ sleekly-dash/backend/$1 [L]
 
-# Serve existing files and directories directly
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+# Deny secret / env files under Apache (XAMPP / local) — mirrors nginx Chunk 1
+<FilesMatch "(?i)^(\.env.*|service-account\.json)$">
+  Require all denied
+</FilesMatch>
 
-# CRM API → sleekly-dash PHP frontend controller
-# Route through api.php (do not map onto backend/public/, which is a real directory).
-RewriteRule ^api/(.*)$ sleekly-dash/backend/api.php [L,QSA]
-
-# Marketing SPA fallback (preserve sub-apps and static handlers)
-RewriteCond %{REQUEST_URI} !^/api/
-RewriteCond %{REQUEST_URI} !^/php/
-RewriteCond %{REQUEST_URI} !^/assets/
-RewriteCond %{REQUEST_URI} !^/forms/
-RewriteCond %{REQUEST_URI} !^/blog/
-RewriteCond %{REQUEST_URI} !^/dash/
-RewriteCond %{REQUEST_URI} !^/portfolio-app/
-RewriteCond %{REQUEST_URI} !^/portfolio/
-RewriteCond %{REQUEST_URI} !^/sleekly-dash/
-RewriteCond %{REQUEST_URI} !^/ulndash/
-RewriteRule ^ index.html [L]
-
-DirectoryIndex index.html
+# Deny leftover legacy CRM tree if present on disk
+RewriteRule ^ulndash(/|$) - [F,L]

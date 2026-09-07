@@ -102,6 +102,7 @@ export type CaseFile = {
   weaknesses: CaseFileWeakness[];
   pains: CaseFilePain[];
   pitchAngle: string | null;
+  opportunityType: string | null;
   executiveSummary: string | null;
   recommendedServices: string[];
   purchaseReadiness: BoIPurchaseReadiness | null;
@@ -235,6 +236,10 @@ export function buildCaseFile(input: {
 
   const pains = mapPains(boi?.pains ?? []);
   const pitchAngle = boi?.salesBrief?.pitchAngle ?? websiteBrief?.pitchAngle ?? null;
+  const opportunityType =
+    websiteBrief?.opportunityType ??
+    boi?.salesBrief?.opportunityType ??
+    null;
   const evidence = (boi?.evidence ?? []).map((item) => ({
     id: item.id,
     label: item.label,
@@ -247,6 +252,17 @@ export function buildCaseFile(input: {
     label: gap.label,
     severity: gap.severity,
   }));
+  if (boi?.digitalGaps?.length) {
+    for (const gap of boi.digitalGaps) {
+      if (!websiteGaps.some((existing) => existing.key === gap.id)) {
+        websiteGaps.push({
+          key: gap.id,
+          label: gap.label,
+          severity: gap.severity === 'low' ? 'info' : gap.severity,
+        });
+      }
+    }
+  }
 
   const email = profile.contact.email ?? null;
   const phone = profile.contact.phone ?? null;
@@ -280,6 +296,7 @@ export function buildCaseFile(input: {
     weaknesses,
     pains,
     pitchAngle,
+    opportunityType,
     executiveSummary: boi?.salesBrief?.executiveSummary ?? null,
     recommendedServices: boi?.salesBrief?.recommendedServices ?? [],
     purchaseReadiness: boi?.purchaseReadiness ?? null,

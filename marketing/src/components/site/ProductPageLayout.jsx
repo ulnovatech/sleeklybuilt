@@ -6,7 +6,7 @@ import ProductFeatureSections from './ProductFeatureSections'
 import PeopleAskSection from '../sections/PeopleAskSection'
 import Reveal from '../motion/Reveal'
 import { siteConfig } from '../../site.config'
-import { usePageTitle } from '../../lib/usePageTitle'
+import { usePageSeo } from '../../lib/usePageSeo'
 
 /**
  * Shared product line page — PageHeader (not full hero), features, FAQ, CTA.
@@ -21,7 +21,7 @@ export default function ProductPageLayout({
   secondaryAction,
   children,
 }) {
-  usePageTitle(title)
+  usePageSeo()
 
   return (
     <>

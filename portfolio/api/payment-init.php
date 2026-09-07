@@ -155,6 +155,5 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Could not start payment. Please try again or contact us.',
-        'error' => $e->getMessage(),
     ]);
 }

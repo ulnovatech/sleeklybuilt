@@ -15,6 +15,9 @@ public_html/
 .env.development.local
 .env.test.local
 .env.production.local
+**/.env old
+**/.env.old
+**/.env.bak
 
 # IDE
 .cursor/
@@ -42,6 +45,21 @@ ulndash/backend/.env
 infra/env/docker.ulnovatech.env
 infra/env/docker.discovery.env
 infra/env/*.env
+infra/secrets/*
+!infra/secrets/.gitkeep
+marketing/.env.production
+
+# Local deploy scratch / legacy trees (do not commit)
+_deploy_tmp/
+ulndash/
+uln-blog/
+
+# Orphan Vite hashed build copies outside controlled assemble paths
+assets/index-*.js
+assets/uln-logo-*.png
+dash/assets/index-*.js
+dash/assets/uln-logo-*.png
+portfolio-app/assets/index-*.js
 
 # Demand Capture (discovery/) — pnpm Turborepo monolith
 discovery/node_modules/

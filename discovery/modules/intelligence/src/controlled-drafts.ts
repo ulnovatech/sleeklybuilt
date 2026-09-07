@@ -7,6 +7,7 @@ import { platformSettings, type CredentialKey, type DraftProvider } from '@agenc
 import { and, desc, eq } from 'drizzle-orm';
 import type { CaseFile } from './case-file';
 import type { PitchPack } from './pitch-pack';
+import { resolveSelectedOffer, type SelectedOffer } from './boi/resolve-selected-offer';
 
 export type DraftChannel = 'email' | 'whatsapp' | 'phone' | 'follow_up';
 
@@ -43,12 +44,14 @@ export type DraftFactPack = {
     whatsappStatus: string;
   };
   channel: DraftChannel;
+  selectedOffer: SelectedOffer | null;
   agency: {
     brandName: string;
     senderName: string;
     currency: string;
     packages: Array<{ id: string; title: string; priceUgx: number }>;
     services: string[];
+    siteUrl: string;
   };
   /** Populated after phone draft generation for UI expand */
   phoneSections?: PhoneDraftSections | null;
@@ -74,6 +77,7 @@ export type OutreachDraftRecord = {
   updatedAt: Date;
   cached: boolean;
   phoneSections?: PhoneDraftSections | null;
+  selectedOffer?: SelectedOffer | null;
 };
 
 export class DraftGenerationError extends Error {
@@ -123,6 +127,7 @@ function toCaseFile(source: DraftSource): CaseFile {
     weaknesses: source.weaknesses,
     pains: [],
     pitchAngle: source.pitchAngle,
+    opportunityType: null,
     executiveSummary: null,
     recommendedServices: source.recommendedServices,
     purchaseReadiness: null,
@@ -140,6 +145,31 @@ function toCaseFile(source: DraftSource): CaseFile {
 export function buildDraftFactPack(caseFile: DraftSource, channel: DraftChannel): DraftFactPack {
   const file = toCaseFile(caseFile);
   const agency = platformSettings.getAgencySettings();
+  const gapIds = [
+    ...file.websiteGaps.map((gap) => gap.key),
+    ...file.weaknesses.map((weakness) => weakness.id),
+    ...file.solutions.flatMap((solution) =>
+      solution.painIds.filter((id) => id.startsWith('gap:')).map((id) => id.slice(4)),
+    ),
+  ];
+  const intentTexts = file.pains
+    .filter((pain) => pain.id.startsWith('pain:intent:'))
+    .map((pain) => pain.label);
+  const selectedOffer = resolveSelectedOffer({
+    status: file.status,
+    opportunityType: file.opportunityType,
+    presenceClass: file.presence.class,
+    hasPhone: Boolean(file.contact.phone?.trim()),
+    hasEmail: Boolean(file.contact.email?.trim()),
+    industry: file.identity.industry,
+    businessName: file.identity.name,
+    painIds: file.pains.map((pain) => pain.id),
+    gapIds,
+    intentTexts,
+    siteUrl: agency.siteUrl,
+    productLines: agency.productLines,
+  });
+
   return {
     identity: file.identity,
     presence: file.presence,
@@ -164,6 +194,7 @@ export function buildDraftFactPack(caseFile: DraftSource, channel: DraftChannel)
       whatsappStatus: file.contact.whatsapp.status,
     },
     channel,
+    selectedOffer,
     agency: {
       brandName: agency.brandName || 'web agency',
       senderName: agency.senderName || agency.brandName || '',
@@ -174,6 +205,7 @@ export function buildDraftFactPack(caseFile: DraftSource, channel: DraftChannel)
         priceUgx: p.priceUgx,
       })),
       services: agency.services.map((s) => s.name),
+      siteUrl: agency.siteUrl || '',
     },
   };
 }
@@ -187,9 +219,10 @@ function channelInstructions(channel: DraftChannel, brandName: string): string[]
   if (channel === 'email') {
     return [
       `Write a concise cold outreach email for ${agency}.`,
-      'Platform: email — use a clear subject line, short paragraphs, professional tone, one specific ask.',
+      'Platform: email — clear subject, short paragraphs, one specific ask.',
       'Return JSON with subject (string, max 90 chars) and body (string, max 900 chars).',
-      'Tone: professional, specific, non-hype. No fabricated metrics or reviews.',
+      'Tone: brief, human, edged — not brochure. Never “hope this finds you well”.',
+      'No fabricated metrics or reviews. Do not list multiple product lines.',
     ];
   }
   if (channel === 'whatsapp') {
@@ -197,7 +230,7 @@ function channelInstructions(channel: DraftChannel, brandName: string): string[]
       `Write a short WhatsApp outreach message for ${agency}.`,
       'Platform: WhatsApp — mobile-first, brevity, direct greeting, one clear ask, no formal letter structure.',
       'Return JSON with subject null and body (string, max 420 chars).',
-      'Tone: direct and polite; one clear ask; no links unless from evidence URLs in factPack.',
+      'Tone: direct, polite, edged; one clear ask.',
     ];
   }
   if (channel === 'phone') {
@@ -207,7 +240,7 @@ function channelInstructions(channel: DraftChannel, brandName: string): string[]
       'Ground the hook in factPack.weaknesses or factPack.pains only.',
       'Return JSON with subject null, body (string, full formatted script the operator reads), and sections object:',
       'sections.opening15s, sections.valueHook, sections.evidenceMention, sections.ask, sections.objectionHandlers (array of 2 strings max), sections.close.',
-      'Tone: conversational, confident, not scripted-sounding; no fabricated reviews or metrics.',
+      'Tone: conversational, confident, not scripted-sounding; no fabricated reviews or metrics. Speak the offer — no URLs.',
     ];
   }
   return [
@@ -219,6 +252,24 @@ function channelInstructions(channel: DraftChannel, brandName: string): string[]
 }
 
 export function buildDraftPrompt(factPack: DraftFactPack): string {
+  const offerRules = factPack.selectedOffer
+    ? [
+        `Use factPack.selectedOffer as the only product: label "${factPack.selectedOffer.label}"` +
+          (factPack.selectedOffer.packageId
+            ? ` (package id ${factPack.selectedOffer.packageId}; prefer matching agency.packages title when present)`
+            : '') +
+          '.',
+        `Structure: (1) homework beat naming the business + evidence-backed pain, (2) offer beat using selectedOffer.label, (3) optional one evidence excerpt, (4) ask — prefer selectedOffer.ask, (5) link.`,
+        factPack.channel === 'phone'
+          ? 'Phone: speak the offer; do not include URLs.'
+          : `Include exactly one product URL in the body: ${factPack.selectedOffer.url}. No other links. Never link the homepage.`,
+        'Do not pitch other product lines. Do not invent packages not in factPack.',
+      ]
+    : [
+        'No selectedOffer — stay conservative; do not invent a product line or marketing URL.',
+        'One clear ask only; no homepage links.',
+      ];
+
   return JSON.stringify(
     {
       factPack,
@@ -226,7 +277,7 @@ export function buildDraftPrompt(factPack: DraftFactPack): string {
         ...channelInstructions(factPack.channel, factPack.agency.brandName),
         'Use only facts in factPack. Never invent pains, reviews, or contact details.',
         'Ground claims in weaknesses, pains, and evidence labels only.',
-        'When factPack.agency.packages is non-empty, prefer those package titles for offers.',
+        ...offerRules,
         'When factPack.sentiment.complaintThemes is non-empty, you may reference one complaint theme if evidence-backed.',
       ],
     },
@@ -468,6 +519,33 @@ function phoneSectionsFromStoredFactPack(factPack: Record<string, unknown>): Pho
   return sections as PhoneDraftSections;
 }
 
+function selectedOfferFromStoredFactPack(factPack: Record<string, unknown>): SelectedOffer | null {
+  const offer = factPack.selectedOffer;
+  if (!offer || typeof offer !== 'object') return null;
+  const record = offer as Partial<SelectedOffer>;
+  if (typeof record.label !== 'string' || typeof record.url !== 'string') return null;
+  if (typeof record.productLine !== 'string') return null;
+  return {
+    productLine: record.productLine as SelectedOffer['productLine'],
+    label: record.label,
+    url: record.url,
+    packageId: typeof record.packageId === 'string' ? record.packageId : null,
+    why: typeof record.why === 'string' ? record.why : '',
+    matchedGapIds: Array.isArray(record.matchedGapIds)
+      ? record.matchedGapIds.filter((id): id is string => typeof id === 'string')
+      : [],
+    matchedPainIds: Array.isArray(record.matchedPainIds)
+      ? record.matchedPainIds.filter((id): id is string => typeof id === 'string')
+      : [],
+    ask: typeof record.ask === 'string' ? record.ask : '',
+  };
+}
+
+/** Recompute selected offer from a Case File for UI (no LLM). */
+export function selectedOfferForCaseFile(caseFile: DraftSource): SelectedOffer | null {
+  return buildDraftFactPack(caseFile, 'email').selectedOffer;
+}
+
 export async function generateOutreachDraft(input: {
   leadId: string;
   accountId?: string;
@@ -550,6 +628,8 @@ export async function generateOutreachDraft(input: {
       updatedAt: existing.updatedAt,
       cached: true,
       phoneSections: phoneSectionsFromStoredFactPack(existing.factPack),
+      selectedOffer:
+        selectedOfferFromStoredFactPack(existing.factPack) ?? factPack.selectedOffer,
     };
   }
 
@@ -629,6 +709,7 @@ export async function generateOutreachDraft(input: {
       updatedAt: updated.updatedAt,
       cached: false,
       phoneSections: parsed.phoneSections ?? null,
+      selectedOffer: factPack.selectedOffer,
     };
   }
 
@@ -661,6 +742,7 @@ export async function generateOutreachDraft(input: {
     updatedAt: created.updatedAt,
     cached: false,
     phoneSections: parsed.phoneSections ?? null,
+    selectedOffer: factPack.selectedOffer,
   };
 }
 

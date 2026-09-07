@@ -8,6 +8,9 @@ import { NextResponse } from 'next/server';
 const crm = new CrmService();
 
 export async function GET(request: Request) {
+  const operator = await requireOperator();
+  if (operator instanceof NextResponse) return operator;
+
   try {
     const { searchParams } = new URL(request.url);
     const parsed = parseListSearchParams(crmLeadsListQuerySchema, searchParams);

@@ -3,19 +3,14 @@ import PortfolioCard from '../components/PortfolioCard'
 import FAQ from '../components/FAQ'
 import { hubHref } from '../site.config'
 
-/**
- * Layouts gallery home — soft-neutral mood (Wave 9 Phase E).
- * No rainbow icon strips; semantic tokens only.
- */
 export default function Home() {
   const [templates, setTemplates] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
   const API_URL = import.meta.env.VITE_API_URL
 
   useEffect(() => {
-    fetch(`${API_URL}/portfolios.php?collection=websites`)
+    fetch(`${API_URL}/portfolios.php`)
       .then((res) => {
         if (!res.ok) throw new Error('Network response was not ok')
         return res.json()
@@ -24,7 +19,7 @@ export default function Home() {
         if (data.success) {
           setTemplates(data.templates)
         } else {
-          setError(data.error || 'Failed to load templates')
+          setError(data.error || 'Failed to load layouts')
         }
       })
       .catch((err) => setError(err.message))
@@ -33,11 +28,11 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-content px-6 py-16 lg:px-10">
+      <div className="mx-auto max-w-content px-5 py-16 lg:px-8" role="status" aria-live="polite">
         <div className="h-8 w-48 animate-pulse rounded bg-surface-sunken" />
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-64 animate-pulse rounded-xl border border-subtle bg-surface-raised" />
+            <div key={i} className="h-64 animate-pulse rounded-xl bg-surface-sunken" />
           ))}
         </div>
         <p className="sr-only">Loading layouts…</p>
@@ -47,72 +42,71 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-lg px-6 py-16 text-center lg:px-10">
-        <h1 className="font-display text-display-section text-emerald-deep">Couldn&apos;t load layouts</h1>
-        <p className="mt-3 text-body text-ink-soft">{error}</p>
+      <div className="mx-auto max-w-content px-5 py-16 lg:px-8" role="alert">
+        <h1 className="display-section text-emerald-deep">Couldn’t load layouts</h1>
+        <p className="mt-3 text-content-secondary">{error}</p>
         <a
           href={hubHref('contact')}
-          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-5 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+          className="mt-6 inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-sm font-semibold text-content-primary"
         >
-          Contact us
-        </a>
-      </div>
-    )
-  }
-
-  if (templates.length === 0) {
-    return (
-      <div className="mx-auto max-w-lg px-6 py-16 text-center lg:px-10">
-        <h1 className="font-display text-display-section text-emerald-deep">Website layouts</h1>
-        <p className="mt-3 text-body text-ink-soft">
-          No published website layouts are available right now. Check back soon, or contact us from the main site.
-        </p>
-        <a
-          href={hubHref('contact')}
-          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-5 text-meta font-semibold text-ink transition hover:bg-accent-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
-        >
-          Start a project
+          Contact us instead
         </a>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-content px-6 py-10 lg:px-10 lg:py-14">
-      <header className="max-w-2xl">
+    <div>
+      <section className="mx-auto max-w-content px-5 py-12 lg:px-8 lg:py-16">
         <p className="eyebrow">Layouts</p>
-        <h1 className="mt-3 font-display text-display-section text-emerald-deep">Website layouts you can open and click through</h1>
-        <p className="mt-3 text-body text-ink-soft">
-          Pick a starting layout, preview it live, then place a deposit to begin customization.
+        <h1 className="display-section mt-4 text-emerald-deep">Available website layouts</h1>
+        <p className="lead mt-3 text-content-secondary">
+          Browse live previews, then order a package or request a custom build.
         </p>
-      </header>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {templates.map((tpl) => (
-          <PortfolioCard
-            key={tpl.name}
-            templateName={tpl.name}
-            title={tpl.title}
-            description={tpl.description}
-            mainImage={tpl.mainImage}
-            thumbnails={tpl.thumbnails}
-            link={tpl.entry}
-          />
-        ))}
-      </div>
+        {templates.length === 0 ? (
+          <p className="mt-10 text-content-secondary">
+            No layouts are published yet.{' '}
+            <a href={hubHref('contact')} className="font-semibold text-content-link underline-offset-2 hover:underline">
+              Tell us what you need
+            </a>
+            .
+          </p>
+        ) : (
+          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+            {templates.map((tpl) => (
+              <PortfolioCard
+                key={tpl.name}
+                title={tpl.title}
+                description={tpl.description}
+                mainImage={tpl.mainImage}
+                mobileImage={tpl.mobileImage}
+                thumbnails={tpl.thumbnails}
+                link={tpl.entry}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
-      <section className="mt-16 border-t border-subtle pt-14">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-display-section text-emerald-deep">Why start from a layout</h2>
-          <ul className="mt-8 grid gap-4 text-left sm:grid-cols-3">
+      <section className="border-t border-subtle bg-surface-raised">
+        <div className="mx-auto max-w-content px-5 py-14 lg:px-8">
+          <h2 className="display-section text-emerald-deep">Why teams choose SleeklyBuilt</h2>
+          <p className="lead mt-3 text-content-secondary">
+            Clear process, live proof, and builds you can click through before you commit.
+          </p>
+          <ul className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { title: 'Faster path', body: 'A proven structure means less guessing before you launch.' },
-              { title: 'Yours to own', body: 'Customization and full ownership once the build is complete.' },
-              { title: 'Real preview', body: 'Open the live layout before you pay a deposit.' },
-            ].map((item) => (
-              <li key={item.title} className="rounded-xl border border-subtle bg-surface-raised p-5">
-                <h3 className="font-display text-display-card text-emerald-deep">{item.title}</h3>
-                <p className="mt-2 text-meta text-ink-soft">{item.body}</p>
+              'Premium, intentional design',
+              'Fast, realistic turnaround',
+              'Responsive on real devices',
+              'SEO-ready structure',
+              'Support after launch',
+              'Motion that clarifies, not distracts',
+            ].map((text) => (
+              <li key={text} className="flex gap-3 text-body text-content-secondary">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-action-soft" aria-hidden="true" />
+                <span className="font-medium text-content-primary">{text}</span>
               </li>
             ))}
           </ul>

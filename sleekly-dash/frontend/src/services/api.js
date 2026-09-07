@@ -1,3 +1,5 @@
+import { getClerkBearerToken } from '../lib/clerkToken'
+
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   '/api';
@@ -12,6 +14,11 @@ async function request(path, options = {}) {
   const defaultHeaders =
     hasBody && !isFormData ? { 'Content-Type': 'application/json' } : {};
   const headers = { ...defaultHeaders, ...(options.headers || {}) };
+
+  const clerkToken = await getClerkBearerToken();
+  if (clerkToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${clerkToken}`;
+  }
 
   const res = await fetch(url, {
     credentials: 'include',
@@ -120,6 +127,10 @@ export const RequestsAPI = {
   get: (type, id) => request(`/requests/${encodeURIComponent(type)}/${encodeURIComponent(id)}`),
   convertToCompany: (id) =>
     request(`/requests/${encodeURIComponent(id)}/convert`, { method: 'POST' }),
+};
+
+export const AnalyticsAPI = {
+  ga: () => request('/analytics/ga'),
 };
 
 export const CompetitorsAPI = {

@@ -213,6 +213,51 @@
       "section_ids": [],
       "default_service_id": null,
       "default_product_kind": "orderable_package"
+    },
+    {
+      "page_id": "blog",
+      "path": "/blog/",
+      "title": "Blog",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "blog-list",
+      "path": "/blog/blog",
+      "title": "All posts",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "blog-about",
+      "path": "/blog/about",
+      "title": "Blog about",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "blog-contact",
+      "path": "/blog/contact",
+      "title": "Blog contact",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
+    },
+    {
+      "page_id": "blog-post",
+      "path": "/blog/",
+      "title": "Blog article",
+      "external": true,
+      "section_ids": [],
+      "default_service_id": null,
+      "default_product_kind": null
     }
   ]
 }

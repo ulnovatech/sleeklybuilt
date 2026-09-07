@@ -11,13 +11,13 @@ if [[ -z "$ROOT" ]]; then
 fi
 
 CRM=""
-for candidate in sleekly-dash ulndash; do
+for candidate in sleekly-dash; do
   if [[ -d "$ROOT/public_html/$candidate/backend" ]]; then
     CRM="$ROOT/public_html/$candidate/backend"
     break
   fi
 done
-[[ -n "$CRM" ]] || { echo "CRM backend not found under $ROOT/public_html"; exit 1; }
+[[ -n "$CRM" ]] || { echo "CRM backend not found under $ROOT/public_html/sleekly-dash"; exit 1; }
 
 ENVF=""
 for f in "$ROOT/env/docker.sleeklybuilt.env" "$ROOT/env/docker.ulnovatech.env"; do

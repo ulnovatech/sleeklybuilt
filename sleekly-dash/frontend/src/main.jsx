@@ -48,7 +48,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="companies" element={<LazyPage><Companies /></LazyPage>} />
             <Route path="companies/:id" element={<LazyPage><CompanyDetail /></LazyPage>} />
             <Route path="requests" element={<LazyPage><Requests /></LazyPage>} />
-            <Route path="requests/:id" element={<LazyPage><RequestDetails /></LazyPage>} />
+            <Route path="requests/:type/:id" element={<LazyPage><RequestDetails /></LazyPage>} />
             <Route path="analytics" element={<LazyPage><GAnalytics /></LazyPage>} />
             <Route path="competitors" element={<LazyPage><Competitors /></LazyPage>} />
             <Route path="competitors/:id" element={<LazyPage><CompetitorDetail /></LazyPage>} />

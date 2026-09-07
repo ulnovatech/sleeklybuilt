@@ -5,7 +5,7 @@ import PhoneInput from '../components/forms/PhoneInput'
 import { defaultDialCode } from '../components/forms/CountrySelect'
 import { apiEndpoints } from '../site.config'
 import { useSiteConfig } from '../context/SiteContactContext'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 import { cn } from '../lib/utils'
 
 const empty = {
@@ -19,7 +19,7 @@ const empty = {
  * Not multi-step theatre; proportionate to lookup.
  */
 export default function TrackOrderPage() {
-  usePageTitle('Track order')
+  usePageSeo()
   const siteConfig = useSiteConfig()
   const formId = useId()
   const [form, setForm] = useState(empty)
@@ -159,7 +159,7 @@ export default function TrackOrderPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-action-primary-hover px-6 text-meta font-semibold text-cream transition duration-fast ease-dos hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 disabled:opacity-60"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-dos-lg bg-action-primary-hover px-6 text-meta font-semibold text-cream transition duration-fast ease-dos hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 disabled:opacity-60"
                 >
                   <FiSearch aria-hidden="true" />
                   {loading ? 'Looking up…' : 'Track my order'}
@@ -219,7 +219,7 @@ export default function TrackOrderPage() {
                   <button
                     type="button"
                     onClick={reset}
-                    className="min-h-11 rounded-full border border-subtle px-5 text-meta font-semibold text-ink-soft transition hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                    className="min-h-11 rounded-dos-lg border border-subtle px-5 text-meta font-semibold text-ink-soft transition hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   >
                     Look up another order
                   </button>
@@ -227,7 +227,7 @@ export default function TrackOrderPage() {
                     href={siteConfig.whatsapp}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-11 items-center justify-center rounded-full bg-action-primary-hover px-5 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                    className="inline-flex min-h-11 items-center justify-center rounded-dos-lg bg-action-primary-hover px-5 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   >
                     Chat with support
                   </a>

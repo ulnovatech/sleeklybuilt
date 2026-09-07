@@ -1,0 +1,143 @@
+/**
+ * SleeklyBuilt public Design OS — Meridian identity.
+ * Hex lives only here. Apps must prefer semantic --color-* / Tailwind roles.
+ * Narrative contract: ./DESIGN.md · Design OS: design-os/systems/design_tokens.md
+ */
+:root {
+  /* ── Brand primitives — Meridian ────────────────────────────────────────
+   * Halo (canvas) · Meridian (structure) · Spark (signal) · Void (emphasis)
+   *
+   * Personality: precise · calm · capable · premium · human
+   * Positioning: systems studio — software operators can run on.
+   */
+  --halo: #f3f5f7;
+  --halo-deep: #dce1e8;
+  --meridian-deep: #0b343c;
+  --meridian: #15656f;
+  --meridian-soft: #458f98;
+  --spark: #e35a18;
+  --spark-soft: #ef7b42;
+  --spark-deep: #b84512;
+  --ink: #12161d;
+  --ink-soft: #596270;
+  --void: #07090d;
+  --void-raised: #11151c;
+  --void-line: #1e2430;
+
+  /* Compatibility aliases — prefer halo/meridian/spark/void in new code */
+  --porcelain: var(--halo);
+  --porcelain-deep: var(--halo-deep);
+  --indigo-deep: var(--meridian-deep);
+  --indigo: var(--meridian);
+  --indigo-soft: var(--meridian-soft);
+  --ember: var(--spark);
+  --ember-soft: var(--spark-soft);
+  --ember-deep: var(--spark-deep);
+  --cream: var(--halo);
+  --cream-deep: var(--halo-deep);
+  --emerald-deep: var(--meridian-deep);
+  --emerald: var(--meridian);
+  --emerald-soft: var(--meridian-soft);
+  --gold: var(--spark);
+  --gold-soft: var(--spark-soft);
+  --obsidian: var(--void);
+  --obsidian-raised: var(--void-raised);
+  --obsidian-line: var(--void-line);
+
+  --radius: 0.375rem;
+
+  /* Semantic roles (color_system / design_tokens) */
+  --color-surface-base: var(--halo);
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: var(--halo-deep);
+  --color-surface-overlay: rgb(7 9 13 / 0.62);
+  --color-surface-inverse: var(--void);
+  --color-surface-inverse-raised: var(--void-raised);
+
+  --color-border-subtle: var(--halo-deep);
+  --color-border-default: var(--void-line);
+  --color-border-strong: var(--ink-soft);
+  --color-border-focus: var(--color-focus-ring);
+  --color-border-on-inverse: var(--void-line);
+
+  --color-content-primary: var(--ink);
+  --color-content-secondary: var(--ink-soft);
+  --color-content-muted: #7a8290;
+  --color-content-disabled: #a0a6b2;
+  --color-content-inverse: var(--halo);
+  --color-content-link: var(--meridian);
+
+  /* Light-surface primary actions — meridian (trust / structure) */
+  --color-action-primary: var(--meridian);
+  --color-action-primary-hover: var(--meridian-deep);
+  --color-action-primary-active: #072428;
+  --color-action-primary-soft: var(--meridian-soft);
+  --color-action-secondary: transparent;
+  --color-action-secondary-hover: rgb(11 52 60 / 0.08);
+  --color-action-danger: #c0392b;
+  --color-action-danger-hover: #9b2e22;
+  --color-action-disabled: #c5cad3;
+
+  /* Signal accent — spark; one primary accent element per viewport */
+  --color-accent: var(--spark);
+  --color-accent-hover: var(--spark-soft);
+
+  /* Focus ring — never meridian or spark */
+  --color-focus-ring: #2a3340;
+  --color-focus-ring-inverse: var(--halo);
+
+  --color-status-success: #1f7a4c;
+  --color-status-success-surface: #e6f4ec;
+  --color-status-warning: #b7791f;
+  --color-status-warning-surface: #f7f0e0;
+  --color-status-danger: #c0392b;
+  --color-status-danger-surface: #f8e9e6;
+  --color-status-info: #15656f;
+  --color-status-info-surface: #e4f1f3;
+
+  /* Spacing — 8pt grid */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 2.5rem;
+  --space-3xl: 3rem;
+  --space-4xl: 4rem;
+
+  /* Radius — engineered precision (not startup soft) */
+  --radius-none: 0;
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: var(--radius);
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
+
+  /* Elevation — cool graphite tint; restrained */
+  --shadow-color: 14 18 24;
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgb(var(--shadow-color) / 0.05);
+  --shadow-sm: 0 1px 3px rgb(var(--shadow-color) / 0.07), 0 1px 2px rgb(var(--shadow-color) / 0.04);
+  --shadow-md: 0 4px 14px rgb(var(--shadow-color) / 0.09), 0 2px 4px rgb(var(--shadow-color) / 0.04);
+  --shadow-lg: 0 12px 32px rgb(var(--shadow-color) / 0.12), 0 4px 8px rgb(var(--shadow-color) / 0.05);
+  --shadow-xl: 0 24px 48px rgb(var(--shadow-color) / 0.16), 0 8px 16px rgb(var(--shadow-color) / 0.07);
+
+  /* Motion — restrained, elegant */
+  --motion-instant: 75ms;
+  --motion-fast: 160ms;
+  --motion-normal: 280ms;
+  --motion-slow: 420ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-default: var(--ease-out);
+
+  /* Z-index */
+  --z-base: 0;
+  --z-dropdown: 20;
+  --z-sticky: 40;
+  --z-modal: 60;
+  --z-notification: 70;
+}

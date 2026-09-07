@@ -3,14 +3,14 @@ import Reveal from '../components/motion/Reveal'
 import PageHeader from '../components/site/PageHeader'
 import { trustCommitments } from '../config/proof'
 import { siteConfig } from '../site.config'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 
 /**
  * About — PageHeader (obsidian budget) + soft-neutral body (Wave 9 Phase E).
  * No fabricated metrics; quiet cream eyebrow on dark (not competing gold).
  */
 export default function AboutPage() {
-  usePageTitle('About')
+  usePageSeo()
 
   return (
     <>

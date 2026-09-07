@@ -23,6 +23,16 @@ assert(
   'website service remap',
 );
 assert(sleek.signature.includes('SleeklyBuilt'), 'signature includes brand');
+assert(sleek.siteUrl === 'https://sleeklybuilt.pro', 'siteUrl');
+assert(
+  sleek.productLines.some((p) => p.id === 'sleek_pages' && p.path === '/sleek-pages'),
+  'sleek_pages product line',
+);
+assert(
+  sleek.productLines.every((p) => p.path !== '/' && !p.path.endsWith('/')),
+  'no homepage product paths',
+);
+assert(generic.productLines.length === 0, 'generic product lines empty');
 
 console.log('ok agency presets');
-console.log('7 passed, 0 failed');
+console.log('11 passed, 0 failed');

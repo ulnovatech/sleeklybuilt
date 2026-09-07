@@ -7,12 +7,14 @@ const toneClass = {
   hero: {
     idle: 'text-cream/80 hover:text-cream',
     active: 'text-cream',
-    badge: 'bg-gold text-ink',
+    badge: 'bg-cream/15 text-cream',
+    underline: 'after:bg-cream/70',
   },
   light: {
     idle: 'text-ink-soft hover:text-emerald-deep',
     active: 'text-emerald-deep',
-    badge: 'bg-gold text-ink',
+    badge: 'bg-action-primary-hover/10 text-emerald-deep',
+    underline: 'after:bg-emerald',
   },
 }
 
@@ -36,7 +38,8 @@ export default function NavMenu({ tone = 'light' }) {
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'relative inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-md px-2 text-sm font-medium transition',
-                  'after:absolute after:inset-x-2 after:-bottom-px after:h-px after:origin-left after:bg-gold after:transition-transform',
+                  'after:absolute after:inset-x-2 after:-bottom-px after:h-px after:origin-left after:transition-transform',
+                  styles.underline,
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                   tone === 'hero'
                     ? 'focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'

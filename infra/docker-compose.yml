@@ -37,6 +37,7 @@ services:
       - template_import_data:/var/lib/sleeklybuilt/template-imports
       - template_import_logs:/var/log/sleeklybuilt/template-import
       - template_profile_data:/var/lib/sleeklybuilt/template-profiles
+      - ${SLEEKLYBUILT_SECRETS_DIR:-./secrets}:/var/www/secrets:ro
     depends_on:
       mysql:
         condition: service_healthy

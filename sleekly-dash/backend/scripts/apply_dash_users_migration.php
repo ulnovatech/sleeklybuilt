@@ -73,7 +73,18 @@ if ($seeded) {
     fwrite(STDOUT, 'Seeded first admin (empty table): ' . $seeded['email'] . "\n");
 }
 
-$mother = $users->ensureMotherAccount();
-fwrite(STDOUT, 'Mother account ready: ' . $mother['email'] . " / initial password changeme (change after sign-in)\n");
+require_once __DIR__ . '/../auth/ClerkTokenAuth.php';
+if (ClerkTokenAuth::passwordLoginDisabled()) {
+    fwrite(STDOUT, "Clerk SSO configured — skipping local mother password bootstrap.\n");
+} else {
+    try {
+        $mother = $users->ensureMotherAccount();
+        fwrite(STDOUT, 'Mother account ready: ' . $mother['email'] . " (password from DASH_ADMIN_PASS env)\n");
+    } catch (Throwable $e) {
+        fwrite(STDERR, 'Mother bootstrap: ' . $e->getMessage() . "\n");
+        fwrite(STDERR, "Set DASH_ADMIN_PASS (min 12 chars) or configure Clerk SSO.\n");
+        exit(1);
+    }
+}
 
 fwrite(STDOUT, "Migration 013_dash_users applied.\n");

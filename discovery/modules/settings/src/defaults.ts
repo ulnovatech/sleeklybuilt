@@ -178,7 +178,7 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
     },
     qualification: {
       requireContactForReview: true,
-      minScoreDefault: 0,
+      minScoreDefault: envInt('QUALIFICATION_MIN_SCORE_DEFAULT', 25),
       icp: {
         requireWebsiteOpportunity: true,
         demandWeightMultiplier: 1,

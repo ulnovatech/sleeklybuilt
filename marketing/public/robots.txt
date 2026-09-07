@@ -4,5 +4,8 @@ Allow: /
 Disallow: /dash/
 Disallow: /sleekly-dash/
 Disallow: /api/
+Disallow: /blog/admin/
+Disallow: /performante
+Disallow: /performante/
 
-Sitemap: http://hub.34.66.94.12.nip.io/sitemap.xml
+Sitemap: https://sleeklybuilt.pro/sitemap.xml

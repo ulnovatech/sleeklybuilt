@@ -11,9 +11,10 @@ class DashUserService
 {
     public const MIN_PASSWORD_LENGTH = 12;
     public const RESET_TTL_SECONDS = 3600;
-    /** Canonical first admin for prod / fresh installs. */
-    public const MOTHER_EMAIL = 'ulnovatech@gmail.com';
-    public const MOTHER_PASSWORD = 'changeme';
+    /** Canonical first admin for prod / fresh installs. Override with DASH_ADMIN_EMAIL. */
+    public const MOTHER_EMAIL = 'sales@sleeklybuilt.pro';
+    /** @deprecated Never use a hardcoded password — read DASH_ADMIN_PASS from env. */
+    public const MOTHER_PASSWORD = '';
     public const MOTHER_USERNAME = 'admin';
 
     public function __construct(
@@ -74,13 +75,24 @@ class DashUserService
         return $this->ensureMotherAccount();
     }
 
+    public static function motherEmail(): string
+    {
+        $fromEnv = strtolower(trim((string) (getenv('DASH_ADMIN_EMAIL') ?: '')));
+        if ($fromEnv !== '' && filter_var($fromEnv, FILTER_VALIDATE_EMAIL)) {
+            return $fromEnv;
+        }
+
+        return self::MOTHER_EMAIL;
+    }
+
     /**
-     * Ensure the mother admin exists (ulnovatech@gmail.com).
+     * Ensure the mother admin exists (DASH_ADMIN_EMAIL, default sales@sleeklybuilt.pro).
      * Creates it with the initial password when missing; does not reset an existing password.
      */
     public function ensureMotherAccount(): array
     {
-        $existing = $this->findByEmail(self::MOTHER_EMAIL);
+        $email = self::motherEmail();
+        $existing = $this->findByEmail($email);
         if ($existing) {
             if (!(int) ($existing['is_active'] ?? 0)) {
                 $this->pdo->prepare('UPDATE dash_users SET is_active = 1 WHERE id = :id')
@@ -90,7 +102,21 @@ class DashUserService
             return $existing;
         }
 
-        $passPlain = self::MOTHER_PASSWORD;
+        // Prefer explicit hash; otherwise require a strong env password (never a code default).
+        $passHash = trim((string) (getenv('DASH_ADMIN_PASS_HASH') ?: ''));
+        $passPlain = trim((string) (getenv('DASH_ADMIN_PASS') ?: ''));
+        if ($passHash === '' && $passPlain === '') {
+            throw new RuntimeException(
+                'Mother admin missing and DASH_ADMIN_PASS / DASH_ADMIN_PASS_HASH not set. '
+                . 'Set a strong password env or create the operator via Clerk-only mode without local mother.'
+            );
+        }
+        if ($passPlain !== '' && strlen($passPlain) < self::MIN_PASSWORD_LENGTH) {
+            throw new RuntimeException('DASH_ADMIN_PASS must be at least ' . self::MIN_PASSWORD_LENGTH . ' characters.');
+        }
+        if ($passPlain === 'changeme' || $passPlain === 'password' || $passPlain === 'admin') {
+            throw new RuntimeException('DASH_ADMIN_PASS rejects known-weak defaults.');
+        }
 
         $username = self::MOTHER_USERNAME;
 
@@ -101,13 +127,19 @@ class DashUserService
             $username = null;
         }
 
-        return $this->createUser([
-            'email' => self::MOTHER_EMAIL,
+        $create = [
+            'email' => $email,
             'username' => $username,
-            'password_hash' => password_hash($passPlain, PASSWORD_DEFAULT),
             'display_name' => 'Admin',
             'role' => 'admin',
-        ]);
+        ];
+        if ($passHash !== '') {
+            $create['password_hash'] = $passHash;
+        } else {
+            $create['password'] = $passPlain;
+        }
+
+        return $this->createUser($create);
     }
 
     public function findById(int $id): ?array

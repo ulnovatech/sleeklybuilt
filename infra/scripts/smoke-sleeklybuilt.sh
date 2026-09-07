@@ -3,8 +3,8 @@
 set -euo pipefail
 
 BASE="${1:-http://localhost:8080}"
-HOST_HDR="${SMOKE_HOST:-hub.34.66.94.12.nip.io}"
-ADMIN_USER="${DASH_ADMIN_USER:-ulnovatech@gmail.com}"
+HOST_HDR="${SMOKE_HOST:-sleeklybuilt.pro}"
+ADMIN_USER="${DASH_ADMIN_USER:-sales@sleeklybuilt.pro}"
 ADMIN_PASS="${DASH_ADMIN_PASS:-changeme}"
 CURL=(curl -s -H "Host: ${HOST_HDR}")
 
@@ -44,5 +44,17 @@ else
   echo "FAIL: unexpected newsletter status ${code_newsletter}"
   exit 1
 fi
+
+perf_file="$(mktemp)"
+code_perf=$("${CURL[@]}" -o "$perf_file" -w '%{http_code}' "${BASE}/performante")
+echo "GET /performante → ${code_perf}"
+[[ "$code_perf" == "200" ]] || { echo "FAIL: /performante"; rm -f "$perf_file"; exit 1; }
+if grep -q 'Operator destinations' "$perf_file"; then
+  echo "FAIL: unsigned /performante HTML leaked operator destinations"
+  rm -f "$perf_file"
+  exit 1
+fi
+echo "OK: /performante reachable without destination list in HTML"
+rm -f "$perf_file"
 
 echo "=== Smoke tests complete ==="

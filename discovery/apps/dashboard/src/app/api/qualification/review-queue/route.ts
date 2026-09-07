@@ -1,3 +1,4 @@
+import { requireOperator } from '@/lib/api-auth';
 import {
   QualificationService,
   type ReviewQueueFilters,
@@ -14,6 +15,9 @@ function parseVerification(value: string | null): VerificationFilter | undefined
 }
 
 export async function GET(request: Request) {
+  const operator = await requireOperator();
+  if (operator instanceof NextResponse) return operator;
+
   try {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q')?.trim() || undefined;

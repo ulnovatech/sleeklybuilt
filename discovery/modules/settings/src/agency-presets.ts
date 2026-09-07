@@ -1,4 +1,10 @@
-import type { AgencyPackage, AgencyPresetId, AgencyService, AgencySettings } from './types';
+import type {
+  AgencyPackage,
+  AgencyPresetId,
+  AgencyProductLine,
+  AgencyService,
+  AgencySettings,
+} from './types';
 
 /** Empty catalog = legacy hardcoded BOI/proposal/outreach behavior. */
 export function buildGenericAgencyPreset(): AgencySettings {
@@ -13,6 +19,8 @@ export function buildGenericAgencyPreset(): AgencySettings {
     location: '',
     senderName: '',
     signature: '',
+    siteUrl: '',
+    productLines: [],
     packages: [],
     services: [],
   };
@@ -102,6 +110,13 @@ export function buildSleeklyBuiltAgencyPreset(): AgencySettings {
     },
   ];
 
+  const productLines: AgencyProductLine[] = [
+    { id: 'sleek_pages', label: 'Sleek Page', path: '/sleek-pages' },
+    { id: 'websites', label: 'Website', path: '/websites' },
+    { id: 'mobile_apps', label: 'Mobile app', path: '/mobile-apps' },
+    { id: 'business_systems', label: 'Business system', path: '/business-systems' },
+  ];
+
   return {
     presetId: 'sleeklybuilt',
     brandName: 'SleeklyBuilt',
@@ -114,6 +129,8 @@ export function buildSleeklyBuiltAgencyPreset(): AgencySettings {
     senderName: 'SleeklyBuilt',
     signature:
       '—\nSleeklyBuilt\nWebsites, apps & systems — built sleek, built right\nsales@sleeklybuilt.pro · +256 791779448\nKampala, Uganda',
+    siteUrl: 'https://sleeklybuilt.pro',
+    productLines,
     packages,
     services,
   };

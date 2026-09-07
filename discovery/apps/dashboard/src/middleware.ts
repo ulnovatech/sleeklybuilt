@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { isClerkAdminConfigured, assertAdminOperator, clerkConfigured } from '@/lib/admin-allowlist';
 import { isCronAuthorized } from '@/lib/cron-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -9,6 +10,7 @@ const isCronApi = createRouteMatcher([
   '/api/discovery/plans/tick',
   '/api/integrations/sleekly-dash/sync',
   '/api/qualification/segment-performance/refresh',
+  '/api/market-hunter/scans/scheduled',
 ]);
 const isPublicPage = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)']);
 
@@ -16,19 +18,10 @@ function clerkPublishableKey(): string {
   return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ?? '';
 }
 
-function clerkConfigured() {
-  return !!(process.env.CLERK_SECRET_KEY && clerkPublishableKey());
-}
-
-function devAuthAllowed() {
-  // Next production builds inline NODE_ENV=production. Interim GCE deploys
-  // run without Clerk keys and rely on ALLOW_DEV_AUTH baked into the image.
-  return process.env.ALLOW_DEV_AUTH === 'true';
-}
-
 async function authorize(
   request: NextRequest,
   protect: (() => Promise<unknown>) | null,
+  getUserId: (() => Promise<string | null>) | null,
 ) {
   const { pathname } = request.nextUrl;
 
@@ -41,32 +34,25 @@ async function authorize(
       return NextResponse.next();
     }
 
-    if (devAuthAllowed()) {
-      if (request.method !== 'GET') {
-        const devUser = request.headers.get('x-dev-user');
-        if (!devUser) {
-          return NextResponse.json(
-            { error: 'Dev auth required: set X-Dev-User header' },
-            { status: 401 },
-          );
-        }
-      }
-      return NextResponse.next();
+    if (!clerkConfigured() || !protect || !getUserId) {
+      return NextResponse.json(
+        { error: 'Authentication not configured. Set Clerk keys and CLERK_ADMIN_USER_ID.' },
+        { status: 401 },
+      );
     }
 
-    if (clerkConfigured() && protect) {
-      await protect();
-      return NextResponse.next();
+    if (!isClerkAdminConfigured()) {
+      return NextResponse.json(
+        { error: 'Admin allowlist missing. Set CLERK_ADMIN_USER_ID or CLERK_ADMIN_EMAIL.' },
+        { status: 401 },
+      );
     }
 
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Authentication not configured' }, { status: 401 });
+    await protect();
+    const userId = await getUserId();
+    if (!userId || !(await assertAdminOperator(userId))) {
+      return NextResponse.json({ error: 'Forbidden — not an authorized operator.' }, { status: 403 });
     }
-
-    return NextResponse.next();
-  }
-
-  if (devAuthAllowed()) {
     return NextResponse.next();
   }
 
@@ -74,24 +60,40 @@ async function authorize(
     return NextResponse.next();
   }
 
-  if (clerkConfigured() && protect) {
-    await protect();
-    return NextResponse.next();
+  if (!clerkConfigured() || !protect || !getUserId) {
+    return new NextResponse(
+      'Authentication not configured. Set Clerk keys and CLERK_ADMIN_USER_ID.',
+      { status: 401 },
+    );
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    return new NextResponse('Authentication not configured', { status: 401 });
+  if (!isClerkAdminConfigured()) {
+    return new NextResponse(
+      'Admin allowlist missing. Set CLERK_ADMIN_USER_ID or CLERK_ADMIN_EMAIL.',
+      { status: 401 },
+    );
   }
 
+  await protect();
+  const userId = await getUserId();
+  if (!userId || !(await assertAdminOperator(userId))) {
+    return new NextResponse('Forbidden — not an authorized operator.', { status: 403 });
+  }
   return NextResponse.next();
 }
 
 async function unsignedMiddleware(request: NextRequest) {
-  return authorize(request, null);
+  return authorize(request, null, null);
 }
 
 export default clerkPublishableKey()
-  ? clerkMiddleware(async (auth, request) => authorize(request, () => auth.protect()))
+  ? clerkMiddleware(async (auth, request) =>
+      authorize(
+        request,
+        () => auth.protect(),
+        async () => (await auth()).userId,
+      ),
+    )
   : unsignedMiddleware;
 
 export const config = {

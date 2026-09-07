@@ -23,7 +23,7 @@ export default function SearchTrigger({ tone = 'light', onOpen, className = '' }
       type="button"
       onClick={onOpen}
       className={cn(
-        'group hidden h-9 items-center gap-2 rounded-full border px-3 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 lg:inline-flex',
+        'group hidden h-9 items-center gap-2 rounded-dos-lg border px-3 text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 lg:inline-flex',
         onDark
           ? 'border-cream/20 bg-cream/5 text-cream/70 hover:border-cream/35 hover:text-cream focus-visible:ring-dos-inverse focus-visible:ring-offset-obsidian'
           : 'border-subtle bg-surface-raised/70 text-ink-soft hover:border-emerald/30 hover:text-emerald-deep focus-visible:ring-dos focus-visible:ring-offset-surface-base',

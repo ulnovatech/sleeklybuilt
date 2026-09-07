@@ -15,6 +15,7 @@ services:
       - /opt/sleeklybuilt/data/template-imports:/var/lib/sleeklybuilt/template-imports
       - /opt/sleeklybuilt/logs/template-import:/var/log/sleeklybuilt/template-import
       - /opt/sleeklybuilt/data/template-profiles:/var/lib/sleeklybuilt/template-profiles
+      - /opt/sleeklybuilt/secrets:/var/www/secrets:ro
 
   nginx:
     restart: always
@@ -33,6 +34,8 @@ services:
 
   discovery-web:
     restart: always
+    ports:
+      - '127.0.0.1:3000:3000'
 
   discovery-worker:
     restart: always

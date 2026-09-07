@@ -17,6 +17,7 @@ export default function NewsletterForm({ className = '' }) {
   const { submit, loading } = useFormSubmit({
     url: apiEndpoints.newsletter,
     successToast: true,
+    analyticsMethod: 'newsletter',
     onSuccess: () => {
       setEmail('')
       setError('')
@@ -39,8 +40,8 @@ export default function NewsletterForm({ className = '' }) {
     setError('')
     try {
       await submit({ email: value })
-    } catch {
-      /* toast from hook */
+    } catch (err) {
+      setError(err?.message || 'Could not subscribe. Please try again.')
     }
   }
 

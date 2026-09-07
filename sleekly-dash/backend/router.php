@@ -8,18 +8,24 @@ require_once __DIR__ . '/controllers/InteractionController.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// --- CORS ---
-$allowed_origins = explode(',', $_ENV['ALLOWED_ORIGINS'] ?? '*');
+// --- CORS (allowlist only — never wildcard) ---
+$allowed_origins = array_values(array_filter(array_map('trim', explode(',', $_ENV['ALLOWED_ORIGINS'] ?? ''))));
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array('*', $allowed_origins) || in_array($origin, $allowed_origins)) {
-    header("Access-Control-Allow-Origin: $origin");
+if ($origin !== '' && in_array($origin, $allowed_origins, true)) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Vary: Origin');
+} elseif ($origin !== '') {
+    http_response_code(403);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['error' => 'Origin not allowed']);
+    exit;
 }
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
 // Preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
+    http_response_code(204);
     exit;
 }
 

@@ -39,7 +39,7 @@ function LayoutCard({ layout, ctaLabel }) {
           {layout.image ? (
             <img
               src={layout.image}
-              alt=""
+              alt={`${layout.title} homepage preview`}
               loading="lazy"
               className="h-full w-full object-cover object-top transition duration-fast ease-dos group-hover:scale-[1.02]"
             />
@@ -72,14 +72,14 @@ function LayoutCard({ layout, ctaLabel }) {
             href={layout.previewUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-subtle px-4 text-meta font-semibold text-emerald-deep transition hover:border-emerald/40 hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-dos-lg border border-subtle px-4 text-meta font-semibold text-emerald-deep transition hover:border-emerald/40 hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
           >
             Live preview
             <FiArrowUpRight aria-hidden="true" />
           </a>
           <a
             href={layout.orderUrl}
-            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-action-primary-hover px-4 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-dos-lg bg-action-primary-hover px-4 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2"
           >
             {ctaLabel}
             <FiArrowRight aria-hidden="true" />
@@ -95,10 +95,10 @@ function CardSkeleton() {
     <div className="overflow-hidden rounded-dos-xl border border-subtle bg-surface-raised shadow-sm" aria-hidden="true">
       <div className="aspect-[16/10] animate-pulse bg-surface-sunken" />
       <div className="space-y-3 p-6">
-        <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-sunken" />
-        <div className="h-5 w-3/4 animate-pulse rounded-full bg-surface-sunken" />
-        <div className="h-3 w-full animate-pulse rounded-full bg-surface-sunken" />
-        <div className="mt-4 h-11 w-full animate-pulse rounded-full bg-surface-sunken" />
+        <div className="h-2.5 w-20 animate-pulse rounded-dos-lg bg-surface-sunken" />
+        <div className="h-5 w-3/4 animate-pulse rounded-dos-lg bg-surface-sunken" />
+        <div className="h-3 w-full animate-pulse rounded-dos-lg bg-surface-sunken" />
+        <div className="mt-4 h-11 w-full animate-pulse rounded-dos-lg bg-surface-sunken" />
       </div>
     </div>
   )
@@ -186,7 +186,7 @@ export default function LayoutsGallery({
             <button
               type="button"
               onClick={reload}
-              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-dos-lg border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
             >
               <FiRefreshCw aria-hidden="true" />
               Refresh
@@ -251,7 +251,7 @@ export default function LayoutsGallery({
                 <button
                   type="button"
                   onClick={reload}
-                  className="inline-flex min-h-11 items-center rounded-full border border-subtle px-5 text-meta font-semibold text-emerald-deep transition hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                  className="inline-flex min-h-11 items-center rounded-dos-lg border border-subtle px-5 text-meta font-semibold text-emerald-deep transition hover:bg-surface-sunken focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                 >
                   Try again
                 </button>
@@ -292,7 +292,7 @@ export default function LayoutsGallery({
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="inline-flex min-h-11 items-center justify-center rounded-full bg-action-primary-hover px-5 text-meta font-semibold text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                  className="inline-flex min-h-11 items-center justify-center rounded-dos-lg bg-action-primary-hover px-5 text-meta font-semibold text-cream focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                 >
                   Clear filters
                 </button>

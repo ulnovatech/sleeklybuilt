@@ -9,7 +9,7 @@ export default function FooterLinks({ title, links }) {
           <li key={link.label}>
             <NavLink
               item={link}
-              className="text-meta text-cream/85 transition hover:text-gold focus:outline-none focus-visible:underline"
+              className="text-meta text-cream/85 transition hover:text-cream focus:outline-none focus-visible:underline"
             />
           </li>
         ))}

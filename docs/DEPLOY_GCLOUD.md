@@ -1,8 +1,10 @@
 # Deploy SleeklyBuilt to Google Compute Engine (Docker)
 
-Operator runbook for production on a **single GCE VM** (Ubuntu 22.04/24.04 AMD64) with **GitHub Actions** deploy. Public access is **IP + nip.io** until a custom domain is purchased ([`ACCESS.md`](./ACCESS.md)).
+> **Historical runbook.** Current production is **Linode + `https://sleeklybuilt.pro`**. Use [`DEPLOY_LINODE.md`](./DEPLOY_LINODE.md), [`ACCESS.md`](./ACCESS.md), and [`CLOUDFLARE_DNS.md`](./CLOUDFLARE_DNS.md).
 
-Primary production target. Legacy Oracle runbook: [`DEPLOY_ORACLE.md`](./DEPLOY_ORACLE.md).
+Operator runbook for a **single GCE VM** (Ubuntu 22.04/24.04 AMD64) with **GitHub Actions** deploy. Public access was historically **IP + nip.io** before the domain cutover.
+
+Legacy Oracle runbook: [`DEPLOY_ORACLE.md`](./DEPLOY_ORACLE.md).
 
 ## Architecture
 

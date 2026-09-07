@@ -22,10 +22,10 @@ The product fails when it generates impressive text, invents prices, claims an o
 
 Use this pattern when:
 
-- the visitor is already on the marketing site and needs advice, navigation, or a real business action
+- the visitor is already on a SleeklyBuilt public surface (marketing, portfolio gallery/checkout, or public blog) and needs advice, navigation, or a real business action
+- conversation history must survive across those same-origin apps in one session
 - the business has structured products, pages, and backends the attendant can call
 - a human path (WhatsApp, phone, email) must remain visible
-- conversation history must survive across pages in one session
 
 ---
 
@@ -167,7 +167,7 @@ Full-bleed bottom sheet ~92vh. Composer padding accounts for the home indicator.
 └────────────────────────────────┴─────────┘
 ```
 
-Docked panel 380px wide as a reserved right column. Page content reflows (`padding-right`) so the panel does not overlay the primary heading. Same component tree as mobile. Minimized: padding released; gold launcher with chevron up.
+Docked panel 380px wide as a reserved right column. Page content reflows (`padding-right`) so the panel does not overlay the primary heading. Same component tree as mobile. Minimized: padding released; gold launcher keeps the **message icon** (not a chevron).
 
 ---
 
@@ -212,7 +212,7 @@ Confirm
   → report verified backend result only
 
 Minimize
-  → panel collapses to the gold launcher (chevron up)
+  → panel collapses to the gold launcher (message icon)
   → conversation id persists in session storage
   → expand restores the panel without a new session
 ```
@@ -317,7 +317,7 @@ The UI must never display a price, order id, or "sent" state that did not come f
 - Taking payment in the panel
 - Claiming success when the backend did not
 - A second floating WhatsApp button competing with the launcher
-- Resetting the thread on route change
+- Resetting the thread on same-origin navigation between marketing, portfolio, and blog
 - Exposing skills, prompts, or model names to the visitor
 
 ---

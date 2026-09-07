@@ -8,6 +8,15 @@ import { api } from '@/lib/api';
 
 type DraftChannel = 'email' | 'whatsapp' | 'follow_up';
 
+type SelectedOffer = {
+  productLine: string;
+  label: string;
+  url: string;
+  packageId: string | null;
+  why: string;
+  ask: string;
+};
+
 type DraftRecord = {
   id: string;
   channel: DraftChannel;
@@ -18,10 +27,12 @@ type DraftRecord = {
   regenerated: boolean;
   updatedAt: string;
   cached: boolean;
+  selectedOffer?: SelectedOffer | null;
 };
 
 type DraftGetResponse = {
   draft: DraftRecord | null;
+  selectedOffer?: SelectedOffer | null;
   budget: { cap: number; used: number; remaining: number; canSpend: boolean };
   drafts: { enabled: boolean; provider: string; model: string };
   credentialConfigured: boolean;
@@ -29,7 +40,7 @@ type DraftGetResponse = {
 };
 
 type DraftPostResponse = {
-  draft: DraftRecord;
+  draft: DraftRecord & { selectedOffer?: SelectedOffer | null };
   budget: { cap: number; used: number; remaining: number; canSpend: boolean };
   cached: boolean;
 };
@@ -168,6 +179,8 @@ export function DraftPanel({
           ? 'Daily llm_draft budget is exhausted.'
           : null;
 
+  const selectedOffer = state?.draft?.selectedOffer ?? state?.selectedOffer ?? null;
+
   return (
     <CollapsibleSection
       id={`outreach-draft-${leadId}`}
@@ -187,6 +200,31 @@ export function DraftPanel({
             </div>
           )}
         </div>
+
+        {selectedOffer && (
+          <div className="rounded-md border border-line bg-surface-raised/50 px-3 py-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
+                Offer
+              </span>
+              <a
+                href={selectedOffer.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-medium text-accent hover:bg-accent/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                {selectedOffer.label}
+                <ExternalLink className="h-3 w-3" aria-hidden />
+              </a>
+              {selectedOffer.packageId && (
+                <span className="text-[11px] text-ink-muted">Package · {selectedOffer.packageId}</span>
+              )}
+            </div>
+            {selectedOffer.why && (
+              <p className="mt-1.5 text-[11px] leading-4 text-ink-muted">{selectedOffer.why}</p>
+            )}
+          </div>
+        )}
 
       <div className="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="Draft channel">
         {CHANNELS.map((item) => (
@@ -231,7 +269,7 @@ export function DraftPanel({
           {!state.draft && !error && (
             <EmptyState
               title="No draft for this channel yet"
-              description="Generate from the Pitch Pack facts only. Cache hits do not consume budget."
+              description="Generate from Case File facts only. Cache hits do not consume budget."
               action={
                 <Button
                   size="sm"

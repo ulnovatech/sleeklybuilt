@@ -61,12 +61,13 @@ final class TemplateScreenshotLauncher
         }
 
         $node = $this->resolveNodeBinary();
-        $payload = [
+            $payload = [
             'slug' => $slug,
             'siteRoot' => $siteRoot,
             'baseUrl' => $baseUrl,
             'pages' => $pages,
             'viewport' => ['width' => 1280, 'height' => 720],
+            'mobileViewport' => ['width' => 390, 'height' => 844, 'deviceScaleFactor' => 2],
             'executablePath' => $this->resolveChromiumPath(),
         ];
 

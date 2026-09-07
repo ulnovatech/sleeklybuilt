@@ -40,6 +40,7 @@ final class TemplateScreenshotService
             'started_at' => null,
             'finished_at' => null,
             'main' => 'images/main.png',
+            'mobile' => 'images/main-mobile.png',
             'files' => [],
             'pages' => [],
             'skipped' => [],
@@ -99,6 +100,13 @@ final class TemplateScreenshotService
                 }
             }
 
+            $mobileRelative = 'images/main-mobile.png';
+            $mobileAbsolute = $imagesDir . DIRECTORY_SEPARATOR . 'main-mobile.png';
+            $hasMobile = is_file($mobileAbsolute);
+            if ($hasMobile && !in_array($mobileRelative, $files, true)) {
+                $files[] = $mobileRelative;
+            }
+
             if ($files === [] || !is_file($imagesDir . DIRECTORY_SEPARATOR . 'main.png')) {
                 throw new RuntimeException(
                     'Screenshot capture finished without main.png. '
@@ -112,6 +120,7 @@ final class TemplateScreenshotService
                 'started_at' => $shots['started_at'],
                 'finished_at' => gmdate(DATE_ATOM),
                 'main' => 'images/main.png',
+                'mobile' => $hasMobile ? $mobileRelative : null,
                 'files' => $files,
                 'pages' => $pages,
                 'skipped' => $result['skipped'] ?? [],
@@ -127,6 +136,7 @@ final class TemplateScreenshotService
                 'started_at' => $shots['started_at'] ?? gmdate(DATE_ATOM),
                 'finished_at' => gmdate(DATE_ATOM),
                 'main' => 'images/main.png',
+                'mobile' => null,
                 'files' => [],
                 'pages' => [],
                 'skipped' => [],
@@ -171,6 +181,14 @@ final class TemplateScreenshotService
 
         foreach (glob($imagesDir . DIRECTORY_SEPARATOR . 'Screenshot*.png') ?: [] as $noise) {
             @unlink($noise);
+        }
+
+        // Always refresh the dual-thumb pair when re-capturing.
+        foreach (['main.png', 'main-mobile.png'] as $pair) {
+            $path = $imagesDir . DIRECTORY_SEPARATOR . $pair;
+            if (is_file($path)) {
+                @unlink($path);
+            }
         }
     }
 

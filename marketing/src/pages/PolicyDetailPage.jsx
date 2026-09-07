@@ -4,7 +4,7 @@ import { FiArrowLeft } from 'react-icons/fi'
 import PageHeader from '../components/site/PageHeader'
 import { fetchPolicyBySlug } from '../lib/policiesApi'
 import SimpleMarkdown from '../lib/simpleMarkdown'
-import { usePageTitle } from '../lib/usePageTitle'
+import { usePageSeo } from '../lib/usePageSeo'
 import { siteConfig } from '../site.config'
 
 /**
@@ -14,7 +14,14 @@ export default function PolicyDetailPage() {
   const { slug = '' } = useParams()
   const [state, setState] = useState({ status: 'loading', title: 'Policy', markdown: '', error: '' })
 
-  usePageTitle(state.title || 'Policy')
+  usePageSeo({
+    title:
+      state.title && state.title !== 'Policy'
+        ? `${state.title} | Policies | SleeklyBuilt`
+        : 'Policy | SleeklyBuilt',
+    description: `Read ${state.title || 'this policy'} on SleeklyBuilt — how we handle privacy, terms, and your information.`,
+    path: slug ? `/policies/${slug}` : '/policies',
+  })
 
   const load = () => {
     if (!slug) {
