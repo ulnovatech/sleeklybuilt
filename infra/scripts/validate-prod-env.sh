@@ -8,9 +8,11 @@ DISC_ENV="${2:-${DISCOVERY_ENV_FILE:-/opt/sleeklybuilt/env/docker.discovery.env}
 failed=0
 
 env_val() {
-  local file="$1" key="$2"
-  [[ -f "$file" ]] || return 0
-  grep -E "^${key}=" "$file" 2>/dev/null | tail -n 1 | cut -d= -f2- | sed 's/^["'\'']//;s/["'\'']$//'
+  local file="$1" key="$2" line
+  [[ -f "$file" ]] || { echo ""; return 0; }
+  line="$(grep -E "^${key}=" "$file" 2>/dev/null | tail -n 1 || true)"
+  [[ -n "$line" ]] || { echo ""; return 0; }
+  echo "$line" | cut -d= -f2- | sed 's/^["'\'']//;s/["'\'']$//'
 }
 
 is_false() {
