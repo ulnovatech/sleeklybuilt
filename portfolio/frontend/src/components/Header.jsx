@@ -28,6 +28,7 @@ export default function Header() {
           name={siteConfig.name}
           href="/"
           tone="light"
+          logoSrc="/sleeklybuilt-mark.png"
           LinkComponent={RouterLink}
         />
 

@@ -50,6 +50,8 @@ export function mergePublicContact(base, remote) {
     links: {
       ...base.links,
       logo: remote.logo || base.links?.logo,
+      mark: base.links?.mark,
+      ogImage: base.links?.ogImage,
     },
   }
 }

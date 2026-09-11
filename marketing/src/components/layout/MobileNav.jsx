@@ -46,7 +46,19 @@ export default function MobileNav({ open, onClose, onOpenSearch }) {
         className="surface-obsidian absolute right-0 top-0 flex h-full w-[min(100%,22rem)] flex-col shadow-2xl focus:outline-none"
       >
         <div className="flex items-center justify-between border-b border-obsidian-line px-6 py-4">
-          <span className="font-display text-xl text-cream">{siteConfig.name}</span>
+          <span className="flex items-center gap-2.5">
+            <span className="grid h-8 w-8 place-items-center overflow-hidden rounded-dos-sm bg-obsidian/40">
+              <img
+                src={siteConfig.links.mark}
+                alt=""
+                width={28}
+                height={28}
+                className="h-7 w-7 object-contain"
+                decoding="async"
+              />
+            </span>
+            <span className="font-display text-xl text-cream">{siteConfig.name}</span>
+          </span>
           <button
             type="button"
             onClick={onClose}

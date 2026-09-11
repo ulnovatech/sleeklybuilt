@@ -67,6 +67,7 @@ import {
 ```
 
 `ActionLink` / `BrandMark` accept `LinkComponent` so each SPA can inject its router (marketing uses `NavLink`; portfolio/blog use their own).
+`BrandMark` accepts optional `logoSrc` (transparent mark PNG); otherwise it falls back to a letter tile.
 
 ### ActionLink variants
 

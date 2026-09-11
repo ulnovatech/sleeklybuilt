@@ -13,6 +13,19 @@ export default function Footer() {
       <div className="mx-auto max-w-content px-6 py-16 lg:px-10 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-5">
+            <div className="mb-5 flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center overflow-hidden rounded-dos-sm bg-obsidian-raised">
+                <img
+                  src={siteConfig.links.mark}
+                  alt=""
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 object-contain"
+                  decoding="async"
+                />
+              </span>
+              <span className="font-display text-lg font-semibold text-cream">{siteConfig.name}</span>
+            </div>
             <div className="font-display max-w-md text-3xl font-semibold leading-[1.2] tracking-tight md:text-4xl">
               Software built sleek, delivered with care.
             </div>

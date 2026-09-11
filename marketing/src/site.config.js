@@ -35,6 +35,8 @@ export const siteConfig = {
     policies: '/policies',
     getStarted: '/contact',
     logo: '/assets/img/sleeklybuilt-logo.png',
+    mark: '/assets/img/sleeklybuilt-mark.png',
+    ogImage: '/assets/img/sleeklybuilt-og.png',
   },
   siteUrl,
 }

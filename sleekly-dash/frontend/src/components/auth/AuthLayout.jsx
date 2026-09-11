@@ -6,6 +6,7 @@
  */
 
 import { Link } from 'react-router-dom'
+import brandMark from '../../assets/sleeklybuilt-mark.png'
 import { siteConfig } from '../../site.config'
 
 export default function AuthLayout({
@@ -17,7 +18,15 @@ export default function AuthLayout({
   return (
     <div className="min-h-screen bg-[#0b1220] px-4 py-10 sm:py-16">
       <div className="mx-auto flex w-full max-w-md flex-col justify-center">
-        <div className="mb-6 text-center">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img
+            src={brandMark}
+            alt=""
+            width={56}
+            height={56}
+            className="mb-3 h-14 w-14 rounded-xl bg-black object-contain p-1.5"
+            decoding="async"
+          />
           <p className="text-sm font-semibold uppercase tracking-widest text-brand">{siteConfig.name}</p>
         </div>
 

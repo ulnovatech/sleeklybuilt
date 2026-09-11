@@ -8,10 +8,11 @@ import {
   PhoneIcon,
   MagnifyingGlassCircleIcon,
   Cog6ToothIcon,
+  BanknotesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { PresentationChartBarIcon } from '@heroicons/react/24/solid'
-import brandLogo from '../assets/sleeklybuilt-logo.png'
+import brandMark from '../assets/sleeklybuilt-mark.png'
 import { appLinks, siteConfig } from '../site.config'
 
 function externalAppLink(href, label, Icon, onClick) {
@@ -53,9 +54,9 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
     }`}>
       <div className="flex items-center gap-3 px-2">
         <img
-          src={brandLogo}
+          src={brandMark}
           alt={`${siteConfig.name} logo`}
-          className="w-10 h-10 rounded-lg object-contain p-1"
+          className="h-10 w-10 rounded-lg bg-black object-contain p-1"
         />
         <div>
           <div className="text-white font-semibold">{siteConfig.name}</div>
@@ -71,6 +72,7 @@ export default function Sidebar({ open = false, onClose = () => {} }) {
         {navItem('/prospects', 'Prospects', PhoneIcon)}
         {navItem('/companies', 'Companies', BriefcaseIcon)}
         {navItem('/requests', 'Requests', ChartBarIcon)}
+        {navItem('/payments', 'Payments', BanknotesIcon)}
         {navItem('/analytics', 'Analytics', PresentationChartBarIcon)}
         {navItem('/competitors', 'Competition', PresentationChartBarIcon)}
         {navItem('/templates', 'Templates', BookOpenIcon)}

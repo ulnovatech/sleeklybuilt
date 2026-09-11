@@ -68,7 +68,10 @@ export function usePageSeo(overrides = {}) {
     const canonicalPath = path === '/' ? '/' : path
     const canonical = absoluteUrl(canonicalPath)
     const image = absoluteUrl(
-      opts.image || siteConfig.links.logo || '/assets/img/sleeklybuilt-logo.png',
+      opts.image ||
+        siteConfig.links.ogImage ||
+        siteConfig.links.logo ||
+        '/assets/img/sleeklybuilt-og.png',
     )
 
     document.title = title

@@ -76,6 +76,7 @@ export default function Header({ docked = false }) {
             name={siteConfig.name}
             href={siteConfig.links.home}
             tone={tone}
+            logoSrc={siteConfig.links.mark}
             LinkComponent={({ href, className, children, ...rest }) => (
               <Link to={href} className={className} {...rest}>
                 {children}

@@ -1,29 +1,52 @@
 import { cn } from './cn.js'
 
 /**
- * Letter-circle + wordmark. Host SPA supplies LinkComponent (router Link or `<a>`).
+ * Brand glyph + wordmark. Host SPA supplies LinkComponent (router Link or `<a>`).
  * tone: `hero` | `dark` → halo on void; `light` → meridian on halo.
+ * Pass `logoSrc` for the metallic mark (transparent PNG); falls back to letter tile.
  */
 export function BrandMark({
   name,
   href = '/',
   tone = 'light',
+  logoSrc,
   LinkComponent,
   className = '',
   ...rest
 }) {
   const onDark = tone === 'hero' || tone === 'dark'
+  const glyph = logoSrc ? (
+    <span
+      className={cn(
+        'grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-dos-sm transition',
+        onDark ? 'bg-obsidian/40' : 'bg-obsidian',
+      )}
+      aria-hidden="true"
+    >
+      <img
+        src={logoSrc}
+        alt=""
+        width={32}
+        height={32}
+        className="h-7 w-7 object-contain"
+        decoding="async"
+      />
+    </span>
+  ) : (
+    <span
+      className={cn(
+        'grid h-7 w-7 place-items-center rounded-dos-sm font-display text-sm font-semibold leading-none transition',
+        onDark ? 'bg-cream text-obsidian' : 'bg-emerald-deep text-cream',
+      )}
+      aria-hidden="true"
+    >
+      {String(name || '').charAt(0)}
+    </span>
+  )
+
   const mark = (
     <>
-      <span
-        className={cn(
-          'grid h-7 w-7 place-items-center rounded-dos-sm font-display text-sm font-semibold leading-none transition',
-          onDark ? 'bg-cream text-obsidian' : 'bg-emerald-deep text-cream',
-        )}
-        aria-hidden="true"
-      >
-        {String(name || '').charAt(0)}
-      </span>
+      {glyph}
       <span
         className={cn(
           'font-display text-lg font-semibold tracking-tight transition',
