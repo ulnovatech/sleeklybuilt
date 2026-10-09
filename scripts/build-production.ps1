@@ -46,6 +46,19 @@ Copy-Item -Recurse -Force (Join-Path $root 'sleekly-blog\dist') (Join-Path $publ
 Copy-Item -Recurse -Force (Join-Path $root 'sleekly-dash\frontend\dist') (Join-Path $publicHtml 'dash')
 Copy-Item -Recurse -Force (Join-Path $root 'portfolio\frontend\dist') (Join-Path $publicHtml 'portfolio-app')
 
+# Operator Admin APK distribution (APKs are gitignored — copy whatever is present).
+$adminAppSrc = Join-Path $root 'admin-app'
+$adminAppDest = Join-Path $publicHtml 'admin-app'
+New-Item -ItemType Directory -Force -Path $adminAppDest | Out-Null
+if (Test-Path $adminAppSrc) {
+  Write-Host '==> admin-app distribution'
+  Copy-Item -Recurse -Force (Join-Path $adminAppSrc '*') $adminAppDest
+  Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $adminAppDest 'README.md')
+  Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $adminAppDest '.gitignore')
+} else {
+  Write-Warning 'admin-app/ missing — /admin-app/ will 404 until published'
+}
+
 Copy-Item -Force (Join-Path $root '.htaccess') (Join-Path $publicHtml '.htaccess')
 Copy-Item -Force (Join-Path $root 'scripts\htaccess\blog.htaccess') (Join-Path $publicHtml 'blog\.htaccess')
 Copy-Item -Force (Join-Path $root 'scripts\htaccess\dash.htaccess') (Join-Path $publicHtml 'dash\.htaccess')

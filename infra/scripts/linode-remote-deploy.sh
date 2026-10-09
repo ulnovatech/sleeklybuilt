@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO=/opt/sleeklybuilt/repo
-IP="${LINODE_IP:-172.238.122.106}"
+IP="${LINODE_IP:-172.104.151.130}"
 HUB="${SMOKE_HOST:-sleeklybuilt.pro}"
 DISC="${DISCOVERY_HOST:-discovery.sleeklybuilt.pro}"
 
@@ -61,6 +61,15 @@ rsync -a --delete \
   public_html/ /opt/sleeklybuilt/public_html/
 rm -rf /opt/sleeklybuilt/public_html/ulndash 2>/dev/null || true
 rm -f /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json 2>/dev/null || true
+
+# APKs are gitignored — if assemble lacked them, restore from the on-box publish dir.
+if [[ -d /opt/sleeklybuilt/repo/admin-app ]] && [[ ! -f /opt/sleeklybuilt/public_html/admin-app/latest.json || ! -f /opt/sleeklybuilt/public_html/admin-app/sleekly-admin.apk ]]; then
+  log "restore admin-app APKs from repo/admin-app"
+  mkdir -p /opt/sleeklybuilt/public_html/admin-app
+  rsync -a /opt/sleeklybuilt/repo/admin-app/ /opt/sleeklybuilt/public_html/admin-app/
+  rm -f /opt/sleeklybuilt/public_html/admin-app/README.md /opt/sleeklybuilt/public_html/admin-app/.gitignore 2>/dev/null || true
+fi
+
 
 for f in infra/nginx/conf.d/sleeklybuilt.conf infra/nginx/conf.d/discovery.conf; do
   if [[ -f "$f" ]]; then

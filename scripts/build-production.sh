@@ -64,7 +64,24 @@ mkdir -p "$PUBLIC_HTML"
 echo "==> Assemble public_html"
 
 cp -a marketing/dist/. "$PUBLIC_HTML/"
-mkdir -p "$PUBLIC_HTML/blog" "$PUBLIC_HTML/dash" "$PUBLIC_HTML/portfolio-app"
+mkdir -p "$PUBLIC_HTML/blog" "$PUBLIC_HTML/dash" "$PUBLIC_HTML/portfolio-app" "$PUBLIC_HTML/admin-app"
+
+# Operator Admin APK distribution (landing + latest.json + APKs).
+# APKs are gitignored; copy whatever is present under admin-app/.
+if [[ -d "$ROOT/admin-app" ]]; then
+  echo "==> admin-app distribution"
+  cp -a "$ROOT/admin-app/." "$PUBLIC_HTML/admin-app/"
+  rm -f "$PUBLIC_HTML/admin-app/README.md" "$PUBLIC_HTML/admin-app/.gitignore" 2>/dev/null || true
+  if [[ ! -f "$PUBLIC_HTML/admin-app/index.html" ]]; then
+    echo "WARN: admin-app/index.html missing" >&2
+  fi
+  if [[ ! -f "$PUBLIC_HTML/admin-app/latest.json" ]]; then
+    echo "WARN: admin-app/latest.json missing — publish APK before deploy" >&2
+  fi
+else
+  echo "WARN: admin-app/ missing — /admin-app/ will 404 until published" >&2
+fi
+
 if [[ -d sleekly-blog/dist ]]; then
   cp -a sleekly-blog/dist/. "$PUBLIC_HTML/blog/"
 else
