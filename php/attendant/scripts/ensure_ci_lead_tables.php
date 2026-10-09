@@ -30,39 +30,21 @@ $pdo = new PDO(
     ]
 );
 
-$statements = [
-    <<<'SQL'
-CREATE TABLE IF NOT EXISTS contactus (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  name VARCHAR(255) NOT NULL,
-  phone VARCHAR(64) DEFAULT NULL,
-  email VARCHAR(255) DEFAULT NULL,
-  subject VARCHAR(255) DEFAULT NULL,
-  message TEXT,
-  received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_contactus_received_at (received_at),
-  KEY idx_contactus_name (name),
-  KEY idx_contactus_phone (phone),
-  KEY idx_contactus_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-SQL,
-    <<<'SQL'
-CREATE TABLE IF NOT EXISTS website_orders (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  template VARCHAR(255) DEFAULT NULL,
-  name VARCHAR(255) NOT NULL,
-  phone VARCHAR(64) DEFAULT NULL,
-  business VARCHAR(255) DEFAULT NULL,
-  details TEXT,
-  submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_website_orders_submitted_at (submitted_at),
-  KEY idx_website_orders_name (name),
-  KEY idx_website_orders_phone (phone)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-SQL,
-];
+// Keep in sync with sleekly-dash/backend/migrations/019_inquiry_lead_tables.sql
+$sqlFile = dirname(__DIR__, 3) . '/sleekly-dash/backend/migrations/019_inquiry_lead_tables.sql';
+if (!is_file($sqlFile)) {
+    fwrite(STDERR, "MISSING: 019_inquiry_lead_tables.sql\n");
+    exit(1);
+}
+$sql = (string) file_get_contents($sqlFile);
+$statements = preg_split('/;\s*\n/', $sql) ?: [];
+$statements = array_values(array_filter(array_map(static function (string $part): string {
+    $lines = array_values(array_filter(
+        explode("\n", trim($part)),
+        static fn (string $line): bool => !str_starts_with(trim($line), '--')
+    ));
+    return trim(implode("\n", $lines));
+}, $statements)));
 
 foreach ($statements as $sql) {
     $pdo->exec($sql);
