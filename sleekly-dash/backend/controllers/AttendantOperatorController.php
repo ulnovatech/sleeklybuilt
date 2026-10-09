@@ -29,6 +29,31 @@ class AttendantOperatorController
         ]);
     }
 
+    /** All recent chats (including AI-only / not handed over). */
+    public function indexAll(): void
+    {
+        $limit = max(1, min(150, (int) ($_GET['limit'] ?? 80)));
+        $rows = $this->store->listConversations($limit, 'all');
+        echo json_encode([
+            'success' => true,
+            'conversations' => $rows,
+            // Back-compat for clients that still read escalations[]
+            'escalations' => array_values(array_filter(
+                $rows,
+                static fn (array $r): bool => in_array(
+                    (string) ($r['escalation_state'] ?? ''),
+                    [Attendant\EscalationState::ESCALATED, Attendant\EscalationState::HUMAN_ACTIVE],
+                    true
+                )
+            )),
+            'meta' => [
+                'total' => count($rows),
+                'scope' => 'all',
+                'limit' => $limit,
+            ],
+        ]);
+    }
+
     public function show(string $id): void
     {
         $conv = $this->store->getConversation($id);
@@ -53,7 +78,15 @@ class AttendantOperatorController
             echo json_encode(['success' => false, 'error' => 'Conversation not found']);
             return;
         }
-        $from = (string) ($conv['escalation_state'] ?? 'autonomous');
+        $from = Attendant\EscalationState::normalize((string) ($conv['escalation_state'] ?? 'autonomous'));
+        if ($from === Attendant\EscalationState::HUMAN_ACTIVE) {
+            echo json_encode([
+                'success' => true,
+                'escalation_state' => Attendant\EscalationState::HUMAN_ACTIVE,
+                'already_active' => true,
+            ]);
+            return;
+        }
         $to = Attendant\EscalationState::transition($from, Attendant\EscalationState::HUMAN_ACTIVE);
         if ($to !== Attendant\EscalationState::HUMAN_ACTIVE) {
             http_response_code(409);
@@ -117,7 +150,7 @@ class AttendantOperatorController
                 ]);
                 return;
             }
-            $this->store->setEscalationState($id, Attendant\EscalationState::AUTONOMOUS);
+            $this->store->resumeToAutonomous($id);
             $this->store->addMessage(
                 $id,
                 'system',
@@ -134,7 +167,7 @@ class AttendantOperatorController
         }
 
         $this->store->setEscalationState($id, Attendant\EscalationState::RESUMED);
-        $this->store->setEscalationState($id, Attendant\EscalationState::AUTONOMOUS);
+        $this->store->resumeToAutonomous($id);
         $this->store->addMessage(
             $id,
             'system',
@@ -160,14 +193,7 @@ class AttendantOperatorController
             echo json_encode(['success' => false, 'error' => 'Conversation not found']);
             return;
         }
-        $state = (string) ($conv['escalation_state'] ?? '');
-        if (!Attendant\EscalationState::isHumanControlled($state)
-            && $state !== Attendant\EscalationState::RESUMED
-        ) {
-            http_response_code(409);
-            echo json_encode(['success' => false, 'error' => 'Conversation is not escalated']);
-            return;
-        }
+        $state = Attendant\EscalationState::normalize((string) ($conv['escalation_state'] ?? ''));
 
         $text = trim((string) ($body['text'] ?? $body['message'] ?? ''));
         if ($text === '') {
@@ -181,8 +207,27 @@ class AttendantOperatorController
             return;
         }
 
-        if ($state === Attendant\EscalationState::ESCALATED) {
+        // First operator reply claims the conversation (escalated, AI-only, or resumed).
+        if ($state !== Attendant\EscalationState::HUMAN_ACTIVE) {
+            $to = Attendant\EscalationState::transition($state, Attendant\EscalationState::HUMAN_ACTIVE);
+            if ($to !== Attendant\EscalationState::HUMAN_ACTIVE) {
+                http_response_code(409);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Cannot join this chat from state ' . $state,
+                    'escalation_state' => $state,
+                ]);
+                return;
+            }
             $this->store->setEscalationState($id, Attendant\EscalationState::HUMAN_ACTIVE, null, $userId);
+            $this->store->addMessage(
+                $id,
+                'system',
+                'A team member has joined this conversation.',
+                null,
+                null,
+                'takeover-on-reply-' . $id
+            );
         }
 
         $idem = isset($body['idempotency_key'])
@@ -192,7 +237,27 @@ class AttendantOperatorController
             $idem = null;
         }
 
-        $msgId = $this->store->addMessage($id, 'human', $text, null, null, $idem);
+        try {
+            $msgId = $this->store->addMessage($id, 'human', $text, null, null, $idem);
+        } catch (Throwable $e) {
+            error_log('operator_post_message: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Could not save your reply. Try again.',
+            ]);
+            return;
+        }
+
+        if ($msgId <= 0) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Reply was not saved. Try again.',
+            ]);
+            return;
+        }
+
         echo json_encode([
             'success' => true,
             'message' => [

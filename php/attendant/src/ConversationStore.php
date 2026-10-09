@@ -105,6 +105,10 @@ final class ConversationStore
         if (($row['status'] ?? '') !== 'active') {
             return null;
         }
+
+        // Sliding session window — keep returning visitors on the same conversation.
+        $this->touchSession((int) $row['session_id']);
+
         $draft = null;
         if (!empty($row['draft_json'])) {
             $decoded = json_decode((string) $row['draft_json'], true);
@@ -119,6 +123,24 @@ final class ConversationStore
             ),
             'escalation_state' => (string) ($row['escalation_state'] ?? 'autonomous'),
         ];
+    }
+
+    /** Extend visitor session expiry on activity (sliding TTL). */
+    public function touchSession(int $sessionId): void
+    {
+        if ($sessionId <= 0) {
+            return;
+        }
+        $expires = (new \DateTimeImmutable('+' . ATTENDANT_SESSION_TTL_SECONDS . ' seconds'))
+            ->format('Y-m-d H:i:s');
+        try {
+            $stmt = $this->pdo->prepare(
+                'UPDATE attendant_sessions SET expires_at = ? WHERE id = ?'
+            );
+            $stmt->execute([$expires, $sessionId]);
+        } catch (\Throwable) {
+            // Non-fatal — chat can continue with existing expiry.
+        }
     }
 
     /**
@@ -172,8 +194,9 @@ final class ConversationStore
                         $toolOk === null ? null : ($toolOk ? 1 : 0),
                         mb_substr($idempotencyKey, 0, 64),
                     ]);
+                    $insertedId = $this->resolveInsertedMessageId($conversationId, $idempotencyKey);
                     $this->touchConversation($conversationId);
-                    return (int) $this->pdo->lastInsertId();
+                    return $insertedId;
                 } catch (\PDOException $e) {
                     $again = $this->findMessageByIdempotency($conversationId, $idempotencyKey);
                     if ($again !== null) {
@@ -195,8 +218,44 @@ final class ConversationStore
             $toolName,
             $toolOk === null ? null : ($toolOk ? 1 : 0),
         ]);
+        $insertedId = $this->resolveInsertedMessageId($conversationId, null);
         $this->touchConversation($conversationId);
-        return (int) $this->pdo->lastInsertId();
+        return $insertedId;
+    }
+
+    /**
+     * PDO lastInsertId() can return 0 across some proxied/persistent connections.
+     * Prefer LAST_INSERT_ID(), then idempotency lookup, then latest row for the conversation.
+     */
+    private function resolveInsertedMessageId(string $conversationId, ?string $idempotencyKey): int
+    {
+        $id = (int) $this->pdo->lastInsertId();
+        if ($id > 0) {
+            return $id;
+        }
+        try {
+            $id = (int) $this->pdo->query('SELECT LAST_INSERT_ID()')->fetchColumn();
+            if ($id > 0) {
+                return $id;
+            }
+        } catch (\Throwable) {
+            // fall through
+        }
+        if ($idempotencyKey !== null && $idempotencyKey !== '') {
+            $found = $this->findMessageByIdempotency($conversationId, $idempotencyKey);
+            if ($found !== null && $found > 0) {
+                return $found;
+            }
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT id FROM attendant_messages
+             WHERE conversation_id = ?
+             ORDER BY id DESC
+             LIMIT 1'
+        );
+        $stmt->execute([$conversationId]);
+        $row = $stmt->fetch();
+        return $row ? (int) $row['id'] : 0;
     }
 
     public function findMessageByIdempotency(string $conversationId, string $key): ?int
@@ -347,45 +406,116 @@ final class ConversationStore
     }
 
     /**
+     * Open handoffs waiting for / owned by a human.
+     *
      * @return list<array<string,mixed>>
      */
     public function listEscalated(int $limit = 40): array
+    {
+        return $this->listConversations($limit, 'open');
+    }
+
+    /**
+     * Operator inbox listing.
+     *
+     * @param 'open'|'all' $scope open = escalated|human_active; all = every recent thread
+     * @return list<array<string,mixed>>
+     */
+    public function listConversations(int $limit = 50, string $scope = 'all'): array
     {
         $columns = $this->conversationColumns();
         if (!isset($columns['escalation_state'])) {
             return [];
         }
-        $limit = max(1, min(100, $limit));
+        $limit = max(1, min(150, $limit));
+        $scope = $scope === 'open' ? 'open' : 'all';
+        $where = $scope === 'open'
+            ? "WHERE c.escalation_state IN ('escalated', 'human_active')"
+            : '';
+
         $stmt = $this->pdo->query(
-            "SELECT id, escalation_state, operator_brief_json, commercial_state, updated_at,
-                    escalated_at, human_taken_at, draft_json
-             FROM attendant_conversations
-             WHERE escalation_state IN ('escalated', 'human_active')
-             ORDER BY updated_at DESC
+            "SELECT c.id, c.escalation_state, c.operator_brief_json, c.commercial_state, c.updated_at,
+                    c.escalated_at, c.human_taken_at, c.draft_json, c.status,
+                    (
+                      SELECT m.text_body FROM attendant_messages m
+                      WHERE m.conversation_id = c.id
+                      ORDER BY m.id DESC LIMIT 1
+                    ) AS last_text,
+                    (
+                      SELECT m.role FROM attendant_messages m
+                      WHERE m.conversation_id = c.id
+                      ORDER BY m.id DESC LIMIT 1
+                    ) AS last_role
+             FROM attendant_conversations c
+             {$where}
+             ORDER BY c.updated_at DESC
              LIMIT {$limit}"
         );
+
         $out = [];
         foreach ($stmt->fetchAll() ?: [] as $row) {
-            $brief = null;
-            if (!empty($row['operator_brief_json'])) {
-                $decoded = json_decode((string) $row['operator_brief_json'], true);
-                $brief = is_array($decoded) ? $decoded : null;
+            $mapped = $this->mapConversationListRow($row);
+            if ($mapped !== null) {
+                $out[] = $mapped;
             }
-            $customer = is_array($brief['customer'] ?? null) ? $brief['customer'] : [];
-            $out[] = [
-                'id' => (string) $row['id'],
-                'escalation_state' => EscalationState::normalize($row['escalation_state'] ?? null),
-                'commercial_state' => CommercialStateMachine::normalize($row['commercial_state'] ?? null),
-                'reason_code' => $brief['reason_code'] ?? null,
-                'summary' => $brief['summary'] ?? null,
-                'org_name' => $customer['org_name'] ?? null,
-                'objective' => $customer['objective'] ?? null,
-                'suggested_next_action' => $brief['suggested_next_action'] ?? null,
-                'updated_at' => $row['updated_at'] ?? null,
-                'escalated_at' => $row['escalated_at'] ?? null,
-            ];
         }
         return $out;
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array<string,mixed>|null
+     */
+    private function mapConversationListRow(array $row): ?array
+    {
+        $id = trim((string) ($row['id'] ?? ''));
+        if ($id === '') {
+            return null;
+        }
+
+        $brief = null;
+        if (!empty($row['operator_brief_json'])) {
+            $decoded = json_decode((string) $row['operator_brief_json'], true);
+            $brief = is_array($decoded) ? $decoded : null;
+        }
+        $customer = is_array($brief['customer'] ?? null) ? $brief['customer'] : [];
+
+        $draft = null;
+        if (!empty($row['draft_json'])) {
+            $decoded = json_decode((string) $row['draft_json'], true);
+            $draft = is_array($decoded) ? $decoded : null;
+        }
+        $draftCustomer = is_array($draft['customer_model'] ?? null) ? $draft['customer_model'] : [];
+
+        $orgName = $customer['org_name']
+            ?? $draftCustomer['org_name']
+            ?? ($draft['business_name'] ?? null);
+        $objective = $customer['objective'] ?? $draftCustomer['objective'] ?? null;
+        $summary = $brief['summary'] ?? null;
+        if ($summary === null || $summary === '') {
+            $last = trim((string) ($row['last_text'] ?? ''));
+            if ($last !== '') {
+                $role = (string) ($row['last_role'] ?? '');
+                $prefix = $role === 'visitor' ? 'Visitor: ' : ($role === 'human' ? 'You: ' : ($role === 'assistant' ? 'AI: ' : ''));
+                $summary = $prefix . (mb_strlen($last) > 140 ? mb_substr($last, 0, 140) . '…' : $last);
+            }
+        }
+
+        return [
+            'id' => $id,
+            'status' => (string) ($row['status'] ?? ''),
+            'escalation_state' => EscalationState::normalize($row['escalation_state'] ?? null),
+            'commercial_state' => CommercialStateMachine::normalize($row['commercial_state'] ?? null),
+            'reason_code' => $brief['reason_code'] ?? null,
+            'summary' => $summary,
+            'org_name' => $orgName !== null && $orgName !== '' ? (string) $orgName : null,
+            'objective' => $objective !== null && $objective !== '' ? (string) $objective : null,
+            'suggested_next_action' => $brief['suggested_next_action'] ?? null,
+            'last_text' => isset($row['last_text']) ? (string) $row['last_text'] : null,
+            'last_role' => isset($row['last_role']) ? (string) $row['last_role'] : null,
+            'updated_at' => $row['updated_at'] ?? null,
+            'escalated_at' => $row['escalated_at'] ?? null,
+        ];
     }
 
     /**
@@ -456,6 +586,59 @@ final class ConversationStore
         if ($operatorUserId !== null && isset($columns['operator_user_id'])) {
             $sets[] = 'operator_user_id = ?';
             $params[] = $operatorUserId;
+        }
+
+        $params[] = $conversationId;
+        $sql = 'UPDATE attendant_conversations SET ' . implode(', ', $sets) . ' WHERE id = ?';
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+    }
+
+    /**
+     * Return conversation to AI: autonomous escalation, clear operator claim,
+     * restore commercial_state off the escalated branch when possible.
+     * Keeps escalated_at / human_taken_at for history.
+     */
+    public function resumeToAutonomous(string $conversationId): void
+    {
+        $conv = $this->getConversation($conversationId);
+        if ($conv === null) {
+            return;
+        }
+
+        $columns = $this->conversationColumns();
+        $sets = ['updated_at = CURRENT_TIMESTAMP'];
+        $params = [];
+
+        if (isset($columns['escalation_state'])) {
+            $sets[] = 'escalation_state = ?';
+            $params[] = EscalationState::AUTONOMOUS;
+        }
+
+        if (isset($columns['operator_user_id'])) {
+            $sets[] = 'operator_user_id = NULL';
+        }
+
+        $commercial = isset($conv['commercial_state'])
+            ? CommercialStateMachine::normalize((string) $conv['commercial_state'])
+            : CommercialStateMachine::DISCOVERY;
+
+        if (
+            isset($columns['commercial_state'])
+            && $commercial === CommercialStateMachine::ESCALATED
+        ) {
+            // Resume is an operator action: restore pre-escalation commercial state from draft
+            // when present (transition graph from escalated is intentionally narrow).
+            $restored = CommercialStateMachine::DISCOVERY;
+            $draft = is_array($conv['draft'] ?? null) ? $conv['draft'] : [];
+            if (isset($draft['commercial_state'])) {
+                $fromDraft = CommercialStateMachine::normalize((string) $draft['commercial_state']);
+                if ($fromDraft !== CommercialStateMachine::ESCALATED) {
+                    $restored = $fromDraft;
+                }
+            }
+            $sets[] = 'commercial_state = ?';
+            $params[] = $restored;
         }
 
         $params[] = $conversationId;
