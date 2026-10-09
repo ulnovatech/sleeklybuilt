@@ -53,7 +53,13 @@ assert(authLib.includes('credentials'), 'auth lib sends cookies')
 const dest = read('src/components/performante/PerformanteDestinations.jsx')
 assert(dest.includes('performanteDestinations'), 'destinations module owns the list')
 assert(dest.includes('Operator destinations'), 'destination nav labelled')
-assert(dest.includes('content-loom') || dest.includes('Content Loom'), 'destinations include Content Loom')
+
+const destConfig = read('src/config/performanteDestinations.js')
+assert(
+  destConfig.includes("id: 'content-loom'") || destConfig.includes('id: "content-loom"'),
+  'destinations include Content Loom',
+)
+assert(destConfig.includes('loom.sleeklybuilt.pro'), 'Content Loom href is loom.sleeklybuilt.pro')
 
 const shortcut = read('src/components/performante/PerformanteShortcut.jsx')
 assert(shortcut.includes("event.key.toLowerCase() !== 'p'"), 'shortcut listens for P')
