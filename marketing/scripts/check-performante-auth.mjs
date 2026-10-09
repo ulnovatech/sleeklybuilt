@@ -1,5 +1,5 @@
 /**
- * Static checks for Chunk 12 — Clerk-protected /performante.
+ * Static checks for /performante — email+password operator bridge (Clerk retired).
  * Usage: node marketing/scripts/check-performante-auth.mjs
  */
 
@@ -31,25 +31,29 @@ assert(app.includes('path="/performante"'), 'performante route registered')
 assert(app.includes('PerformanteShortcut'), 'Alt+P shortcut mounted')
 
 const page = read('src/pages/PerformantePage.jsx')
-assert(page.includes('ClerkProvider'), 'page wraps ClerkProvider when configured')
 assert(page.includes('PerformanteGate'), 'page mounts auth gate')
-assert(page.includes('isPerformanteClerkConfigured'), 'fails closed without Clerk key')
+assert(!page.includes('ClerkProvider'), 'page does not use ClerkProvider')
 assert(!page.includes('performanteDestinations'), 'page entry does not import destinations list')
 
 const gate = read('src/components/performante/PerformanteGate.jsx')
-assert(gate.includes('SignIn'), 'unsigned sees SignIn')
-assert(gate.includes('isPerformanteOperator'), 'allowlist gate')
-assert(gate.includes("lazy(() => import('./PerformanteDestinations'))"), 'destinations lazy after allowlist')
+assert(gate.includes('performanteLogin'), 'gate uses password login API')
+assert(gate.includes('performanteMe'), 'gate checks session via /auth/me')
+assert(gate.includes('type="password"') || gate.includes("type='password'"), 'unsigned sees password field')
+assert(gate.includes('Sign in'), 'unsigned sees Sign in')
+assert(gate.includes("lazy(() => import('./PerformanteDestinations'))"), 'destinations lazy after auth')
 assert(gate.includes('noindex') || gate.includes('usePageSeo'), 'SEO noindex on bridge')
 assert(!gate.includes('performanteDestinations'), 'gate does not import destinations list')
+assert(!gate.includes('ClerkProvider') && !gate.includes('@clerk'), 'gate does not use Clerk')
+
+const authLib = read('src/lib/performanteAuth.js')
+assert(authLib.includes('/auth/login'), 'auth lib posts to /auth/login')
+assert(authLib.includes('/auth/me'), 'auth lib reads /auth/me')
+assert(authLib.includes('credentials'), 'auth lib sends cookies')
 
 const dest = read('src/components/performante/PerformanteDestinations.jsx')
 assert(dest.includes('performanteDestinations'), 'destinations module owns the list')
 assert(dest.includes('Operator destinations'), 'destination nav labelled')
-
-const allow = read('src/lib/performanteAllowlist.js')
-assert(allow.includes('VITE_CLERK_ADMIN_USER_ID'), 'allowlist reads admin user id')
-assert(allow.includes('fail closed') || allow.includes('return false'), 'allowlist fails closed')
+assert(dest.includes('content-loom') || dest.includes('Content Loom'), 'destinations include Content Loom')
 
 const shortcut = read('src/components/performante/PerformanteShortcut.jsx')
 assert(shortcut.includes("event.key.toLowerCase() !== 'p'"), 'shortcut listens for P')
@@ -67,14 +71,12 @@ assert(robots.includes('Disallow: /performante'), 'robots disallows performante'
 const analytics = read('src/lib/analytics.js')
 assert(analytics.includes("startsWith('/performante')"), 'analytics skips performante')
 
-const pkg = read('package.json')
-assert(pkg.includes('@clerk/clerk-react'), 'marketing depends on clerk-react')
-
-const envEx = read('.env.example')
-assert(envEx.includes('VITE_CLERK_PUBLISHABLE_KEY'), 'env example documents Clerk key')
-assert(envEx.includes('VITE_CLERK_ADMIN_USER_ID'), 'env example documents allowlist')
-
 const authDoc = read('docs/AUTH_SSO.md', repoRoot)
 assert(authDoc.includes('/performante'), 'AUTH_SSO documents performante')
+assert(
+  authDoc.includes('email + password') || authDoc.includes('Password'),
+  'AUTH_SSO documents password auth',
+)
+assert(authDoc.includes('Content Loom') || authDoc.includes('loom.sleeklybuilt'), 'AUTH_SSO mentions Content Loom')
 
 process.exit(failed > 0 ? 1 : 0)

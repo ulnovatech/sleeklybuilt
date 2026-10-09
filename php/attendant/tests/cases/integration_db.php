@@ -45,7 +45,8 @@ $ordersAfter = (int) $pdo->query('SELECT COUNT(*) FROM website_orders')->fetchCo
 AttendantTest::assertSame($ordersBefore, $ordersAfter, 'integration: no website_orders INSERT without confirm');
 
 // Telemetry scrub on persisted meta (ToolRouter does not emit; engine does — simulate emit)
-$handoff = $router->execute('handoff', ['reason' => 'layer-a'], $cid, $page, false);
+// Reason must be an allowed escalation code (soft reasons like "layer-a" are rejected).
+$handoff = $router->execute('handoff', ['reason' => 'explicit_human'], $cid, $page, false);
 AttendantTest::assertTrue(($handoff['ok'] ?? false) === true, 'handoff tool succeeds');
 $telemetry = new Attendant\Telemetry($pdo);
 $telemetry->emit('tool_call', [
