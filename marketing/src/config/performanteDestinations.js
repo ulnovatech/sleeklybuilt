@@ -11,6 +11,11 @@ const discoveryUrl =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_DISCOVERY_URL?.replace(/\/$/, '')) ||
   'https://discovery.sleeklybuilt.pro'
 
+const contentLoomUrl =
+  (typeof import.meta !== 'undefined' &&
+    import.meta.env?.VITE_CONTENT_LOOM_URL?.replace(/\/$/, '')) ||
+  'https://loom.sleeklybuilt.pro'
+
 /** @typedef {{ id: string, label: string, href: string, description: string, external?: boolean }} PerformanteDestination */
 
 /** @type {PerformanteDestination[]} */
@@ -26,6 +31,13 @@ export const performanteDestinations = [
     label: 'Discovery',
     href: discoveryUrl,
     description: 'Demand Capture — research & outreach',
+    external: true,
+  },
+  {
+    id: 'content-loom',
+    label: 'Content Loom',
+    href: contentLoomUrl,
+    description: 'Content OS — topics, production, publish',
     external: true,
   },
   {

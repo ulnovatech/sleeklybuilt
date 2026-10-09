@@ -21,6 +21,8 @@ services:
     restart: always
     ports:
       - '80:80'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - /opt/sleeklybuilt/public_html:/var/www/public_html:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -28,6 +30,7 @@ services:
       - ./nginx/conf.d/sleeklybuilt.conf:/etc/nginx/conf.d/sleeklybuilt.conf:ro
       - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/conf.d/discovery.conf:/etc/nginx/conf.d/discovery.conf:ro
+      - ./nginx/conf.d/content-loom.conf:/etc/nginx/conf.d/content-loom.conf:ro
 
   postgres:
     restart: always
