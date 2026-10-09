@@ -37,6 +37,7 @@ services:
 
   discovery-web:
     restart: always
+    # Loopback only — nginx reaches the service as discovery-web:3000 on the compose network.
     ports:
       - '127.0.0.1:3000:3000'
 

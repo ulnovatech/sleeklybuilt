@@ -4,10 +4,12 @@ require_once __DIR__ . '/SessionAuth.php';
 require_once __DIR__ . '/MobileTokenAuth.php';
 require_once __DIR__ . '/ServiceTokenAuth.php';
 require_once __DIR__ . '/ClerkTokenAuth.php';
+require_once __DIR__ . '/OperatorDeviceTokenAuth.php';
 
 /**
- * Unified gate: Clerk JWT (admin SSO), session cookie (legacy web),
- * Bearer mobile HS256 (legacy), or hashed service token (integrations only).
+ * Unified gate: Clerk JWT (admin SSO), operator device token (phone APK),
+ * session cookie (legacy web), Bearer mobile HS256 (legacy), or hashed
+ * service token (integrations only).
  */
 class ApiAuth
 {
@@ -16,21 +18,15 @@ class ApiAuth
         private MobileTokenAuth $mobile,
         private ?ServiceTokenAuth $service = null,
         private ?ClerkTokenAuth $clerk = null,
+        private ?OperatorDeviceTokenAuth $device = null,
     ) {
     }
 
     public function user(): ?array
     {
-        if ($this->clerk !== null && $this->clerk->authenticateRequest()) {
-            return $this->clerk->user();
-        }
-
-        // When Clerk SSO is required, do not fall through to password sessions / mobile HS256.
-        if (ClerkTokenAuth::passwordLoginDisabled()) {
-            if ($this->service !== null && $this->service->authenticateRequest()) {
-                return $this->service->user();
-            }
-            return null;
+        // Phone APK device tokens.
+        if ($this->device !== null && $this->device->authenticateRequest()) {
+            return $this->device->user();
         }
 
         if ($this->mobile->authenticateRequest()) {
@@ -52,17 +48,67 @@ class ApiAuth
             header('Content-Type: application/json; charset=UTF-8');
             echo json_encode([
                 'error' => 'Unauthorized',
-                'message' => ClerkTokenAuth::passwordLoginDisabled()
-                    ? 'Sign in with Clerk to continue.'
-                    : 'Please sign in to continue.',
-                'auth_mode' => ClerkTokenAuth::passwordLoginDisabled() ? 'clerk' : 'password',
+                'message' => 'Please sign in to continue.',
+                'auth_mode' => 'password',
             ]);
             exit;
         }
 
         $via = (string) ($user['auth_via'] ?? '');
+        $path = $path ?? '';
+
+        if ($via === 'operator_device_token') {
+            if (!OperatorDeviceTokenAuth::pathAllowed($path)) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'error' => 'Forbidden',
+                    'message' => 'Operator device tokens may only access mobile CRM and attendant routes.',
+                ]);
+                exit;
+            }
+
+            $scopes = $user['scopes'] ?? null;
+            if (!is_array($scopes) || $scopes === []) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'error' => 'Forbidden',
+                    'message' => 'Operator device token has no scopes.',
+                ]);
+                exit;
+            }
+
+            $normalizedPath = '/' . ltrim($path, '/');
+            $needsAttendant = str_starts_with($normalizedPath, '/api/attendant');
+            $hasMobile = in_array('mobile', $scopes, true) || in_array('*', $scopes, true);
+            $hasAttendant = in_array('attendant', $scopes, true) || in_array('*', $scopes, true);
+
+            // Minted tokens carry both scopes; either covers attendant routes.
+            if ($needsAttendant && !$hasAttendant && !$hasMobile) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'error' => 'Forbidden',
+                    'message' => 'Operator device token missing attendant or mobile scope.',
+                ]);
+                exit;
+            }
+
+            if (!$needsAttendant && !$hasMobile) {
+                http_response_code(403);
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode([
+                    'error' => 'Forbidden',
+                    'message' => 'Operator device token missing mobile scope.',
+                ]);
+                exit;
+            }
+
+            return;
+        }
+
         if ($via === 'service_token') {
-            $path = $path ?? '';
             if (!str_starts_with($path, '/api/integrations')) {
                 http_response_code(403);
                 header('Content-Type: application/json; charset=UTF-8');
@@ -84,14 +130,7 @@ class ApiAuth
                 exit;
             }
 
-            $required = ['integrations'];
-            $hasScope = false;
-            foreach ($required as $scope) {
-                if (in_array($scope, $scopes, true) || in_array('*', $scopes, true)) {
-                    $hasScope = true;
-                    break;
-                }
-            }
+            $hasScope = in_array('integrations', $scopes, true) || in_array('*', $scopes, true);
             if (!$hasScope) {
                 http_response_code(403);
                 header('Content-Type: application/json; charset=UTF-8');

@@ -1,61 +1,28 @@
 /**
- * Design OS: patterns/authentication_flow.md + docs/AUTH_SSO.md
+ * Design OS: patterns/authentication_flow.md
  *
  * User journey
- *   Operator hits /performante or Alt+P → prove Clerk identity → allowlist → pick admin surface
+ *   Operator hits /performante or Alt+P → email+password → destinations
  *
  * UX flow
- *   Entry → loading (Clerk) → sign-in OR deny OR destinations → leave
- *
- * Screen layout
- *   Bare obsidian shell (no marketing chrome / attendant). One primary column.
- *
- * Component structure
- *   PerformantePage (ClerkProvider when configured)
- *     → PerformanteGate (auth states)
- *       → lazy PerformanteDestinations (only after allowlist pass)
+ *   Entry → loading → sign-in / forgot → destinations
  *
  * States
- *   Loading: skeleton matching title + list rhythm
- *   Empty/unavailable: Clerk or allowlist not configured — no destinations
- *   Unsigned: Sign-in only — no destination list in DOM
- *   Denied: signed in but not allowlisted — sign out, no destinations
- *   Success: destinations + shortcut documentation
- *   Error: Clerk load failure message + leave link
+ *   Loading / Unsigned / Error / Success (destinations) / Forgot sent
  */
 
-import { lazy, Suspense, useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { SignIn, SignOutButton, useAuth, useUser } from '@clerk/clerk-react'
 import { usePageSeo } from '../../lib/usePageSeo'
 import {
-  isPerformanteAllowlistConfigured,
-  isPerformanteOperator,
-} from '../../lib/performanteAllowlist'
+  performanteForgotPassword,
+  performanteLogin,
+  performanteLogout,
+  performanteMe,
+} from '../../lib/performanteAuth'
 import { PERFORMANTE_PATH } from '../../config/performantePath'
 
 const PerformanteDestinations = lazy(() => import('./PerformanteDestinations'))
-
-const signInAppearance = {
-  variables: {
-    colorPrimary: '#e35a18',
-    colorBackground: '#11151c',
-    colorInputBackground: '#07090d',
-    colorInputText: '#f3f5f7',
-    colorText: '#f3f5f7',
-    colorTextSecondary: 'rgba(243,245,247,0.7)',
-    borderRadius: '0.5rem',
-  },
-  elements: {
-    rootBox: 'mx-auto w-full max-w-sm',
-    card: 'border border-[#1e2430] bg-[#11151c] shadow-none',
-    headerTitle: 'text-cream',
-    headerSubtitle: 'text-cream/70',
-    socialButtonsBlockButton: 'border-[#1e2430] bg-[#07090d] text-cream',
-    formButtonPrimary: 'bg-[#e35a18] text-[#12161d] hover:bg-[#ef7b42]',
-    footerAction: 'hidden',
-  },
-}
 
 function Shell({ children }) {
   return (
@@ -94,6 +61,10 @@ function LeaveLink() {
   )
 }
 
+function fieldClassName() {
+  return 'mt-1 w-full min-h-11 rounded-md border border-obsidian-line bg-obsidian-raised px-3 text-sm text-cream placeholder:text-cream/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold'
+}
+
 function LoadingShell() {
   return (
     <Shell>
@@ -108,21 +79,6 @@ function LoadingShell() {
   )
 }
 
-function UnavailableShell({ title, body }) {
-  return (
-    <Shell>
-      <BrandHeader subtitle={title} />
-      <p className="mt-6 text-sm text-cream/60" role="alert">
-        {body}
-      </p>
-      <LeaveLink />
-    </Shell>
-  )
-}
-
-/**
- * Auth gate — destinations load only after allowlist success.
- */
 export default function PerformanteGate() {
   usePageSeo({
     title: 'Performante',
@@ -131,67 +87,177 @@ export default function PerformanteGate() {
     noindex: true,
   })
 
-  const { isLoaded: authLoaded, isSignedIn } = useAuth()
-  const { isLoaded: userLoaded, user } = useUser()
-  const focusRef = useRef(null)
-
-  const ready = authLoaded && userLoaded
-  const allowed = Boolean(isSignedIn && user && isPerformanteOperator(user))
+  const [ready, setReady] = useState(false)
+  const [user, setUser] = useState(null)
+  const [mode, setMode] = useState('signin') // signin | forgot | forgot-sent
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const errorRef = useRef(null)
 
   useEffect(() => {
-    if (!ready) return
-    if (allowed) return
-    focusRef.current?.focus?.()
-  }, [ready, allowed, isSignedIn])
+    let cancelled = false
+    ;(async () => {
+      const me = await performanteMe()
+      if (!cancelled) {
+        setUser(me)
+        setReady(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
-  if (!isPerformanteAllowlistConfigured()) {
-    return (
-      <UnavailableShell
-        title="Bridge not configured."
-        body="Set VITE_CLERK_ADMIN_USER_ID (preferred) and/or VITE_CLERK_ADMIN_EMAIL, rebuild marketing, then try again. Destinations stay hidden until the allowlist is set."
-      />
-    )
+  useEffect(() => {
+    if (error && errorRef.current) errorRef.current.focus()
+  }, [error])
+
+  async function onSignIn(e) {
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
+    try {
+      const data = await performanteLogin(email.trim(), password)
+      setUser(data.user ?? null)
+      setPassword('')
+    } catch (err) {
+      setError(err?.message || 'Sign-in failed')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  if (!ready) {
-    return <LoadingShell />
+  async function onForgot(e) {
+    e.preventDefault()
+    setError('')
+    setSubmitting(true)
+    try {
+      await performanteForgotPassword(email.trim())
+      setMode('forgot-sent')
+    } catch (err) {
+      setError(err?.message || 'Could not send reset email')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
-  if (!isSignedIn) {
+  async function onSignOut() {
+    await performanteLogout()
+    setUser(null)
+    setMode('signin')
+  }
+
+  if (!ready) return <LoadingShell />
+
+  if (user) {
     return (
       <Shell>
-        <BrandHeader subtitle="Sign in with the operator Clerk account. Destinations stay hidden until you are verified." />
-        <div className="mt-10" ref={focusRef} tabIndex={-1}>
-          <SignIn
-            routing="hash"
-            forceRedirectUrl={PERFORMANTE_PATH}
-            fallbackRedirectUrl={PERFORMANTE_PATH}
-            signUpUrl={undefined}
-            appearance={signInAppearance}
-          />
+        <BrandHeader
+          subtitle={
+            <>
+              Admin surfaces only. Press{' '}
+              <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
+                Alt
+              </kbd>{' '}
+              +{' '}
+              <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
+                P
+              </kbd>{' '}
+              from the marketing site to return here.
+            </>
+          }
+        />
+        <div className="mt-4 flex items-center justify-between gap-3 text-xs text-cream/45">
+          <span className="truncate">{user.email || user.username}</span>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="min-h-11 shrink-0 rounded-md px-2 text-cream/70 underline-offset-2 hover:text-cream hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+          >
+            Sign out
+          </button>
         </div>
+        <Suspense
+          fallback={
+            <div className="mt-10 space-y-3" role="status" aria-live="polite" aria-busy="true">
+              <div className="h-14 animate-pulse rounded-md bg-cream/[0.06]" />
+              <div className="h-14 animate-pulse rounded-md bg-cream/[0.06]" />
+            </div>
+          }
+        >
+          <PerformanteDestinations />
+        </Suspense>
         <LeaveLink />
       </Shell>
     )
   }
 
-  if (!allowed) {
+  if (mode === 'forgot-sent') {
     return (
       <Shell>
-        <BrandHeader subtitle="This account is not on the operator allowlist." />
-        <p className="mt-6 text-sm text-cream/60" role="alert">
-          Use the single admin Clerk user configured for SleeklyBuilt. Destinations are not shown.
+        <BrandHeader subtitle="Check your inbox." />
+        <p className="mt-6 text-sm text-cream/70" role="status">
+          If an account exists for that email, a reset link is on its way. The link expires in 60
+          minutes.
         </p>
-        <div className="mt-8">
-          <SignOutButton redirectUrl="/">
-            <button
-              type="button"
-              className="min-h-11 rounded-md border border-obsidian-line bg-obsidian-raised px-4 text-sm font-medium text-cream transition hover:border-gold/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        <button
+          type="button"
+          onClick={() => setMode('signin')}
+          className="mt-8 min-h-11 self-start rounded-md border border-obsidian-line px-4 text-sm text-cream hover:border-gold/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        >
+          Back to sign in
+        </button>
+        <LeaveLink />
+      </Shell>
+    )
+  }
+
+  if (mode === 'forgot') {
+    return (
+      <Shell>
+        <BrandHeader subtitle="Reset your operator password." />
+        <form className="mt-10 space-y-4" onSubmit={onForgot} noValidate>
+          {error ? (
+            <p
+              ref={errorRef}
+              tabIndex={-1}
+              className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-100"
+              role="alert"
             >
-              Sign out
-            </button>
-          </SignOutButton>
-        </div>
+              {error}
+            </p>
+          ) : null}
+          <label className="block text-sm text-cream/80">
+            Email
+            <input
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={fieldClassName()}
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={submitting || !email.trim()}
+            className="min-h-11 w-full rounded-md bg-[#e35a18] px-4 text-sm font-semibold text-[#12161d] transition hover:bg-[#ef7b42] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:opacity-50"
+          >
+            {submitting ? 'Sending…' : 'Send reset link'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('signin')
+              setError('')
+            }}
+            className="min-h-11 w-full text-sm text-cream/60 underline-offset-2 hover:text-cream hover:underline"
+          >
+            Back to sign in
+          </button>
+        </form>
         <LeaveLink />
       </Shell>
     )
@@ -199,58 +265,60 @@ export default function PerformanteGate() {
 
   return (
     <Shell>
-      <BrandHeader
-        subtitle={
-          <>
-            Admin surfaces only. Not listed in the sitemap. Press{' '}
-            <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
-              Alt
-            </kbd>{' '}
-            +{' '}
-            <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
-              P
-            </kbd>{' '}
-            from the marketing site to return here
-            <span className="text-cream/50">
-              {' '}
-              (or{' '}
-              <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
-                Alt
-              </kbd>
-              +
-              <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
-                Shift
-              </kbd>
-              +
-              <kbd className="rounded border border-obsidian-line bg-obsidian-raised px-1.5 py-0.5 font-mono text-xs text-cream">
-                P
-              </kbd>{' '}
-              if the browser captures Alt+P).
-            </span>
-          </>
-        }
-      />
-      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-cream/45">
-        <span className="truncate">{user.primaryEmailAddress?.emailAddress || user.id}</span>
-        <SignOutButton redirectUrl="/">
+      <BrandHeader subtitle="Sign in with your operator email and password." />
+      <form className="mt-10 space-y-4" onSubmit={onSignIn} noValidate>
+        {error ? (
+          <p
+            ref={errorRef}
+            tabIndex={-1}
+            className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-100"
+            role="alert"
+          >
+            {error}
+          </p>
+        ) : null}
+        <label className="block text-sm text-cream/80">
+          Email
+          <input
+            type="email"
+            autoComplete="username"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={fieldClassName()}
+          />
+        </label>
+        <label className="block text-sm text-cream/80">
+          Password
+          <input
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={fieldClassName()}
+          />
+        </label>
+        <div className="flex justify-end">
           <button
             type="button"
-            className="min-h-11 shrink-0 rounded-md px-2 text-cream/70 underline-offset-2 hover:text-cream hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+            onClick={() => {
+              setMode('forgot')
+              setError('')
+            }}
+            className="min-h-11 text-sm text-cream/55 underline-offset-2 hover:text-cream hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
           >
-            Sign out
+            Forgot password?
           </button>
-        </SignOutButton>
-      </div>
-      <Suspense
-        fallback={
-          <div className="mt-10 space-y-3" role="status" aria-live="polite" aria-busy="true">
-            <div className="h-14 animate-pulse rounded-md bg-cream/[0.06]" />
-            <div className="h-14 animate-pulse rounded-md bg-cream/[0.06]" />
-          </div>
-        }
-      >
-        <PerformanteDestinations />
-      </Suspense>
+        </div>
+        <button
+          type="submit"
+          disabled={submitting || !email.trim() || !password}
+          className="min-h-11 w-full rounded-md bg-[#e35a18] px-4 text-sm font-semibold text-[#12161d] transition hover:bg-[#ef7b42] focus:outline-none focus-visible:ring-2 focus-visible:ring-gold disabled:opacity-50"
+        >
+          {submitting ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
       <LeaveLink />
     </Shell>
   )

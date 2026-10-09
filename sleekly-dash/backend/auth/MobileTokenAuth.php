@@ -81,11 +81,18 @@ class MobileTokenAuth
             $header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
         }
 
-        if (!preg_match('/^Bearer\s+(\S+)$/i', trim($header), $matches)) {
-            return null;
+        if (preg_match('/^Bearer\s+(\S+)$/i', trim($header), $matches)) {
+            return $matches[1];
         }
 
-        return $matches[1];
+        // Performante / Discovery cross-subdomain cookie (see SessionAuth::OPERATOR_TOKEN_COOKIE).
+        $cookieName = 'sb_operator_token';
+        $fromCookie = $_COOKIE[$cookieName] ?? '';
+        if (is_string($fromCookie) && $fromCookie !== '') {
+            return $fromCookie;
+        }
+
+        return null;
     }
 
     private function secret(): string

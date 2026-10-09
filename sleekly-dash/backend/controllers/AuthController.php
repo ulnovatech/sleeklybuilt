@@ -75,9 +75,26 @@ class AuthController
             return;
         }
 
+        $user = $this->auth->user();
+        $tokenPayload = null;
+        try {
+            $tokenPayload = $this->mobileAuth->issueToken($user ?? []);
+            if (!empty($tokenPayload['token'])) {
+                $this->auth->setOperatorTokenCookie(
+                    (string) $tokenPayload['token'],
+                    (int) ($tokenPayload['expires_in'] ?? 604800)
+                );
+            }
+        } catch (Throwable $e) {
+            error_log('Operator token issue failed: ' . $e->getMessage());
+        }
+
         echo json_encode([
             'success' => true,
-            'user' => $this->auth->user(),
+            'user' => $user,
+            'access_token' => $tokenPayload['token'] ?? null,
+            'expires_at' => $tokenPayload['expires_at'] ?? null,
+            'auth_mode' => 'password',
         ]);
     }
 
@@ -205,11 +222,26 @@ class AuthController
         }
 
         $this->auth->loginAsUser($result['user']);
+        $user = $this->auth->user();
+        $tokenPayload = null;
+        try {
+            $tokenPayload = $this->mobileAuth->issueToken($user ?? []);
+            if (!empty($tokenPayload['token'])) {
+                $this->auth->setOperatorTokenCookie(
+                    (string) $tokenPayload['token'],
+                    (int) ($tokenPayload['expires_in'] ?? 604800)
+                );
+            }
+        } catch (Throwable $e) {
+            error_log('Operator token issue after reset failed: ' . $e->getMessage());
+        }
 
         echo json_encode([
             'success' => true,
             'message' => 'Password updated. You are signed in.',
-            'user' => $this->auth->user(),
+            'user' => $user,
+            'access_token' => $tokenPayload['token'] ?? null,
+            'auth_mode' => 'password',
         ]);
     }
 
@@ -320,11 +352,11 @@ class AuthController
             http_response_code(401);
             echo json_encode([
                 'error' => 'Unauthorized',
-                'auth_mode' => ClerkTokenAuth::passwordLoginDisabled() ? 'clerk' : 'password',
+                'auth_mode' => 'password',
             ]);
             return;
         }
-        echo json_encode(['user' => $user]);
+        echo json_encode(['user' => $user, 'auth_mode' => 'password']);
     }
 
     public function mobileLogin(): void

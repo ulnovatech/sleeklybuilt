@@ -443,7 +443,7 @@ class DashUserService
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
             $base = $scheme . '://' . $host;
         }
-        return $base . '/dash/reset-password?token=' . urlencode($token);
+        return $base . '/performante/reset-password?token=' . urlencode($token);
     }
 
     private function envFlag(string $name): bool

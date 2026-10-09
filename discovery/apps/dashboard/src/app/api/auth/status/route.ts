@@ -1,14 +1,10 @@
-import { dynamic } from '@/lib/route-config';
-export { dynamic };
-import { getAuthMode, getOperatorId } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { getAuthMode } from '@/lib/auth';
 
 export async function GET() {
-  const operatorId = await getOperatorId();
   return NextResponse.json({
-    authenticated: !!operatorId,
-    operatorId,
-    mode: getAuthMode(),
-    clerkReady: !!(process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY),
+    authMode: getAuthMode(),
+    performanteUrl:
+      process.env.PERFORMANTE_URL?.trim() || 'https://sleeklybuilt.pro/performante',
   });
 }

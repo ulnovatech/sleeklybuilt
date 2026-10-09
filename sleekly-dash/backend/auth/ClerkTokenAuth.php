@@ -15,18 +15,14 @@ class ClerkTokenAuth
 
     public static function isConfigured(): bool
     {
-        $jwks = trim(getenv('CLERK_JWKS_URL') ?: '');
-        $issuer = trim(getenv('CLERK_ISSUER') ?: '');
-        // Require both verification endpoints — publishable key alone is not enough.
-        return $jwks !== ''
-            && $issuer !== ''
-            && (self::adminUserIds() !== [] || self::adminEmails() !== []);
+        // Clerk SSO retired — password sessions + operator JWT are the admin gate.
+        return false;
     }
 
-    /** When Clerk is configured, password login paths must be closed. */
+    /** Password login is the supported admin auth mode. */
     public static function passwordLoginDisabled(): bool
     {
-        return self::isConfigured();
+        return false;
     }
 
     public function user(): ?array

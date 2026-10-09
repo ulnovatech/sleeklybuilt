@@ -18,6 +18,7 @@ const PoliciesPage = lazy(() => import('./pages/PoliciesPage'))
 const PolicyDetailPage = lazy(() => import('./pages/PolicyDetailPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const PerformantePage = lazy(() => import('./pages/PerformantePage'))
+const PerformanteResetPasswordPage = lazy(() => import('./pages/PerformanteResetPasswordPage'))
 
 function RouteFallback() {
   return (
@@ -35,6 +36,10 @@ export default function App() {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/performante" element={<PerformantePage />} />
+          <Route
+            path="/performante/reset-password"
+            element={<PerformanteResetPasswordPage />}
+          />
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/sleek-pages" element={<SleekPagesPage />} />

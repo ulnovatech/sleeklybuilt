@@ -1,15 +1,13 @@
-import { assertAdminOperator, clerkConfigured, isClerkAdminConfigured } from '@/lib/admin-allowlist';
-import { auth } from '@clerk/nextjs/server';
+import { headers } from 'next/headers';
+import { verifyOperatorWithDash } from '@/lib/operator-jwt';
 
 export async function getOperatorId(): Promise<string | null> {
-  if (!clerkConfigured() || !isClerkAdminConfigured()) {
-    return null;
-  }
-
-  const { userId } = await auth();
-  if (!userId) return null;
-  if (!(await assertAdminOperator(userId))) return null;
-  return userId;
+  const headerStore = await headers();
+  const verified = await verifyOperatorWithDash({
+    cookie: headerStore.get('cookie'),
+    authorization: headerStore.get('authorization'),
+  });
+  return verified?.sub ?? null;
 }
 
 export async function requireAuth(): Promise<string> {
@@ -18,7 +16,6 @@ export async function requireAuth(): Promise<string> {
   return id;
 }
 
-export function getAuthMode(): 'clerk' | 'none' {
-  if (clerkConfigured() && isClerkAdminConfigured()) return 'clerk';
-  return 'none';
+export function getAuthMode(): 'password' | 'none' {
+  return 'password';
 }
