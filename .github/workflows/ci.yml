@@ -163,6 +163,10 @@ jobs:
       DB_NAME: ulnovatech
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Widget checks assert blog host mounts (@sleeklybuilt/attendant in sleekly-blog).
+          submodules: recursive
+          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
