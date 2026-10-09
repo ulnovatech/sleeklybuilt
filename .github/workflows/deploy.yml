@@ -128,7 +128,24 @@ jobs:
             --exclude 'php/.env' \
             --exclude 'sleekly-dash/backend/.env' \
             --exclude 'portfolio/portfolio/' \
+            --exclude 'admin-app/' \
             public_html/ "${DEPLOY_HOST}:/opt/sleeklybuilt/public_html/"
+
+          # APKs are gitignored — restore durable on-box admin-app after every publish.
+          ssh $SSH_OPTS "$DEPLOY_HOST" 'bash -s' <<'REMOTE'
+          set -e
+          if [[ -x /opt/sleeklybuilt/bin/restore-admin-app.sh ]]; then
+            bash /opt/sleeklybuilt/bin/restore-admin-app.sh
+          else
+            SRC=
+            [[ -f /opt/sleeklybuilt/data/admin-app/latest.json ]] && SRC=/opt/sleeklybuilt/data/admin-app
+            [[ -z "$SRC" && -f /opt/sleeklybuilt/repo/admin-app/latest.json ]] && SRC=/opt/sleeklybuilt/repo/admin-app
+            if [[ -n "$SRC" ]]; then
+              mkdir -p /opt/sleeklybuilt/public_html/admin-app
+              rsync -a --delete --exclude README.md --exclude .gitignore "$SRC/" /opt/sleeklybuilt/public_html/admin-app/
+            fi
+          fi
+          REMOTE
 
           # Guarantee runtime contract (company + expertise) even if a prior
           # permission error left public_html/attendant incomplete.

@@ -58,16 +58,21 @@ rsync -a --delete \
   --exclude 'sleekly-dash/backend/.env' \
   --exclude '**/service-account.json' \
   --exclude 'ulndash/' \
+  --exclude 'admin-app/' \
   public_html/ /opt/sleeklybuilt/public_html/
 rm -rf /opt/sleeklybuilt/public_html/ulndash 2>/dev/null || true
 rm -f /opt/sleeklybuilt/public_html/sleekly-dash/backend/service-account.json 2>/dev/null || true
 
-# APKs are gitignored — if assemble lacked them, restore from the on-box publish dir.
-if [[ -d /opt/sleeklybuilt/repo/admin-app ]] && [[ ! -f /opt/sleeklybuilt/public_html/admin-app/latest.json || ! -f /opt/sleeklybuilt/public_html/admin-app/sleekly-admin.apk ]]; then
-  log "restore admin-app APKs from repo/admin-app"
+# APKs are gitignored — always restore from durable on-box store (never let assemble wipe them).
+if [[ -x /opt/sleeklybuilt/bin/restore-admin-app.sh ]]; then
+  log "restore admin-app distribution"
+  bash /opt/sleeklybuilt/bin/restore-admin-app.sh
+elif [[ -d /opt/sleeklybuilt/data/admin-app ]] || [[ -d /opt/sleeklybuilt/repo/admin-app ]]; then
+  log "restore admin-app APKs"
   mkdir -p /opt/sleeklybuilt/public_html/admin-app
-  rsync -a /opt/sleeklybuilt/repo/admin-app/ /opt/sleeklybuilt/public_html/admin-app/
-  rm -f /opt/sleeklybuilt/public_html/admin-app/README.md /opt/sleeklybuilt/public_html/admin-app/.gitignore 2>/dev/null || true
+  SRC=/opt/sleeklybuilt/data/admin-app
+  [[ -f "$SRC/latest.json" ]] || SRC=/opt/sleeklybuilt/repo/admin-app
+  rsync -a --delete --exclude README.md --exclude .gitignore "$SRC/" /opt/sleeklybuilt/public_html/admin-app/
 fi
 
 
