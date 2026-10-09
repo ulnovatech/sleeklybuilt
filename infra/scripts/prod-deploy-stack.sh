@@ -84,8 +84,26 @@ dc_discovery() {
 echo "==> hub up (mysql php-fpm postgres)"
 dc up -d --build mysql php-fpm postgres
 
+echo "==> wait for mysql + postgres"
+for i in $(seq 1 60); do
+  if dc exec -T mysql sh -c 'mysqladmin ping -h 127.0.0.1 -uroot -p"$MYSQL_ROOT_PASSWORD" --silent' 2>/dev/null \
+    && dc exec -T postgres pg_isready -U postgres >/dev/null 2>&1; then
+    echo "databases ready"
+    break
+  fi
+  sleep 2
+done
+
 echo "==> nginx up (--no-deps)"
 dc up -d --build --no-deps nginx
+
+echo "==> hydrate empty DBs from Cloudflare R2 (if configured)"
+chmod +x /opt/sleeklybuilt/repo/infra/scripts/r2-s3.sh \
+  /opt/sleeklybuilt/repo/infra/scripts/sleeklybuilt-hydrate-from-r2.sh \
+  /opt/sleeklybuilt/repo/infra/scripts/sleeklybuilt-backup.sh \
+  /opt/sleeklybuilt/repo/infra/scripts/sleeklybuilt-restore.sh 2>/dev/null || true
+bash /opt/sleeklybuilt/repo/infra/scripts/sleeklybuilt-hydrate-from-r2.sh \
+  || echo "WARN: R2 hydrate skipped or failed"
 
 echo "==> portfolio permissions"
 dc exec -T php-fpm \
@@ -138,23 +156,40 @@ else
     echo "WARN: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY empty — Discovery will skip Clerk init"
   fi
   echo "ALLOW_DEV_AUTH=${ALLOW_DEV_AUTH:-} (baked into discovery-web middleware)"
-  dc_discovery up -d --build discovery-web discovery-worker
-  sleep 3
-  dc_discovery up -d discovery-web
-  echo "==> wait for discovery /api/health"
-  discovery_ok=0
-  for i in $(seq 1 45); do
-    if curl -sf http://127.0.0.1:3000/api/health >/dev/null; then
-      discovery_ok=1
-      break
-    fi
-    sleep 2
-  done
-  if [[ "$discovery_ok" -eq 1 ]]; then
-    echo "discovery health ok"
-  else
-    echo "WARN: discovery /api/health failed after wait"
+
+  # Free 127.0.0.1:3000 before recreate — stale discovery-web (or orphans) cause EADDRINUSE.
+  echo "==> free host port 3000 for discovery-web"
+  dc_discovery stop discovery-web discovery-worker 2>/dev/null || true
+  dc_discovery rm -f discovery-web discovery-worker 2>/dev/null || true
+  mapfile -t _port3000 < <(docker ps -q --filter publish=3000 2>/dev/null || true)
+  if ((${#_port3000[@]})); then
+    docker stop "${_port3000[@]}" 2>/dev/null || true
+    docker rm -f "${_port3000[@]}" 2>/dev/null || true
+  fi
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -k 3000/tcp 2>/dev/null || true
+  fi
+  sleep 1
+
+  if ! dc_discovery up -d --build --force-recreate --remove-orphans discovery-web discovery-worker; then
+    echo "WARN: discovery-web/worker up failed — hub/dash remain; check port 3000 / compose logs"
     dc_discovery logs --no-color --tail=80 discovery-web || true
+  else
+    echo "==> wait for discovery /api/health"
+    discovery_ok=0
+    for i in $(seq 1 45); do
+      if curl -sf http://127.0.0.1:3000/api/health >/dev/null; then
+        discovery_ok=1
+        break
+      fi
+      sleep 2
+    done
+    if [[ "$discovery_ok" -eq 1 ]]; then
+      echo "discovery health ok"
+    else
+      echo "WARN: discovery /api/health failed after wait"
+      dc_discovery logs --no-color --tail=80 discovery-web || true
+    fi
   fi
 fi
 

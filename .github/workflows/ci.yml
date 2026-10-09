@@ -26,6 +26,10 @@ jobs:
     needs: [validate-design-os]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Blog posts feed sitemap generation + SEO smoke (/blog/{slug}).
+          submodules: recursive
+          fetch-depth: 1
 
       - uses: actions/setup-node@v4
         with:
@@ -36,6 +40,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y composer php-cli php-mysql php-mbstring php-xml php-zip
+
+      - name: Verify blog posts available for SEO
+        run: |
+          test -d sleekly-blog/content/posts
+          test "$(find sleekly-blog/content/posts -name '*.md' | wc -l)" -ge 1
 
       - name: Install dependencies and build
         run: |
@@ -164,6 +173,9 @@ jobs:
 
       - name: Apply attendant migration
         run: php php/attendant/scripts/apply_attendant_migration.php
+
+      - name: Ensure CRM lead tables (contactus / website_orders)
+        run: php php/attendant/scripts/ensure_ci_lead_tables.php
 
       - name: Layer A regression
         run: php php/attendant/tests/run.php
