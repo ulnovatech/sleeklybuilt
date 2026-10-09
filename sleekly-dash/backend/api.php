@@ -6,11 +6,15 @@ require_once __DIR__ . '/auth/SessionAuth.php';
 require_once __DIR__ . '/auth/MobileTokenAuth.php';
 require_once __DIR__ . '/auth/ServiceTokenAuth.php';
 require_once __DIR__ . '/auth/ClerkTokenAuth.php';
+require_once __DIR__ . '/auth/OperatorDeviceTokenAuth.php';
 require_once __DIR__ . '/auth/ApiAuth.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/CompanyController.php';
 require_once __DIR__ . '/controllers/RequestsController.php';
 require_once __DIR__ . '/controllers/MobileController.php';
+if (is_file(__DIR__ . '/controllers/OperatorDebugLogController.php')) {
+    require_once __DIR__ . '/controllers/OperatorDebugLogController.php';
+}
 require_once __DIR__ . '/controllers/ImportController.php';
 require_once __DIR__ . '/controllers/InteractionController.php';
 require_once __DIR__ . '/controllers/CompetitorsController.php';
@@ -19,13 +23,21 @@ require_once __DIR__ . '/controllers/IntegrationsController.php';
 require_once __DIR__ . '/controllers/TemplateImportController.php';
 require_once __DIR__ . '/controllers/TemplateCatalogController.php';
 require_once __DIR__ . '/controllers/SettingsController.php';
+// Payment controllers are optional on hosts that have not synced php/payments yet.
+if (is_file(__DIR__ . '/controllers/PaymentSettingsController.php')) {
+    require_once __DIR__ . '/controllers/PaymentSettingsController.php';
+}
+if (is_file(__DIR__ . '/controllers/PaymentsController.php')) {
+    require_once __DIR__ . '/controllers/PaymentsController.php';
+}
 require_once __DIR__ . '/controllers/AttendantOperatorController.php';
 
 $auth = new SessionAuth($pdo);
 $mobileAuth = new MobileTokenAuth($pdo);
 $serviceAuth = new ServiceTokenAuth($pdo);
 $clerkAuth = new ClerkTokenAuth();
-$apiAuth = new ApiAuth($auth, $mobileAuth, $serviceAuth, $clerkAuth);
+$deviceAuth = new OperatorDeviceTokenAuth($pdo);
+$apiAuth = new ApiAuth($auth, $mobileAuth, $serviceAuth, $clerkAuth, $deviceAuth);
 $authController = new AuthController($auth, $mobileAuth, $apiAuth);
 
 // Ensure env bootstrap admin lands in dash_users on first request after migration.
@@ -136,12 +148,96 @@ try {
         new TemplateAuditLogger($pdo)
     );
     $settingsController = new SettingsController($pdo);
+    $paymentSettingsController = class_exists('PaymentSettingsController', false)
+        ? new PaymentSettingsController()
+        : null;
+    $paymentsController = class_exists('PaymentsController', false)
+        ? new PaymentsController()
+        : null;
 
     // Normalize path
     $path = rtrim($path, '/');
 
     if ($path === '/api/public/site-contact' && $method === 'GET') {
         echo json_encode($settingsController->getPublicContact());
+        exit;
+    }
+
+    if ($path === '/api/public/payment-providers' && $method === 'GET') {
+        if ($paymentSettingsController === null) {
+            http_response_code(503);
+            echo json_encode(['error' => 'Payment settings unavailable on this host']);
+            exit;
+        }
+        echo json_encode($paymentSettingsController->getPublicProviders());
+        exit;
+    }
+
+    if ($path === '/api/settings/payments') {
+        if ($paymentSettingsController === null) {
+            http_response_code(503);
+            echo json_encode(['error' => 'Payment settings unavailable on this host']);
+            exit;
+        }
+        if ($method === 'GET') {
+            echo json_encode($paymentSettingsController->getAdminProviders());
+            exit;
+        }
+        if ($method === 'PATCH' || $method === 'PUT') {
+            echo json_encode($paymentSettingsController->updateProviders(json_body(), $apiAuth->user()));
+            exit;
+        }
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed']);
+        exit;
+    }
+
+    if (strpos($path, '/api/payments') === 0) {
+        if ($paymentsController === null) {
+            http_response_code(503);
+            echo json_encode(['error' => 'Payments API unavailable on this host']);
+            exit;
+        }
+        try {
+            if ($method === 'GET' && $path === '/api/payments') {
+                echo json_encode($paymentsController->queue($_GET));
+            } elseif ($method === 'GET' && preg_match('#^/api/payments/(\d+)$#', $path, $m)) {
+                echo json_encode($paymentsController->show((int) $m[1]));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/(\d+)/match$#', $path, $m)) {
+                echo json_encode($paymentsController->matchPreview((int) $m[1], json_body(), $apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/(\d+)/confirm$#', $path, $m)) {
+                echo json_encode($paymentsController->confirm((int) $m[1], json_body(), $apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/(\d+)/reject$#', $path, $m)) {
+                echo json_encode($paymentsController->reject((int) $m[1], json_body(), $apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/(\d+)/ambiguous$#', $path, $m)) {
+                echo json_encode($paymentsController->markAmbiguous((int) $m[1], $apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/(\d+)/notify$#', $path, $m)) {
+                echo json_encode($paymentsController->retryNotify((int) $m[1], $apiAuth->user()));
+            } elseif ($method === 'GET' && $path === '/api/payments/adapters') {
+                echo json_encode($paymentsController->adapterStatus($apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/adapters/([a-z]+)/pull$#', $path, $m)) {
+                echo json_encode($paymentsController->adapterPull($m[1], json_body(), $apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/webhooks/([a-z]+)$#', $path, $m)) {
+                // Reserved for future signed provider webhooks; currently returns 501/503 from stub adapters.
+                echo json_encode($paymentsController->webhookIngest($m[1], json_body(), $apiAuth->user()));
+            } elseif ($method === 'GET' && preg_match('#^/api/payments/unmatched/(\d+)/candidates$#', $path, $m)) {
+                echo json_encode($paymentsController->unmatchedCandidates((int) $m[1], $apiAuth->user()));
+            } elseif ($method === 'POST' && preg_match('#^/api/payments/unmatched/(\d+)/attach$#', $path, $m)) {
+                echo json_encode($paymentsController->attachUnmatched((int) $m[1], json_body(), $apiAuth->user()));
+            } elseif ($method === 'POST' && $path === '/api/payments/unmatched') {
+                echo json_encode($paymentsController->recordUnmatched(json_body(), $apiAuth->user()));
+            } else {
+                http_response_code(405);
+                echo json_encode(['error' => 'Method not allowed']);
+            }
+        } catch (Throwable $e) {
+            $code = (int) $e->getCode();
+            if ($code < 400 || $code > 599) {
+                $code = 500;
+            }
+            http_response_code($code);
+            echo json_encode(['error' => $e->getMessage()]);
+        }
         exit;
     }
 
@@ -458,6 +554,62 @@ try {
         exit;
     }
 
+    // Admin APK update manifest (same CORS path as other /api/mobile routes)
+    if ($path === '/api/mobile/app-update' && $method === 'GET') {
+        $candidates = [
+            dirname(__DIR__, 2) . '/admin-app/latest.json',
+            '/opt/sleeklybuilt/public_html/admin-app/latest.json',
+            '/var/www/public_html/admin-app/latest.json',
+        ];
+        $manifest = null;
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate) && is_readable($candidate)) {
+                $raw = file_get_contents($candidate);
+                $decoded = is_string($raw) ? json_decode($raw, true) : null;
+                if (is_array($decoded) && isset($decoded['versionCode'], $decoded['apkUrl'])) {
+                    $manifest = $decoded;
+                    break;
+                }
+            }
+        }
+        if ($manifest === null) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Update manifest not found']);
+            exit;
+        }
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        echo json_encode($manifest);
+        exit;
+    }
+
+    // Remote Inspect console (phone Admin APK → server; agent-readable)
+    if ($path === '/api/mobile/debug-logs') {
+        if (!class_exists('OperatorDebugLogController')) {
+            http_response_code(501);
+            echo json_encode(['success' => false, 'error' => 'Debug log endpoint not deployed']);
+            exit;
+        }
+        $debugLogs = new OperatorDebugLogController($pdo);
+        $user = $apiAuth->user();
+        try {
+            if ($method === 'POST') {
+                $debugLogs->ingest(json_body(), is_array($user) ? $user : null);
+            } elseif ($method === 'GET') {
+                $debugLogs->list();
+            } else {
+                http_response_code(405);
+                echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            }
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => getenv('APP_DEBUG') === 'true' ? $e->getMessage() : 'Debug log error',
+            ]);
+        }
+        exit;
+    }
+
     if (strpos($path, '/api/mobile/devices') === 0) {
         $user = $apiAuth->user();
         try {
@@ -555,6 +707,8 @@ try {
         try {
             if ($method === 'GET' && $path === '/api/attendant/escalations') {
                 $attendantOps->index();
+            } elseif ($method === 'GET' && $path === '/api/attendant/conversations') {
+                $attendantOps->indexAll();
             } elseif ($method === 'GET' && preg_match('#^/api/attendant/conversations/([a-zA-Z0-9_-]+)$#', $path, $m)) {
                 $attendantOps->show($m[1]);
             } elseif ($method === 'POST' && preg_match('#^/api/attendant/conversations/([a-zA-Z0-9_-]+)/takeover$#', $path, $m)) {
