@@ -51,7 +51,7 @@ If no → unfinished.
 ```text
 Tiered plans (Website build, greenfield)
   → Cron ticks all day (city × industry rotation, yield-weighted)
-  → Places fills ~100-capable harvest; CSE / Meta / social / CSV / Reddit overlay
+  → Plan B fills ~100-capable harvest (OSM backbone + Brave/Meta/YouTube/CSV); Places when active
   → Holding pool (dirty, not pitchable)
   → Night purify (~22:00–06:30 EAT)
   → Cut: Morning list (~100) | Dumpster (the rest + miss reasons)
@@ -84,14 +84,14 @@ A lead leaves Pitch today when outreach is recorded (or skipped to dumpster). Pi
 
 | Role | Source | Job |
 |------|--------|-----|
-| Always-on reach | Google Places / Maps | Volume for the ~100 |
+| Always-on reach | OpenStreetMap / Geofabrik (Places when active) | Volume for the ~100 |
 | Cheap frequency | CSE public search (prospect focus), Meta Graph | Same segments; social-only Maps missed |
-| Optional | TikTok `site:` only; Bing if CSE exhausted | Do not steal CSE from prospect queries |
+| Optional | YouTube `site:` only (Plan B); Brave if CSE dormant | Do not steal search budget from prospect queries |
 | High-intent overlay | Reddit custom scrape, paste, RSS | Best closes; not the 100 |
 | Operator list | CSV | Known no-site names |
 | Off for this flight | Browser automation, boost pagination, Place Details review-pain, Modernization campaign | Wrong ICP or wasted Places |
 
-Discover order stays: Places → public search → Meta → social → CSV. **Ingest discipline:** do not keep `websiteClass=real` on the morning path.
+Discover order: Places (if active) → OSM → public search → Meta → social (YouTube) → CSV. **Ingest discipline:** do not keep crawl-proven `websiteClass=real` on the morning path. Uncrawled URLs are `uncertain`; crawl may promote to `broken` / `low_quality` (keepers) or `real` (dumpster).
 
 Places planning volume: on the order of **15–25 Text Search calls/day** for ~8–12 standard city×industry runs, if real-website listings are dropped before the 100. Skip review Details for this flight.
 
@@ -212,7 +212,7 @@ Channels (already in product):
 ## What already exists (do not rebuild)
 
 - Discovery Plans: matrix, cadence, tick, `yieldScore`, empty-streak suppress, `website_build` campaign, greenfield presence filter
-- Sources: Places, CSE/Bing, Meta, social search, CSV, Reddit demand
+- Sources: OSM/Geofabrik, Brave/CSE, Meta, YouTube social search, CSV, Reddit demand; Places when active
 - Scoring / work queue default **greenfield** lane; `websiteClass`; Case File; channel drafts; Queue inspector overlay
 - Worker plan tick ~60s; HTTP `/api/discovery/plans/tick`
 
@@ -229,7 +229,7 @@ Ship in this order. A chunk is done only when the operator-visible loop for that
 | ID | Chunk | Done when |
 |----|--------|-----------|
 | **F0-A** | Lock Tier A countries + first city list + 8 vs 12 daily slots | Catalogue in `plans/factory-markets.ts`; Plan A 12/day, Plan B 2/day |
-| **F0-B** | Credentials live: Places required; CSE key if using search; Reddit already on | `GET /api/discovery/sources` includes `factory`; Discovery → Provider status shows Places required + CSE CX-without-key; scheduler skips Maps plans with `skipped_credentials`; `pnpm discovery:factory-health` |
+| **F0-B** | Credentials live: OSM (Plan B) required for survival; Brave/Meta optional; Places optional while dormant | `GET /api/discovery/sources` includes `factory` + `survivalMode` / `placesLifecycle`; Provider status shows Plan B ready; `pnpm discovery:factory-health` |
 | **F0-C** | Two plans live: Plan A Website-build core, Plan B explore | `pnpm discovery:seed-factory` or worker startup; named cities; greenfield + prospect focus; no All cities; no modernization plan |
 | **F0-D** | Places cap sized for ~15–25 Text Search/day | Default / floor **600**/month |
 
@@ -242,9 +242,9 @@ pnpm discovery:seed-factory
 pnpm discovery:factory-health
 ```
 
-`pnpm discovery:factory-health -- --probe` spends one Places Text Search (Kampala restaurant) when a key is present. It does **not** mint Google keys. Paste a Places API (New) key in **Settings → API credentials**. A Programmable Search widget `cx=` is not a CSE JSON API key — overlay still needs `GOOGLE_CSE_API_KEY` plus CX.
+`pnpm discovery:factory-health` prints Places lifecycle, survivalMode, Geofabrik freshness, and per-channel checks. `--probe` spends one Places Text Search only when Places is **active** (skipped when dormant). Prefer Brave over CSE while Google billing is suspended. Full ops: [PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md).
 
-Factory plans are Places-only. Missing Places does **not** block CSV-only manual runs (`ready` stays “any configured source”). The scheduler skips Factory A/B until Places is configured.
+Factory plans use Plan B survival sources when Places is dormant (`openstreetmap`, `public_search`, `facebook`, `social_search` YouTube-only, `csv_import`). OSM alone keeps factory ready. The scheduler heals legacy Places-only plans via `factoryPlanNeedsSourceHeal`.
 
 ---
 
@@ -253,7 +253,7 @@ Factory plans are Places-only. Missing Places does **not** block CSV-only manual
 | ID | Chunk | Done when |
 |----|--------|-----------|
 | **F1-A** | Drop `websiteClass=real` from morning-path ingest (keep none + link-in-bio) | Factory/greenfield plan runs set `drop_real_websites`; Places ingest + discover stage skip owned sites |
-| **F1-B** | Prospect-focus default on factory plans; social search TikTok-only or off | Factory sources stay Places-only (social off); `filters.socialSearch=tiktok` if overlay enabled; plan discover uses plan.sources |
+| **F1-B** | Prospect-focus default on factory plans; social search YouTube-only (Plan B) | Factory sources include `social_search` with `filters.socialSearch=youtube`; plan discover uses plan.sources; non-YouTube social dropped from public_search too |
 | **F1-C** | Explore floor (~1/8 slots never-run / oldest) so yield winners do not starve new cities | `pickNextTarget` every 8th run orders by oldest/`lastRunAt` null first |
 | **F1-D** | Cohort stamp on accounts/runs (`harvestDate` / `sellDate`) | Plan morning runs stamp EAT harvest date and sell date = harvest+1; Tuesday harvest cannot sell Tuesday |
 

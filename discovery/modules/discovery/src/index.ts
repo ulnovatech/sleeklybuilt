@@ -14,16 +14,128 @@ export {
 
 export { GooglePlacesVerifyProvider } from './providers/places/places-verify';
 export { GooglePlacesDiscoveryProvider } from './providers/places/places-discover';
+export {
+  OsmDiscoveryProvider,
+  preferGeofabrikExtract,
+  type OsmDiscoverResult,
+} from './providers/osm/osm-discover';
+export {
+  resolveGeofabrikPaths,
+  geofabrikIndexReady,
+  geofabrikPbfReady,
+  GEOFABRIK_UGANDA_PBF_URL,
+  GEOFABRIK_EXTRACT_ID,
+  type GeofabrikPaths,
+} from './providers/osm/geofabrik-paths';
+export { downloadGeofabrikUgandaPbf } from './providers/osm/geofabrik-download';
+export {
+  buildGeofabrikPoiIndex,
+  queryGeofabrikPoiIndex,
+  readGeofabrikIndexMeta,
+  haversineMeters,
+  type GeofabrikIndexMeta,
+  type IndexedOsmPoi,
+} from './providers/osm/geofabrik-index';
+export {
+  GEOFABRIK_REFRESH_CRON_HINT,
+  GEOFABRIK_REFRESH_INTERVAL_MS,
+  GEOFABRIK_REFRESH_TIMEZONE,
+  geofabrikExtractStatus,
+  type GeofabrikExtractStatus,
+} from './providers/osm/geofabrik-refresh';
+export {
+  formatProviderStatLogLine,
+  formatProviderStatsSummary,
+  type ProviderStatLine,
+} from './lib/format-provider-stats';
+export {
+  formatFactoryHealthCheckLine,
+  formatFactoryHealthHeader,
+} from './lib/format-factory-health';
+export { osmTagsForIndustry, type OsmTagFilter } from './providers/osm/industry-tags';
+export { osmElementToBusiness, type OsmBackend } from './providers/osm/map-osm-result';
 export { MetaGraphDiscoveryProvider } from './providers/meta/meta-graph-provider';
-export { MetaGraphClient, MetaGraphApiError } from './providers/meta/meta-graph-client';
+export {
+  tripGoogleCircuit,
+  resetGoogleCircuit,
+  isGoogleCircuitOpen,
+  isGoogleAcquisitionDisabledByEnv,
+  getPlacesLifecycle,
+  type PlacesLifecycle,
+} from './providers/google-circuit';
+export {
+  MetaGraphClient,
+  MetaGraphApiError,
+  type MetaPagesSearchProbeResult,
+} from './providers/meta/meta-graph-client';
+export {
+  evaluateMetaPagesSearchCapability,
+  getMetaPagesSearchEnvOverride,
+  getMetaPagesSearchGateState,
+  isMetaPagesSearchReady,
+  markMetaPagesSearchGate,
+  metaPagesSearchGateReason,
+  resetMetaPagesSearchGate,
+  type MetaPagesSearchGateState,
+  type MetaPagesSearchGateStatus,
+} from './providers/meta/meta-pages-search-gate';
 export { SocialSearchProvider } from './providers/social/social-search-provider';
 export { parseSocialSearchResultItem } from './providers/social/parse-social-search-result';
+export {
+  SearchApiClient,
+  braveCountryForIso2,
+  isLegacyBingEnabled,
+  mergeSearchResults,
+  normalizeSearchUrl,
+  SEARCH_RESULTS_PER_PAGE,
+} from './providers/search-api-client';
+export {
+  SearchApiError,
+  SearchBudgetExhaustedError,
+  parseBraveSearchErrorBody,
+  type SearchEngineId,
+} from './providers/search-api-error';
 export {
   placeSearchResultToDiscoveredBusiness,
   placesIdFromExternalId,
   normalizePlacesExternalId,
 } from './providers/places/place-to-candidate';
-export { classifyWebsiteClass, keepOnMorningPath } from './lib/website-class';
+export {
+  classifyWebsiteClass,
+  countsAsOwnedWebsiteForScoring,
+  deriveWebsiteClassFromCrawl,
+  isWebsiteClass,
+  keepOnMorningPath,
+  mergeWebsiteClass,
+  parseWebsiteClass,
+  resolveWebsiteClass,
+  websiteClassLabel,
+  type WebsiteClass,
+} from './lib/website-class';
+export {
+  buildWhyContactScan,
+  contactabilityLabel,
+  contactabilityOf,
+  contactabilityTone,
+  deriveWhyContactLine,
+  topEvidenceFacts,
+  websiteClassTone,
+  type Contactability,
+  type EvidenceFact,
+  type WhyContactScan,
+} from './lib/why-contact';
+export {
+  attachDiscoveryEvidence,
+  finalizeEvidence,
+  formatEvidenceAttribution,
+  formatEvidenceConflicts,
+  mergeAccountMetadata,
+  mergeDiscoveryEvidence,
+  readDiscoveryEvidence,
+  type DiscoveryEvidence,
+  type DiscoveryEvidenceEntry,
+  type DiscoveryEvidenceConflict,
+} from '@agency/validation';
 
 export { GooglePlacesDetailsProvider } from './providers/places/places-details';
 
@@ -31,7 +143,12 @@ export { PlacesApiClient } from './providers/places/places-client';
 
 export { buildPublicSearchQueries } from './lib/build-public-search-queries';
 export { buildMetaSearchQueries } from './lib/build-meta-search-queries';
-export { buildSocialSearchQueries } from './lib/build-social-search-queries';
+export {
+  buildSocialSearchQueries,
+  platformsForSocialSearch,
+  type SocialSearchPlatform,
+  type SocialSearchMode,
+} from './lib/build-social-search-queries';
 export {
   classifySearchResult,
   isKeepableSearchResult,

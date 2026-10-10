@@ -89,6 +89,64 @@ UI: **Today** (`/ops`) — Revenue proof section above acquisition KPIs.
 
 UI: **Today** (`/ops`) — Win/loss summary section between Revenue proof and Acquisition KPIs.
 
+## Website class maturity (Plan B)
+
+`metadata.websiteClass` labels commercial web opportunity:
+
+| Class | Meaning | Morning Path |
+|-------|---------|--------------|
+| `none` | No website URL | keep |
+| `link_in_bio` | Linktree / bio page | keep |
+| `uncertain` | URL present, not yet crawl-proven (or blocked/skipped) | keep |
+| `broken` | Crawl `unreachable` | keep |
+| `low_quality` | Crawl ok but HTTPS or mobile failed | keep |
+| `real` | Crawl-proven healthy owned site | exclude |
+
+Ingest URL classification uses `uncertain` (not `real`) so broken URLs can enter keepers after crawl. Crawl writeback: `IntelligenceService.analyzeBusiness` → `deriveWebsiteClassFromCrawl`. Resolve merge never lets ingest `uncertain` downgrade crawl-proven `real` / `broken` / `low_quality`. Purify `has_website` miss only for `real`. Scoring treats only `real` as owned website.
+
+## Discovery evidence / provenance (Plan B)
+
+Field-level provenance lives on `metadata.discoveryEvidence` (no new tables):
+
+- **Writers:** OSM, Meta, Public Search, Social/YouTube, Places, CSV mappers via `attachDiscoveryEvidence`
+- **Resolve merge:** `AccountService.resolveOrCreate` / account merge deep-merge evidence history; contact scalars are fill-empty (`existing || incoming`); conflicting phone/website values land in `conflicts[]`; merged evidence is written onto the run business row
+- **Operator surface:** Discovery run detail + Pitch today show a **Why contact** strip (`websiteClass` badge, contactability, one-liner, top 2 evidence facts) so outreach decisions do not require raw JSON; phone/website attribution lines remain under contact cells
+- **BoI/Case File:** may later consume the same evidence bag; scan surfaces already use `buildWhyContactScan`
+
+## Multi-source corroboration scoring (Plan B)
+
+`computeLeadScore` applies a capped `multiSourceCorroboration` factor from distinct discovery sources on identity/contact evidence (`phone`, `website`, `email`, social/maps URLs — not bare `name`):
+
+| Distinct sources | Bonus |
+|------------------|-------|
+| 0–1 | 0 |
+| 2 | +3 |
+| 3+ | +5 (cap) |
+
+`QualificationService.scoreBusiness` counts via `countCorroboratingSources` over allowlisted `discoveryEvidence.fields` only (primary source alone / name-only does not inflate). Greenfield phone+no-site still dominate; corroboration lifts ranking among contactable prospects (e.g. phone + two sources ranks above bare OSM name with no contact path).
+
+## `places_enrich` when Places is dormant
+
+`places_enrich` stays in `PIPELINE_JOB_STAGES`. When `getPlacesLifecycle() === 'dormant'`:
+
+- Worker returns immediately (`skipped: true`, `reason: places_dormant`) — no Places API, no review BI patch, no rescore/BOI fan-out
+- `GooglePlacesDetailsProvider.enrichTopScoredForRun` also returns the same no-op shape (economy / unconfigured have parallel skip reasons)
+
+Plan B harvest continues; enrich is a clean no-op until Places reactivates.
+
+## OSM Geofabrik extract (Plan B)
+
+`OsmDiscoveryProvider` prefers a local Geofabrik Uganda POI index over live Overpass:
+
+- **Refresh:** `pnpm discovery:osm-geofabrik` downloads `uganda-latest.osm.pbf` and builds `uganda-pois.ndjson`
+- **Cadence:** weekly (stale after 7 days via `geofabrikExtractStatus`); suggested worker-host cron `0 3 * * 0` `Africa/Kampala`
+- **Paths:** `OSM_PBF_PATH` (file or directory); default `storage/osm/`
+- **Query:** industry tags + haversine radius around Nominatim city center
+- **Provenance:** `metadata.osmBackend` = `geofabrik_pbf` | `overpass`; `osmExtract` when local
+- **Fallback:** Overpass when index absent, extract returns zero hits for the query (node-only index; ways via Overpass), or `OSM_FORCE_OVERPASS=true`
+- **License:** ODbL — Geofabrik Africa/Uganda extract
+- **Ops:** [PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md) · `pnpm discovery:factory-health`
+
 ## Places primary discovery (Phase 5 D1)
 
 `GooglePlacesDiscoveryProvider` runs first in the `discover` stage when Places is configured and run profile is standard/boost:
@@ -112,7 +170,7 @@ See [P5_DISCOVERY_CHARTER.md](P5_DISCOVERY_CHARTER.md).
 
 `PublicSearchProvider` improvements:
 
-- **CSE/Bing pagination** — up to 2 pages/query (standard), 3 (boost), 1 (economy); 10 results/page
+- **CSE/Brave pagination** — up to 2 pages/query (standard), 3 (boost), 1 (economy); 10 results/page
 - **Result classifier** — drops directories, listicles, articles; keeps business pages + social profiles
 - **Social site: queries** — `buildSocialSearchQueries` (Facebook, Instagram, TikTok, LinkedIn company, YouTube)
 - **Extended parsing** — TikTok/LinkedIn/YouTube/Twitter URLs in `metadata`; cleaner title stripping
@@ -150,23 +208,25 @@ Exports: `parseCsvContent`, `mapCsvRowsToCandidates`, `getCsvImportFileInfo`, `s
 Facebook + Instagram business discovery via Meta Graph API (`MetaGraphDiscoveryProvider`):
 
 - **Credential:** `META_GRAPH_API_TOKEN` / Settings → Meta Graph API Token
-- **Endpoints:** `GET /search?type=page` and `GET /search?type=place` (Graph API v21.0)
+- **Endpoint:** `GET /v21.0/pages/search` (Pages Search API; App Review required)
+- **Capability gate:** process-local probe + optional `META_PAGES_SEARCH_READY`; CLI `pnpm discovery:meta-probe`
 - **Discover order:** after public search, before CSV
-- **Mapping:** `source: facebook` for pages/places; linked `instagram_business_account` also emits `source: instagram` row
+- **Mapping:** `source: facebook` for pages; linked `instagram_business_account` also emits `source: instagram` row (`placesFound` always 0 — place search removed)
 - **Budget:** `meta_graph` daily cap (`META_GRAPH_DAILY_CAP`); per-run query limits via `metaGraphLimits` in acquisition settings
-- **Errors:** auth/rate-limit logged; run continues with other sources
+- **Errors:** capability/auth → gate RED and skip; rate-limit logged; run continues with other sources
 
-Exports: `MetaGraphDiscoveryProvider`, `MetaGraphClient`, `buildMetaSearchQueries`.
+Exports: `MetaGraphDiscoveryProvider`, `MetaGraphClient`, `buildMetaSearchQueries`, Pages Search gate helpers.
 
 ## Social search discovery (Phase 5 D10)
 
-TikTok, LinkedIn, X, and YouTube profile discovery via CSE/Bing `site:` queries (`SocialSearchProvider`):
+TikTok, LinkedIn, X, and YouTube profile discovery via Brave/CSE `site:` queries (`SocialSearchProvider`):
 
-- **Credential:** same as public search (`GOOGLE_CSE_API_KEY` + `GOOGLE_CSE_CX` and/or `BING_SEARCH_KEY`)
-- **Queries:** `build-social-search-queries.ts` — `site:tiktok.com`, `site:linkedin.com/company`, `site:youtube.com`, `site:twitter.com`, `site:x.com`
+- **Credential:** same as public search (`BRAVE_SEARCH_API_KEY` and/or `GOOGLE_CSE_API_KEY` + `GOOGLE_CSE_CX`)
+- **Queries:** `build-social-search-queries.ts` — platform set from `socialSearch` filter (`off` | `tiktok` | `youtube` | `all`)
+- **Factory Plan B:** `FACTORY_FILTERS.socialSearch = 'youtube'` — only `site:youtube.com` queries; non-YouTube hits dropped
 - **Discover order:** after Meta Graph, before CSV
 - **Parser:** `parse-social-search-result.ts` — social profiles only; rejects Facebook/Instagram (Meta Graph)
-- **Budget:** shares `google_cse` / `bing_search` daily caps; skips gracefully when exhausted
+- **Budget:** shares `brave_search` / `google_cse` daily caps; skips gracefully when exhausted
 - **Source:** `social_search` on candidates with `metadata.primaryPlatform` and platform URL fields
 
 Exports: `SocialSearchProvider`, `parseSocialSearchResultItem`, `buildSocialSearchQueries`.
@@ -259,7 +319,7 @@ Pipeline: Grok marketplace research → ghost filter → Claude complaints → g
 
 ## Pipeline
 
-Discovery (Places primary → Public Search → Meta Graph → Social search → CSV by mode) → Intent → Intelligence → Qualification → CRM → Outreach → Proposal → Revenue
+Discovery (Places if active → OSM → Public Search → Meta Graph → Social search → CSV) → Intent → Intelligence → Qualification → CRM → Outreach → Proposal → Revenue
 
 Lead status changes only via `modules/crm`.
 
@@ -269,7 +329,7 @@ Lead status changes only via `modules/crm`.
 |--------|--------|
 | acquisition_jobs, budget_ledger, acquisition_settings | acquisition (`modules/acquisition`) |
 
-- **BudgetGovernor** — quota tracking for paid/limited providers (Places, CSE, Bing, browser, custom scrape)
+- **BudgetGovernor** — quota tracking for paid/limited providers (Places, CSE, Brave, browser, custom scrape)
 - **JobQueue** — Postgres-backed job staging for async pipeline
 - APIs: `GET /api/acquisition/budget`, `GET /api/acquisition/jobs/[runId]`
 
@@ -279,7 +339,7 @@ Lead status changes only via `modules/crm`.
 
 | Stage | Action |
 |-------|--------|
-| discover | **Places primary** (standard/boost) + public search + Meta Graph + social search + CSV |
+| discover | Places if active + **OSM Plan B** + public search + Meta Graph + social search + CSV |
 | resolve_accounts | Places verify for non-Places candidates + canonical accounts |
 | crawl | Website intelligence |
 | bi_enrich | Business intelligence profile (identity, footprint, completeness) |

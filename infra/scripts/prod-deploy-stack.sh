@@ -65,10 +65,14 @@ CRON_MARKER='# sleeklybuilt-template-import-maintenance'
 CRON_JOB="17 3 * * * /bin/bash /opt/sleeklybuilt/repo/infra/scripts/run-template-import-maintenance.sh 2>&1 | /usr/bin/logger -t sleeklybuilt-template-import-maintenance ${CRON_MARKER}"
 BACKUP_MARKER='# sleeklybuilt-db-backup'
 BACKUP_JOB="12 2 * * * /bin/bash /opt/sleeklybuilt/repo/infra/scripts/sleeklybuilt-backup.sh 2>&1 | /usr/bin/logger -t sleeklybuilt-backup ${BACKUP_MARKER}"
+# Plan B: weekly Geofabrik Uganda extract (Sunday 03:00 Africa/Kampala ≈ 00:00 UTC)
+GEOFABRIK_MARKER='# sleeklybuilt-osm-geofabrik'
+GEOFABRIK_JOB="0 0 * * 0 docker compose --env-file /opt/sleeklybuilt/env/docker.discovery.env -f /opt/sleeklybuilt/repo/infra/docker-compose.full.yml -f /opt/sleeklybuilt/repo/infra/docker-compose.prod.yml exec -T discovery-worker pnpm discovery:osm-geofabrik 2>&1 | /usr/bin/logger -t sleeklybuilt-osm-geofabrik ${GEOFABRIK_MARKER}"
 {
-  crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" | grep -vF "$BACKUP_MARKER" || true
+  crontab -l 2>/dev/null | grep -vF "$CRON_MARKER" | grep -vF "$BACKUP_MARKER" | grep -vF "$GEOFABRIK_MARKER" || true
   printf '%s\n' "$CRON_JOB"
   printf '%s\n' "$BACKUP_JOB"
+  printf '%s\n' "$GEOFABRIK_JOB"
 } | crontab -
 
 dc() {
@@ -186,6 +190,22 @@ else
     done
     if [[ "$discovery_ok" -eq 1 ]]; then
       echo "discovery health ok"
+      echo "==> ensure Plan B Places dormancy on discovery env"
+      if ! grep -qE '^GOOGLE_ACQUISITION_DISABLED=' "$DISCOVERY_ENV_FILE"; then
+        printf '\n# Plan B — Places dormant; OSM harvest continues\nGOOGLE_ACQUISITION_DISABLED=true\n' >> "$DISCOVERY_ENV_FILE"
+        dc_discovery up -d --force-recreate --no-deps discovery-web discovery-worker || true
+      elif grep -qE '^GOOGLE_ACQUISITION_DISABLED=(false|0|no)\s*$' "$DISCOVERY_ENV_FILE"; then
+        echo "WARN: GOOGLE_ACQUISITION_DISABLED is off — Plan B expects true while Places billing is down"
+      fi
+      echo "==> factory health (Plan B)"
+      dc_discovery exec -T discovery-worker pnpm discovery:factory-health \
+        || echo "WARN: factory-health failed — check OSM / credentials"
+      echo "==> Geofabrik status (refresh if missing/stale)"
+      if ! dc_discovery exec -T discovery-worker pnpm discovery:osm-geofabrik -- --status; then
+        echo "==> Geofabrik refresh (first-time / status failed)"
+        dc_discovery exec -T discovery-worker pnpm discovery:osm-geofabrik \
+          || echo "WARN: Geofabrik refresh failed — Overpass fallback remains"
+      fi
     else
       echo "WARN: discovery /api/health failed after wait"
       dc_discovery logs --no-color --tail=80 discovery-web || true

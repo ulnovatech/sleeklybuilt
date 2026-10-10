@@ -75,10 +75,13 @@ type FactoryCredentialCheck = {
   configured: boolean;
   ready: boolean;
   reason?: string;
+  lifecycle?: 'active' | 'dormant';
 };
 
 type FactoryCredentialHealth = {
   ready: boolean;
+  survivalMode?: boolean;
+  placesLifecycle?: 'active' | 'dormant';
   checks: FactoryCredentialCheck[];
 };
 
@@ -89,6 +92,7 @@ type SourceStatus = {
   enabled?: boolean;
   reason?: string;
   health?: string;
+  lifecycle?: 'active' | 'dormant';
 };
 
 const RUN_PRESETS: ProductSavedView[] = [
@@ -155,9 +159,12 @@ function DiscoveryPageContent() {
   const [listError, setListError] = useState<string | null>(null);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [runNowSubmitting, setRunNowSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sources, setSources] = useState<SourceStatus[]>([]);
   const [sourcesReady, setSourcesReady] = useState(false);
+  const [sourcesLoadState, setSourcesLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [sourcesLoadError, setSourcesLoadError] = useState<string | null>(null);
   const [factoryHealth, setFactoryHealth] = useState<FactoryCredentialHealth | null>(null);
   const [options, setOptions] = useState<DiscoveryOptions | null>(null);
   const [budgetInfo, setBudgetInfo] = useState<{
@@ -228,14 +235,24 @@ function DiscoveryPageContent() {
           searchQueriesPerRun?: number;
           providers: BudgetProvider[];
         };
-      }>('/api/discovery/sources').then((d) => {
-        setSources(d.sources);
-        setSourcesReady(d.ready);
-        setFactoryHealth(d.factory ?? null);
-        if (d.budget) setBudgetInfo(d.budget);
-        if (d.factory && !d.factory.ready) setSourcesOpen(true);
-        if (!d.ready && d.message) setError(d.message);
-      }),
+      }>('/api/discovery/sources')
+        .then((d) => {
+          setSources(d.sources);
+          setSourcesReady(d.ready);
+          setFactoryHealth(d.factory ?? null);
+          setSourcesLoadState('ready');
+          setSourcesLoadError(null);
+          if (d.budget) setBudgetInfo(d.budget);
+          if (d.factory && !d.factory.ready) setSourcesOpen(true);
+          if (!d.ready && d.message) setError(d.message);
+        })
+        .catch((reason) => {
+          setSourcesLoadState('error');
+          setSourcesLoadError(
+            reason instanceof Error ? reason.message : 'Failed to load source status',
+          );
+          throw reason;
+        }),
     [],
   );
 
@@ -355,7 +372,33 @@ function DiscoveryPageContent() {
     }
   };
 
+  const runScheduledNow = async () => {
+    setRunNowSubmitting(true);
+    setError(null);
+    try {
+      const result = await api<{
+        run: { id: string };
+        target: { city: string; country: string; industry: string };
+        message?: string;
+      }>('/api/discovery/plans/run-next', { method: 'POST' });
+      setActiveRunId(result.run.id);
+      await load();
+      push({
+        tone: 'success',
+        title: 'Scheduled harvest started',
+        description:
+          result.message ??
+          `${result.target.city}, ${result.target.country} · ${result.target.industry}`,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not start scheduled harvest');
+    } finally {
+      setRunNowSubmitting(false);
+    }
+  };
+
   const canSubmit = Boolean(form.country && form.city && form.industry && sourcesReady && options);
+  const canRunScheduled = Boolean(sourcesReady && factoryHealth?.ready);
   const totalPages = Math.max(1, Math.ceil(total / state.limit));
   const hasFilters = Boolean(state.q || statusFilter || hasPlanFilter);
 
@@ -372,16 +415,41 @@ function DiscoveryPageContent() {
         }
       />
 
+      <section
+        aria-label="Scheduled harvest"
+        className="rounded-lg border border-line bg-surface p-4 shadow-panel"
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-ink">Scheduled harvest</h2>
+            <p className="mt-0.5 text-xs text-ink-muted">
+              Factory cadence (every 2h weekdays by default). Runs the next city × industry without
+              picking criteria. Adjust times under Discovery plans.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="primary"
+            className="shrink-0"
+            loading={runNowSubmitting}
+            disabled={!canRunScheduled || runNowSubmitting}
+            onClick={() => void runScheduledNow()}
+          >
+            {runNowSubmitting ? 'Starting…' : 'Run scheduled now'}
+          </Button>
+        </div>
+      </section>
+
       {factoryHealth && !factoryHealth.ready && (
         <div
           role="alert"
           className="rounded-lg border border-warning/30 bg-warning-muted p-4 text-sm text-warning-foreground"
         >
-          <p className="font-medium text-ink">Factory harvest is waiting on Google Places</p>
+          <p className="font-medium text-ink">Factory harvest needs a free channel</p>
           <p className="mt-1">
-            {factoryHealth.checks.find((c) => c.id === 'places')?.reason ??
-              'Add a Google Places API key in Settings.'}{' '}
-            CSE and Reddit are overlays — they do not replace Places for the morning list.
+            OpenStreetMap is enabled by default. Add a Brave Search key and/or Meta token, or upload a CSV.
+            Google Places can wait until billing is restored.
           </p>
           <Link
             href="/settings#settings-credentials"
@@ -389,6 +457,27 @@ function DiscoveryPageContent() {
           >
             Open API credentials
           </Link>
+        </div>
+      )}
+
+      {factoryHealth?.ready &&
+        (factoryHealth.survivalMode || factoryHealth.placesLifecycle === 'dormant') && (
+        <div
+          role="status"
+          className="rounded-lg border border-line bg-surface-raised p-4 text-sm text-ink-muted"
+        >
+          <p className="font-medium text-ink">
+            Plan B harvest active
+            {factoryHealth.placesLifecycle === 'dormant' ? (
+              <span className="ml-2 inline-flex align-middle">
+                <StatusBadge tone="neutral">Places dormant</StatusBadge>
+              </span>
+            ) : null}
+          </p>
+          <p className="mt-1">
+            Google Places is hibernating (not removed) — discovering via OpenStreetMap and other Plan B
+            sources when configured. Reactivate Places when GCP billing is healthy.
+          </p>
         </div>
       )}
 
@@ -400,9 +489,16 @@ function DiscoveryPageContent() {
         onOpenChange={setSourcesOpen}
         trailing={
           <span className="flex flex-wrap items-center gap-2">
+            {factoryHealth?.placesLifecycle === 'dormant' ? (
+              <StatusBadge tone="neutral">Places dormant</StatusBadge>
+            ) : null}
             {factoryHealth ? (
               <StatusBadge tone={factoryHealth.ready ? 'success' : 'warning'}>
-                {factoryHealth.ready ? 'Factory ready' : 'Factory blocked'}
+                {factoryHealth.ready
+                  ? factoryHealth.survivalMode
+                    ? 'Plan B ready'
+                    : 'Factory ready'
+                  : 'Factory blocked'}
               </StatusBadge>
             ) : null}
             {budgetInfo ? (
@@ -416,12 +512,26 @@ function DiscoveryPageContent() {
             {factoryHealth.checks.map((check) => (
               <li key={check.id} className="flex flex-wrap items-center gap-2">
                 <StatusBadge
-                  tone={check.ready ? 'success' : check.required ? 'danger' : 'neutral'}
+                  tone={
+                    check.lifecycle === 'dormant'
+                      ? 'neutral'
+                      : check.ready
+                        ? 'success'
+                        : check.required
+                          ? 'danger'
+                          : 'neutral'
+                  }
                 >
                   {check.label}
                 </StatusBadge>
                 <span className="text-ink-muted">
-                  {check.ready ? 'ready' : check.required ? 'required' : 'optional'}
+                  {check.lifecycle === 'dormant'
+                    ? 'dormant'
+                    : check.ready
+                      ? 'ready'
+                      : check.required
+                        ? 'required'
+                        : 'optional'}
                 </span>
                 {check.reason && (
                   <span className="text-xs text-warning-foreground">({check.reason})</span>
@@ -435,19 +545,23 @@ function DiscoveryPageContent() {
             <li key={s.name} className="flex flex-wrap items-center gap-2">
               <StatusBadge
                 tone={
-                  s.health === 'degraded'
-                    ? 'danger'
-                    : s.configured && s.enabled !== false
-                      ? 'success'
-                      : s.configured
-                        ? 'warning'
-                        : 'neutral'
+                  s.lifecycle === 'dormant'
+                    ? 'neutral'
+                    : s.health === 'degraded'
+                      ? 'danger'
+                      : s.configured && s.enabled !== false
+                        ? 'success'
+                        : s.configured
+                          ? 'warning'
+                          : 'neutral'
                 }
               >
                 {s.label}
               </StatusBadge>
               <span className="text-ink-muted">
-                {!s.configured
+                {s.lifecycle === 'dormant'
+                  ? 'dormant'
+                  : !s.configured
                   ? 'not configured'
                   : s.health === 'degraded'
                     ? 'degraded'
@@ -458,13 +572,35 @@ function DiscoveryPageContent() {
               {s.reason && <span className="text-xs text-warning-foreground">({s.reason})</span>}
             </li>
           ))}
-          {sources.length === 0 && <li className="text-ink-muted">Checking provider status…</li>}
+          {sourcesLoadState === 'loading' && sources.length === 0 && (
+            <li className="text-ink-muted">Checking provider status…</li>
+          )}
+          {sourcesLoadState === 'error' && (
+            <li>
+              <ErrorState
+                title="Provider status unavailable"
+                description={
+                  sourcesLoadError ??
+                  'Could not load discovery sources. Retry, or open Settings → API credentials.'
+                }
+                onRetry={() => void loadSources().catch(() => undefined)}
+              />
+            </li>
+          )}
+          {sourcesLoadState === 'ready' && sources.length === 0 && (
+            <li className="text-ink-muted">
+              No discovery sources listed. Harvest may still run via factory checks above — confirm OSM /
+              Brave / Meta in Settings if yield is zero.
+            </li>
+          )}
         </ul>
         {budgetInfo && (
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-line pt-3 text-xs text-ink-muted sm:grid-cols-3">
             {budgetInfo.providers
               .filter((p) =>
-                ['google_cse', 'bing_search', 'google_places', 'meta_graph'].includes(p.provider),
+                ['google_cse', 'brave_search', 'bing_search', 'google_places', 'meta_graph'].includes(
+                  p.provider,
+                ),
               )
               .map((p) => (
                 <div key={p.provider}>

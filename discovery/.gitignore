@@ -8,3 +8,8 @@ dist
 .DS_Store
 coverage
 storage/uploads
+storage/osm/*.osm.pbf
+storage/osm/*.pbf
+storage/osm/*.ndjson
+storage/osm/*.meta.json
+storage/osm/*.partial

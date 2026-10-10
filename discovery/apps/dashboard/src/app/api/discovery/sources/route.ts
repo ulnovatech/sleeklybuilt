@@ -33,20 +33,31 @@ export async function GET() {
   const budget = await governor.getSummary();
   const places = budget.find((b) => b.provider === 'google_places');
   const cse = budget.find((b) => b.provider === 'google_cse');
+  const brave = budget.find((b) => b.provider === 'brave_search');
   const mode = getAcquisitionModeLabel();
   const searchQueriesPerRun = platformSettings.getRunSearchQueryLimit();
+  const searchBudgetAvailable = !!(cse?.canSpend || brave?.canSpend);
 
   let message: string | undefined;
   if (!factory.ready) {
     message =
-      'Factory harvest needs a Google Places API key. Add it in Settings → API credentials. CSE is optional overlay; Reddit demand is separate.';
+      'No harvest channel ready. OpenStreetMap is on by default — keep OSM_DISCOVERY_ENABLED on, or add Brave Search / Meta / CSV. Google Places stays dormant until billing is restored.';
+  } else if (factory.survivalMode || factory.placesLifecycle === 'dormant') {
+    message =
+      'Google Places is DORMANT (billing/circuit). Harvesting via Plan B: OpenStreetMap (+ Brave public search / Meta / social / CSV when configured). Places code remains for reactivation.';
   } else if (active.length === 0) {
     message =
-      'No discovery sources active. Add Google Places, search credentials (CSE/Bing), Meta Graph token, or a CSV import file.';
-  } else if (mode === 'economy' && !cse?.canSpend && !sources.find((s) => s.name === 'csv_import')?.configured) {
-    message = 'Economy mode: CSE daily budget exhausted. Use CSV import or wait until tomorrow.';
+      'No discovery sources active. Add Google Places, Brave Search (or CSE), Meta Graph token, OSM (default), or a CSV import file.';
+  } else if (
+    mode === 'economy' &&
+    !searchBudgetAvailable &&
+    !sources.find((s) => s.name === 'csv_import')?.configured &&
+    !sources.find((s) => s.name === 'openstreetmap')?.enabled
+  ) {
+    message =
+      'Economy mode: search budget exhausted (Brave/CSE). Use OSM, CSV import, or wait until tomorrow.';
   } else if (places && !places.canSpend && mode !== 'economy') {
-    message = `Google Places monthly budget exhausted (${places.used}/${places.cap}). Public Search and CSV still available.`;
+    message = `Google Places monthly budget exhausted (${places.used}/${places.cap}). OSM, Brave/public search, and CSV still available.`;
   }
 
   return NextResponse.json({

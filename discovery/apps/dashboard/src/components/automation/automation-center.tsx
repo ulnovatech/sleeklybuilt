@@ -44,9 +44,11 @@ type OpsMetrics = {
   demandInboxOpen: number;
 };
 
-function formatTimestamp(value: string | null) {
-  if (!value) return 'No heartbeat recorded';
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+function formatTimestamp(value: string | Date | null | undefined) {
+  if (value == null || value === '') return 'No heartbeat recorded';
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'No heartbeat recorded';
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(parsed);
 }
 
 const SURFACE_ROUTES: Record<string, string> = {

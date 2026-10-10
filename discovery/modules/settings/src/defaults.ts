@@ -73,7 +73,8 @@ export function buildDefaultPlatformSettings(): PlatformSettings {
       caps: {
         google_places: envInt('PLACES_MONTHLY_CAP', 600),
         google_cse: envInt('CSE_DAILY_CAP', 100),
-        bing_search: envInt('BING_DAILY_CAP', 50),
+        brave_search: envInt('BRAVE_DAILY_CAP', 50),
+        bing_search: envInt('BING_DAILY_CAP', 0),
         browser_automation: envInt('BROWSER_DAILY_CAP', 10),
         custom_scrape: envInt('CUSTOM_SCRAPE_DAILY_CAP', 50),
         meta_graph: envInt('META_GRAPH_DAILY_CAP', 50),

@@ -8,8 +8,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "test": "tsx src/__tests__/discovery-stub-guard.test.ts && tsx src/__tests__/parse-search-results.test.ts && tsx src/__tests__/industry-search-terms.test.ts && tsx src/__tests__/search-api-client.test.ts && tsx src/__tests__/search-discover-engine.test.ts && tsx src/__tests__/public-search.test.ts && tsx src/__tests__/places-discover.test.ts && tsx src/__tests__/places-enrichment.test.ts && tsx src/__tests__/prospect-focus.test.ts && tsx src/__tests__/review-pain-signals.test.ts && tsx src/__tests__/reddit-parse.test.ts && tsx src/__tests__/custom-scrape-health.test.ts && tsx src/__tests__/run-yield-metrics.test.ts && tsx src/__tests__/parse-csv.test.ts && tsx src/__tests__/map-csv-row.test.ts && tsx src/__tests__/meta-graph.test.ts && tsx src/__tests__/social-search.test.ts && tsx src/__tests__/discovery-plans.test.ts && tsx src/__tests__/factory-credentials.test.ts && tsx src/__tests__/factory-purify.test.ts && tsx src/__tests__/factory-dumpster.test.ts && tsx src/__tests__/factory-scoreboard.test.ts && tsx src/__tests__/discovery-acceptance.test.ts",
-    "discovery:acceptance": "tsx src/__tests__/discovery-stub-guard.test.ts && tsx src/__tests__/discovery-acceptance.test.ts"
+    "test": "tsx src/__tests__/discovery-stub-guard.test.ts && tsx src/__tests__/parse-search-results.test.ts && tsx src/__tests__/industry-search-terms.test.ts && tsx src/__tests__/search-api-client.test.ts && tsx src/__tests__/search-discover-engine.test.ts && tsx src/__tests__/public-search.test.ts && tsx src/__tests__/places-discover.test.ts && tsx src/__tests__/places-enrichment.test.ts && tsx src/__tests__/prospect-focus.test.ts && tsx src/__tests__/review-pain-signals.test.ts && tsx src/__tests__/reddit-parse.test.ts && tsx src/__tests__/custom-scrape-health.test.ts && tsx src/__tests__/run-yield-metrics.test.ts && tsx src/__tests__/parse-csv.test.ts && tsx src/__tests__/map-csv-row.test.ts && tsx src/__tests__/meta-graph.test.ts && tsx src/__tests__/social-search.test.ts && tsx src/__tests__/discovery-plans.test.ts && tsx src/__tests__/website-class.test.ts && tsx src/__tests__/why-contact.test.ts && tsx src/__tests__/factory-credentials.test.ts && tsx src/__tests__/survival-osm-circuit.test.ts && tsx src/__tests__/geofabrik-index.test.ts && tsx src/__tests__/geofabrik-refresh.test.ts && tsx src/__tests__/format-provider-stats.test.ts && tsx src/__tests__/format-factory-health.test.ts && tsx src/__tests__/osm-geofabrik-fallback.test.ts && tsx src/__tests__/factory-purify.test.ts && tsx src/__tests__/factory-dumpster.test.ts && tsx src/__tests__/factory-scoreboard.test.ts && tsx src/__tests__/discovery-acceptance.test.ts",
+    "discovery:acceptance": "tsx src/__tests__/discovery-stub-guard.test.ts && tsx src/__tests__/discovery-acceptance.test.ts",
+    "discovery:osm-geofabrik": "tsx ../../apps/dashboard/src/scripts/osm-geofabrik-cli.ts"
   },
   "dependencies": {
     "@agency/accounts": "workspace:*",
@@ -20,7 +21,8 @@
     "@agency/scoring": "workspace:^",
     "@agency/settings": "workspace:*",
     "@agency/validation": "workspace:*",
-    "drizzle-orm": "^0.38.3"
+    "drizzle-orm": "^0.38.3",
+    "osm-pbf-parser-node": "^1.1.4"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

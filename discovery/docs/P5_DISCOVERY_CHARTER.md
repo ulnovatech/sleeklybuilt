@@ -17,10 +17,10 @@ Discovery runs must produce **structured, contactable local businesses** — not
 | # | Source | Role | Free method | Paid / fallback |
 |---|--------|------|-------------|-----------------|
 | 1 | **Google Maps** | Primary proactive discovery | Places Text Search fan-out (standard/boost) | Monthly cap via BudgetGovernor |
-| 2 | **Public search** | Secondary seed + social URL discovery | CSE / Bing queries | Bing when CSE daily cap exhausted |
+| 2 | **Public search** | Secondary seed + social URL discovery | Brave / CSE queries | Brave when Places/CSE dormant |
 | 3 | **CSV import** | Operator lists | File on disk / upload | — |
 | 4 | **Meta Facebook / Instagram** | Business page discovery | Graph API (P5-D9) | — |
-| 5 | **TikTok / LinkedIn / X / YouTube** | Social footprint discovery | `site:` public search + crawl (P5-D10) | Browser tier for blocked bios |
+| 5 | **YouTube (factory) / optional TikTok·LinkedIn·X** | Social footprint discovery | `site:` public search + crawl (P5-D10); factory filter `youtube` | Browser tier for blocked bios |
 | 6 | **Reddit** | Demand signals only | Public JSON poll (Tier 5) | — |
 | 7 | **Manual / demand inbox** | Hot demand + paste | Paste, RSS, prospect create | — |
 
@@ -32,8 +32,8 @@ Discovery runs must produce **structured, contactable local businesses** — not
 
 1. **Google Places** — primary fan-out (`GooglePlacesDiscoveryProvider`)
 2. **Public search** — supplemental candidates
-3. **Meta Graph** — Facebook page/place + linked Instagram (`MetaGraphDiscoveryProvider`)
-4. **Social search** — TikTok / LinkedIn / X / YouTube via `site:` queries (`SocialSearchProvider`)
+3. **Meta Graph** — Facebook `/pages/search` + linked Instagram (`MetaGraphDiscoveryProvider`; gated)
+4. **Social search** — YouTube (factory Plan B) or broader platforms via `site:` queries (`SocialSearchProvider`)
 5. **CSV import** — operator file
 
 **Micro / economy:** Places discovery disabled (0 API calls); search + CSV only.

@@ -25,7 +25,11 @@ async function main() {
     console.log(`  ${check.label}: ${flag}${check.reason ? ` — ${check.reason}` : ''}`);
   }
   if (!health.ready) {
-    console.log('Add a Google Places API key in Settings → API credentials, then run pnpm discovery:factory-health.');
+    console.log(
+      'Factory blocked — enable OSM (default) or add Brave Search / Meta token. Places is optional while dormant. Run pnpm discovery:factory-health.',
+    );
+  } else if (health.survivalMode) {
+    console.log(`Plan B survivalMode=yes · Places ${health.placesLifecycle}`);
   }
   await closeDb();
 }

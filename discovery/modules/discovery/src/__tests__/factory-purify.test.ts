@@ -101,6 +101,42 @@ assert(
 
 assert(
   classifyMissReason({
+    phone: '+256700000000',
+    website: 'https://dead.example',
+    metadata: { websiteClass: 'broken', businessStatus: 'OPERATIONAL' },
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: true,
+  }) === null,
+  'broken site stays eligible for keepers',
+);
+
+assert(
+  classifyMissReason({
+    phone: '+256700000000',
+    website: 'https://weak.example',
+    metadata: { websiteClass: 'low_quality', businessStatus: 'OPERATIONAL' },
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: true,
+  }) === null,
+  'low_quality site stays eligible for keepers',
+);
+
+assert(
+  classifyMissReason({
+    phone: '+256700000000',
+    website: 'https://maybe.example',
+    metadata: { websiteClass: 'uncertain', businessStatus: 'OPERATIONAL' },
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: false,
+  }) === null,
+  'uncertain site stays eligible until crawl proves real',
+);
+
+assert(
+  classifyMissReason({
     phone: '  ',
     website: null,
     metadata: { businessStatus: 'OPERATIONAL' },
@@ -134,6 +170,56 @@ assert(
   }) === null,
   'missing businessStatus is treated as operational',
 );
+
+// Plan B-only keepers: phone + greenfield from OSM / Meta / search / YouTube (no Places).
+for (const source of ['openstreetmap', 'facebook', 'public_search', 'social_search'] as const) {
+  assert(
+    classifyMissReason({
+      phone: '+256700111222',
+      website: null,
+      metadata: {
+        businessStatus: 'OPERATIONAL',
+        websiteClass: 'none',
+        discoveryEvidence: {
+          primarySource: source,
+          fields: [{ field: 'phone', source }],
+        },
+      },
+      suppressed: false,
+      hasActiveLead: false,
+      analysisHasWebsite: false,
+    }) === null,
+    `Plan B ${source} phone+greenfield is a keeper`,
+  );
+}
+
+assert(
+  classifyMissReason({
+    phone: null,
+    website: null,
+    metadata: {
+      businessStatus: 'OPERATIONAL',
+      websiteClass: 'none',
+      discoveryEvidence: { primarySource: 'openstreetmap', fields: [{ field: 'name', source: 'openstreetmap' }] },
+    },
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: false,
+  }) === 'no_phone',
+  'bare OSM name without phone is dumped',
+);
+
+const planBKeepers = cutKeepers(
+  [
+    { id: 'osm-phone', rankScore: 40, source: 'openstreetmap' },
+    { id: 'fb-phone', rankScore: 55, source: 'facebook' },
+    { id: 'search-phone', rankScore: 48, source: 'public_search' },
+    { id: 'yt-phone', rankScore: 42, source: 'social_search' },
+  ],
+  100,
+);
+assert(planBKeepers.keepers.length === 4, 'Plan B-only cohort produces keepers');
+assert(planBKeepers.keepers[0]?.id === 'fb-phone', 'highest rankScore leads keepers');
 
 assert(geoTierForCountry('Uganda') === 'core', 'Uganda is core geo');
 assert(geoTierForCountry('Ghana') === 'explore', 'Ghana is explore geo');

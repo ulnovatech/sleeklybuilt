@@ -70,8 +70,11 @@ export const FACTORY_CADENCE: PlanCadence = {
 export const FACTORY_FILTERS: PlanFiltersConfig = {
   presence: 'greenfield',
   requirePhone: true,
-  /** Overlay only if social_search is in sources — factory sources stay Places-only. */
-  socialSearch: 'tiktok',
+  /**
+   * Overlay when social_search is in sources.
+   * Plan B factory ingest is YouTube-only (no TikTok / LinkedIn / X).
+   */
+  socialSearch: 'youtube',
 };
 
 export const FACTORY_CORE_LIMITS: PlanLimitsConfig = {

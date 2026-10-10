@@ -9,7 +9,7 @@ See also: [P5_DISCOVERY_CHARTER.md](P5_DISCOVERY_CHARTER.md) · [ACQUISITION_TIE
 | What | Where |
 |------|--------|
 | **Infrastructure** (database, auth, caps, feature flags) | Single `.env` at **project root** — copy from `.env.example` |
-| **API keys** (Places, CSE, Bing, Meta, etc.) | **Settings → API credentials** in the dashboard (preferred) |
+| **API keys** (Places, CSE, Brave, Meta, etc.) | **Settings → API credentials** in the dashboard (preferred) |
 
 Do **not** duplicate env into `apps/dashboard/.env.local`. The app, worker, and `pnpm db:migrate` all load the root `.env` automatically.
 
@@ -78,9 +78,9 @@ Also enable if prompted:
 
 ### 2.5 Add key in Settings UI (preferred)
 
-Open **Settings → API credentials** → **Google Places API Key (required for factory harvest)** → paste your key → **Save**.
+Open **Settings → API credentials** → **Google Places API Key** (optional while dormant; Plan B uses OSM) → paste your key → **Save**.
 
-Env var `GOOGLE_PLACES_API_KEY` is optional (CI fallback only when Settings is empty). Factory plans will skip (`skipped_credentials`) until this key is present.
+Env var `GOOGLE_PLACES_API_KEY` is optional (CI fallback only when Settings is empty). While Places is dormant, factory harvest continues via OSM / Brave / Meta / CSV — see [PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md).
 
 Check without printing secrets:
 
@@ -88,7 +88,7 @@ Check without printing secrets:
 pnpm discovery:factory-health
 ```
 
-Optional live probe (spends 1 Places Text Search):
+Expect `survivalMode=yes` and `Factory harvest ready: yes` when OSM is on. Optional Places probe (skipped when dormant):
 
 ```powershell
 pnpm discovery:factory-health -- --probe
@@ -107,7 +107,7 @@ pnpm discovery:purify -- --force
 pnpm dev
 ```
 
-Open **Discovery** → **Provider status** — you should see **Factory ready** and **Google Maps / Business listings — ready** when using standard/boost mode. A widget snippet `cse.js?cx=…` is **not** the backend CSE JSON API.
+Open **Discovery** → **Provider status** — expect **Plan B ready** / **Places dormant** while Google billing is down, or **Factory ready** with Maps when Places is active. A widget snippet `cse.js?cx=…` is **not** the backend CSE JSON API.
 
 ### 2.7 Test a run
 
@@ -116,13 +116,13 @@ Open **Discovery** → **Provider status** — you should see **Factory ready** 
 3. Example: Country **Uganda**, City **Kampala**, Industry **Restaurant**
 4. Click **Run Discovery**
 
-Results should include structured businesses: name, phone, website, city, Maps link, rating, review count — with `source=google_maps` on Places-backed rows.
+Results should include structured businesses: name, phone, website, city, rating/source URL — with `source=openstreetmap` (Plan B) or `source=google_maps` when Places is active. Run logs show per-provider totals (`Provider totals: openstreetmap: N, …`).
 
 ---
 
 ## Step 2b: Google Custom Search (optional factory overlay; required for micro/economy)
 
-Public search is an overlay on the same factory segments — not a replacement for Places. In **micro** / `ACQUISITION_MODE=economy`, Places discovery is disabled (0 API calls) — use CSE/Bing + CSV.
+Public search is an overlay on the same factory segments — not a replacement for Places. In **micro** / `ACQUISITION_MODE=economy`, Places discovery is disabled (0 API calls) — use Brave/CSE + CSV.
 
 The Programmable Search **website widget** (`cse.js?cx=…`) is not the JSON API. Factory overlay needs **both** a Custom Search **API key** and the engine **CX**. CX alone is stored but search stays off until the key is saved.
 
@@ -142,9 +142,15 @@ GOOGLE_CSE_CX=your_cx_id
 
 For economy-only operation add `ACQUISITION_MODE=economy`.
 
-Free tier: **100 search queries/day** (tracked in budget governor as `google_cse`).
+Free tier: **100 search queries/day** (tracked in budget governor as `google_cse`). While Google billing is suspended, CSE is dormant with Places — use Brave instead.
 
-Optional fallback: [Bing Web Search API](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) → `BING_SEARCH_KEY`
+### Plan B: Brave Search (recommended when Google is dormant)
+
+1. Create a key at [Brave Search API](https://api-dashboard.search.brave.com/)
+2. **Settings → API credentials** → **Brave Search API Key** → Save
+3. Optional env: `BRAVE_SEARCH_API_KEY` · daily cap `BRAVE_DAILY_CAP` (default 50)
+
+Bing Web Search API was retired Aug 2025. Legacy Bing remains dead-code-gated behind `BING_SEARCH_LEGACY_ENABLED=true` + `BING_SEARCH_KEY` — prefer Brave.
 
 ---
 
@@ -168,18 +174,22 @@ name,industry,website,phone,email,city,country,source_url,google_maps_url,facebo
 
 ## Step 3a: Meta Graph API (Facebook + Instagram discovery)
 
-Optional supplemental discovery via Meta Graph API page and place search.
+Optional Plan B supplemental discovery via **Pages Search** (`GET /{version}/pages/search`). Deprecated Graph `/search?type=page|place` is not used.
 
 1. Create a [Meta Developer](https://developers.facebook.com/) app
-2. Add **Facebook Login** or use a **System User** token with Page search permissions
-3. Generate a long-lived access token with `pages_read_engagement` (and related Page permissions per your app review status)
+2. Request **Page Public Metadata Access** / **Page Public Content Access** (App Review) for Pages Search
+3. Generate a long-lived user or system-user token with the approved permissions
 4. **Settings → API credentials** → **Meta Graph API Token** → Save
+5. Probe capability: `pnpm discovery:meta-probe` (or `pnpm discovery:meta-probe --q="restaurant Kampala"`)
 
-Optional env fallback: `META_GRAPH_API_TOKEN`
+Optional env:
 
-**Endpoints used:** `GET /search?type=page` and `GET /search?type=place` on Graph API v21.0.
+- `META_GRAPH_API_TOKEN` — token fallback
+- `META_PAGES_SEARCH_READY=true|false` — force GREEN/RED after manual verification (prefer live probe)
 
-Without a token, the Meta provider is omitted from the registry (not shown as ready). Auth or rate-limit errors are logged; other discovery sources continue.
+**Endpoint:** `GET /v21.0/pages/search` — Facebook pages; linked `instagram_business_account` emits a separate Instagram row when present.
+
+Without a token or with a RED gate, Meta is omitted from configured providers. Other sources (OSM, search, CSV) continue.
 
 ---
 
@@ -195,6 +205,36 @@ Poll via **Add demand** or `pnpm custom-scrape:poll`. Shown on Discovery → Sou
 
 ---
 
+## Step 3c: Geofabrik Uganda OSM extract (Plan B backbone)
+
+Local named-POI index so Kampala runs do not depend on Overpass availability.
+
+1. Refresh extract + build index (**weekly** — index older than 7 days is reported stale by `pnpm discovery:factory-health`):
+
+```
+pnpm discovery:osm-geofabrik
+```
+
+Optional: `--status`, `--download-only`, `--index-only`, `--probe` (Restaurant @ Kampala sample).
+
+Suggested worker-host cron (Sunday 03:00 Africa/Kampala):
+
+```
+0 3 * * 0  cd /path/to/discovery && pnpm discovery:osm-geofabrik
+```
+
+2. Default paths (override with `OSM_PBF_PATH`):
+
+```
+storage/osm/uganda-latest.osm.pbf
+storage/osm/uganda-pois.ndjson
+storage/osm/uganda-pois.meta.json
+```
+
+Source: [Geofabrik Uganda](https://download.geofabrik.de/africa/uganda.html) (ODbL). Discover prefers the local index; falls back to Overpass + Nominatim when the index is missing, the extract returns no hits (ways not in the node index), or `OSM_FORCE_OVERPASS=true`.
+
+---
+
 ## Wired sources (Discovery → Sources panel)
 
 Only **implemented** providers appear here. Missing credentials = not shown as ready.
@@ -202,13 +242,14 @@ Only **implemented** providers appear here. Missing credentials = not shown as r
 | Source | Role | Profile / mode | Credentials |
 |--------|------|----------------|-------------|
 | **Google Maps** | Primary discovery + verify | standard, boost | Settings → Google Places API Key |
-| **Public search** | Supplemental discovery | all (when configured) | Settings → CSE and/or Bing keys |
+| **OpenStreetMap** | Plan B structured POIs | all (default on) | Geofabrik extract (`pnpm discovery:osm-geofabrik`) or Overpass fallback |
+| **Public search** | Supplemental discovery | all (when configured) | Settings → Brave and/or CSE keys |
 | **Meta Graph** | Facebook + Instagram business discovery | all (when configured) | Settings → Meta Graph API Token |
-| **Social search** | TikTok / LinkedIn / X / YouTube profiles | all (when CSE/Bing configured) | Same keys as public search |
+| **Social search** | YouTube (factory) / optional TikTok·LinkedIn·X | all (when Brave/CSE configured) | Same keys as public search; factory filter = `youtube` |
 | **CSV import** | Operator list | all (when valid file uploaded) | Upload on Discovery or `storage/imports/businesses.csv` |
 | **Reddit demand** | Demand signals | opt-in | `CUSTOM_SCRAPE_ENABLED=true` |
 
-**Discover stage order (standard/boost):** Places → public search → Meta Graph → social search → CSV.
+**Discover stage order (standard/boost):** Places (if active) → OSM → public search → Meta Graph → social search → CSV.
 
 ---
 
@@ -256,8 +297,8 @@ Set on Vercel:
 
 | Error | Fix |
 |-------|-----|
-| No discovery sources configured | Add `GOOGLE_PLACES_API_KEY`, CSE/Bing keys, or CSV file |
-| Factory harvest blocked / skipped_credentials | Paste a Places API (New) key in Settings → API credentials; run `pnpm discovery:factory-health` |
+| No discovery sources configured | Add `GOOGLE_PLACES_API_KEY`, Brave/CSE keys, or CSV file |
+| Factory harvest blocked / skipped_credentials | Run `pnpm discovery:factory-health` — enable OSM (default) or add Brave/Meta; CSV alone does not mark factory ready; Places is optional while dormant |
 | CSE shows CX but not ready | Add Custom Search **API key** (widget `cx=` is not enough) |
 | Run stuck on pending | Start `pnpm jobs:worker` |
 | Google Places API error 403 | Enable Places API (New), check billing, check key restrictions |
@@ -281,13 +322,13 @@ Set on Vercel:
 
 - [ ] PostgreSQL running, `pnpm db:migrate` succeeded
 - [ ] Root `.env` has `DATABASE_URL` (single file — no `apps/dashboard/.env.local`)
-- [ ] Places API (New) enabled in Google Cloud
-- [ ] Billing linked on Google Cloud
-- [ ] **Settings → API credentials** — Places key saved
-- [ ] `pnpm discovery:factory-health` prints Factory harvest ready: yes
+- [ ] `pnpm discovery:osm-geofabrik` (or accept Overpass fallback)
+- [ ] `pnpm discovery:factory-health` → ready yes · survivalMode when Places dormant
+- [ ] Optional: Brave Search key and/or Meta token (`pnpm discovery:meta-probe`)
+- [ ] Optional: Places API (New) when billing is restored
 - [ ] `pnpm jobs:worker` running (seeds factory plans on startup)
 - [ ] Discovery → Plans shows Factory A (core) and Factory B (explore)
-- [ ] Discovery → Provider status shows **Factory ready** and Google Maps **ready** (standard mode)
-- [ ] Test **standard** run returns Places-backed businesses with Maps links
+- [ ] Discovery → Provider status shows **Plan B ready** (or Factory ready when Places active)
+- [ ] Test **standard** Kampala run returns Plan B businesses; logs show provider totals
 
-When all boxes are checked, the system is running on **real discovery data**.
+When all boxes are checked, the system is running on **real discovery data**. See [PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md).

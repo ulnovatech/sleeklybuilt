@@ -2,7 +2,9 @@ import { AccountRepository } from '@agency/accounts';
 import { getDb, businesses, leadScores } from '@agency/database';
 import { logger, mapWithConcurrency, pipelineConcurrency } from '@agency/config';
 import { platformSettings } from '@agency/settings';
+import { attachDiscoveryEvidence, mergeAccountMetadata } from '@agency/validation';
 import { and, desc, eq, gte } from 'drizzle-orm';
+import { getPlacesLifecycle } from '../google-circuit';
 import { profileToMode, type RunProfile } from '../../lib/run-profile';
 import { DiscoveryRepository } from '../../repository';
 import { shouldSpendPlacesLookup } from '../../places-refresh';
@@ -19,6 +21,9 @@ export interface DetailsEnrichResult {
   skippedCache: number;
   capped: number;
   enrichedBusinessIds: string[];
+  /** True when Places enrich intentionally no-ops (dormant / economy / unconfigured). */
+  skipped?: boolean;
+  reason?: 'places_dormant' | 'economy_mode' | 'places_unconfigured';
 }
 
 export class GooglePlacesDetailsProvider {
@@ -30,14 +35,43 @@ export class GooglePlacesDetailsProvider {
   }
 
   async enrichTopScoredForRun(runId: string): Promise<DetailsEnrichResult> {
+    // Dormant first — no settings/DB/API (Plan B Chunk 08).
+    if (getPlacesLifecycle() === 'dormant') {
+      return {
+        attempted: 0,
+        enriched: 0,
+        skippedCache: 0,
+        capped: 0,
+        enrichedBusinessIds: [],
+        skipped: true,
+        reason: 'places_dormant',
+      };
+    }
+
     await platformSettings.ensureLoaded();
     const run = await this.repo.getRun(runId);
     const mode = profileToMode((run?.runProfile as RunProfile) ?? 'standard');
     if (mode === 'economy') {
-      return { attempted: 0, enriched: 0, skippedCache: 0, capped: 0, enrichedBusinessIds: [] };
+      return {
+        attempted: 0,
+        enriched: 0,
+        skippedCache: 0,
+        capped: 0,
+        enrichedBusinessIds: [],
+        skipped: true,
+        reason: 'economy_mode',
+      };
     }
     if (!(await this.isConfigured())) {
-      return { attempted: 0, enriched: 0, skippedCache: 0, capped: 0, enrichedBusinessIds: [] };
+      return {
+        attempted: 0,
+        enriched: 0,
+        skippedCache: 0,
+        capped: 0,
+        enrichedBusinessIds: [],
+        skipped: true,
+        reason: 'places_unconfigured',
+      };
     }
 
     const { detailsTopN, detailsMinScore } = platformSettings.getPlacesRunSettings();
@@ -87,13 +121,40 @@ export class GooglePlacesDetailsProvider {
       const reviewSnippets = extractReviewSnippets(reviewRecords);
       const businessSignals = buildBusinessSignalsFromReviews(reviewRecords);
 
-      await this.repo.updateBusiness(business.id, {
-        phone: business.phone || details.nationalPhoneNumber || details.internationalPhoneNumber || null,
-        website: business.website || details.websiteUri || null,
-        rating: business.rating ?? details.rating ?? null,
-        reviewCount: business.reviewCount ?? details.userRatingCount ?? null,
-        googleMapsUrl: business.googleMapsUrl || details.googleMapsUri || null,
-        metadata: {
+      const phone =
+        business.phone || details.nationalPhoneNumber || details.internationalPhoneNumber || null;
+      const website = business.website || details.websiteUri || null;
+      const googleMapsUrl = business.googleMapsUrl || details.googleMapsUri || null;
+      const placesEvidence = attachDiscoveryEvidence(
+        {
+          name: business.name,
+          source: 'google_maps' as const,
+          sourceUrl: details.googleMapsUri ?? undefined,
+          externalId: placesId.startsWith('places/') ? placesId : `places/${placesId}`,
+          phone: details.nationalPhoneNumber || details.internationalPhoneNumber || undefined,
+          website: details.websiteUri || undefined,
+          googleMapsUrl: details.googleMapsUri || undefined,
+        },
+        {
+          phone: {
+            method: 'places.details.phone',
+            backend: 'places_details',
+            confidence: 'high',
+          },
+          website: {
+            method: 'places.details.websiteUri',
+            backend: 'places_details',
+            confidence: 'high',
+          },
+          googleMapsUrl: {
+            method: 'places.details.googleMapsUri',
+            backend: 'places_details',
+            confidence: 'high',
+          },
+        },
+      );
+      const metadata = mergeAccountMetadata(
+        {
           ...(business.metadata as Record<string, unknown> | null),
           placesId,
           placesDetailsAt: new Date().toISOString(),
@@ -103,24 +164,29 @@ export class GooglePlacesDetailsProvider {
           reviewPainKeywords: businessSignals.painKeywords,
           leadScoreAtEnrich: score,
         },
+        placesEvidence.metadata,
+        { phone, website },
+      );
+
+      await this.repo.updateBusiness(business.id, {
+        phone,
+        website,
+        rating: business.rating ?? details.rating ?? null,
+        reviewCount: business.reviewCount ?? details.userRatingCount ?? null,
+        googleMapsUrl,
+        metadata,
       });
 
       if (business.accountId) {
         const accountRepo = new AccountRepository();
-        const phone =
-          business.phone || details.nationalPhoneNumber || details.internationalPhoneNumber || null;
         await accountRepo.update(business.accountId, {
           phone: phone ?? undefined,
-          website: business.website || details.websiteUri || undefined,
+          website: website ?? undefined,
           rating: business.rating ?? details.rating ?? undefined,
           reviewCount: business.reviewCount ?? details.userRatingCount ?? undefined,
-          googleMapsUrl: business.googleMapsUrl || details.googleMapsUri || undefined,
+          googleMapsUrl: googleMapsUrl ?? undefined,
           lastPlacesFetchAt: new Date(),
-          metadata: {
-            ...(business.metadata as Record<string, unknown> | null),
-            placesId,
-            placesDetailsAt: new Date().toISOString(),
-          },
+          metadata: metadata ?? undefined,
         });
       }
 

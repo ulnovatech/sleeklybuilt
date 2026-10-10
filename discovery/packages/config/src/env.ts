@@ -20,10 +20,14 @@ const envSchema = z.object({
   GOOGLE_PLACES_API_KEY: z.string().optional(),
   GOOGLE_CSE_API_KEY: z.string().optional(),
   GOOGLE_CSE_CX: z.string().optional(),
+  BRAVE_SEARCH_API_KEY: z.string().optional(),
   BING_SEARCH_KEY: z.string().optional(),
+  /** Opt-in only — Bing Web Search API retired Aug 2025; prefer Brave. */
+  BING_SEARCH_LEGACY_ENABLED: z.string().optional(),
   /** Budget caps — Chunk C1 acquisition control */
   PLACES_MONTHLY_CAP: z.string().optional(),
   CSE_DAILY_CAP: z.string().optional(),
+  BRAVE_DAILY_CAP: z.string().optional(),
   BING_DAILY_CAP: z.string().optional(),
   BROWSER_DAILY_CAP: z.string().optional(),
   CUSTOM_SCRAPE_DAILY_CAP: z.string().optional(),
@@ -36,6 +40,12 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === 'true'),
+  OSM_DISCOVERY_ENABLED: z.string().optional(),
+  OSM_USER_AGENT: z.string().optional(),
+  OVERPASS_URL: z.string().optional(),
+  OSM_PBF_PATH: z.string().optional(),
+  OSM_GEOFABRIK_URL: z.string().optional(),
+  OSM_FORCE_OVERPASS: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

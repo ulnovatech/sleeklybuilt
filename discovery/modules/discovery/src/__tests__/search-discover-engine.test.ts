@@ -43,6 +43,7 @@ class MockSearchClient {
     return {
       items: this.responder(query),
       cseCalls: 1,
+      braveCalls: 0,
       bingCalls: 0,
       budgetExhausted: false,
       errors: [] as SearchApiCallError[],

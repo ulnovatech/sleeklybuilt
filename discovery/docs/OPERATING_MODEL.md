@@ -49,8 +49,8 @@ For each account, the system tries tiers in order (see [ACQUISITION_TIERS.md](AC
 **Phase 5 pipeline additions (standard/boost):**
 
 - **`bi_enrich`** — builds Business Intelligence profile (footprint, infrastructure audit, completeness) before scoring signals
-- **`places_enrich`** — fetches Google review text for top scorers; patches BI `businessSignals` and emits `review_pain` intent signals post-score (reviews are not available earlier in the pipeline)
-- **Meta Graph + social search** — secondary discover providers after Places and public search (share CSE/Bing and Meta daily caps)
+- **`places_enrich`** — fetches Google review text for top scorers; patches BI `businessSignals` and emits `review_pain` intent signals post-score (reviews are not available earlier in the pipeline). When Places is **dormant**, the stage no-ops cleanly (`skipped: places_dormant`) with no API/rescore/BOI fan-out
+- **Meta Graph + social search** — secondary discover providers after Places and public search (share Brave/CSE and Meta daily caps)
 
 ---
 
@@ -60,7 +60,7 @@ For each account, the system tries tiers in order (see [ACQUISITION_TIERS.md](AC
 
 1. Open **Today** (Ops) — KPIs, demand backlog, opportunities queue, pursuit funnel.
 2. Open **Settings** → confirm acquisition mode and review **V1 KPI targets** (read-only).
-3. Check **Discovery → Sources** for budget remaining (Places monthly, CSE/Bing daily).
+3. Check **Discovery → Sources** for budget remaining (Places monthly, Brave/CSE daily).
 4. Ensure **job worker** is running locally or on your worker host:
    ```bash
    pnpm jobs:worker
@@ -130,12 +130,19 @@ Live values for these KPIs will appear on the **Ops** dashboard (Phase 2 R7). Un
 
 ---
 
-## Survival mode ($0 cash)
+## Survival / Plan B mode (Places dormant)
 
-1. Set `ACQUISITION_MODE=economy` or use **micro** run profile.
-2. Rely on CSV import + Google CSE free tier (100 queries/day).
-3. Disable `BROWSER_AUTOMATION_ENABLED` and `CUSTOM_SCRAPE_ENABLED`.
-4. Crawl remains on — no direct cash cost; respect rate limits.
+When Google Places is dormant (`GOOGLE_ACQUISITION_DISABLED` or billing circuit), factory harvest continues without a Places key:
+
+1. **OSM / Geofabrik** — default backbone (`pnpm discovery:osm-geofabrik` weekly). Overpass fallback if index missing.
+2. **Brave Search** (optional) — public web + YouTube `site:` yield; prefer over CSE while Google is suspended.
+3. **Meta Pages Search** (optional) — Facebook/Instagram when `pnpm discovery:meta-probe` is green.
+4. **CSV** — resilience upload. Disable browser automation / custom scrape unless needed.
+5. Verify with `pnpm discovery:factory-health` (expect `survivalMode=yes`).
+
+Weekday ops, refresh cron, and failure cheat sheet: **[PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md)**.
+
+Legacy micro/economy tip: `ACQUISITION_MODE=economy` still disables Places discover spend; Plan B sources remain available.
 
 ---
 

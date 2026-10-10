@@ -27,7 +27,7 @@ export function getRunSearchQueryLimit(mode = getAcquisitionMode()): number {
   return platformSettings.getRunSearchQueryLimit(mode);
 }
 
-/** CSE/Bing result pages fetched per query (10 results per page). */
+/** CSE/Brave result pages fetched per query (10 results per page). */
 export function getSearchPagesPerQuery(mode = getAcquisitionMode()): number {
   if (mode === 'economy') return 1;
   if (mode === 'boost') return 3;

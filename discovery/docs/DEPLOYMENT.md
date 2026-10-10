@@ -2,7 +2,8 @@
 
 Target stack: **Vercel Hobby** (dashboard) + **Neon free tier** (Postgres).
 
-**Daily operations:** [docs/OPERATING_MODEL.md](OPERATING_MODEL.md) — worker requirement, cadence, KPI targets, outreach rules.
+**Daily operations:** [docs/OPERATING_MODEL.md](OPERATING_MODEL.md) — worker requirement, cadence, KPI targets, outreach rules.  
+**Plan B (Places dormant):** [docs/PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md) — factory-health, Geofabrik weekly refresh, Brave/Meta, provider log totals.
 
 ## Prerequisites
 
@@ -34,7 +35,8 @@ Target stack: **Vercel Hobby** (dashboard) + **Neon free tier** (Postgres).
 |----------|---------|-------|
 | `PLACES_MONTHLY_CAP` | `600` | Alert when approaching limit |
 | `CSE_DAILY_CAP` | `100` | |
-| `BING_DAILY_CAP` | `50` | |
+| `BRAVE_DAILY_CAP` | `50` | Plan B public search |
+| `BING_DAILY_CAP` | `0` | Legacy only (`BING_SEARCH_LEGACY_ENABLED`) |
 | `META_GRAPH_DAILY_CAP` | `50` | Meta Graph page/place search (Phase 5) |
 | `BROWSER_DAILY_CAP` | `10` | Tier 4 |
 | `CUSTOM_SCRAPE_DAILY_CAP` | `50` | Tier 5 |
@@ -63,7 +65,7 @@ Do not create `apps/dashboard/.env.local`.
 | Credential | Purpose |
 |------------|---------|
 | Google Places API key | Primary discovery + verify + top-N details |
-| Google CSE and/or Bing | Public search + social `site:` queries |
+| Brave Search and/or Google CSE | Public search + social `site:` queries |
 | Meta Graph API token | Facebook page/place + Instagram discovery (optional) |
 
 ## Post-deploy checklist (Phase 5)
@@ -71,15 +73,16 @@ Do not create `apps/dashboard/.env.local`.
 After migrate + env vars on Vercel and worker host:
 
 1. `pnpm db:migrate` and `pnpm db:seed-settings` (if fresh DB)
-2. **Settings** — enter Places key, CSE/Bing, optional Meta token; confirm acquisition mode
-3. Start background worker: `pnpm jobs:worker` (same `DATABASE_URL` as dashboard)
-4. Run acceptance harness:
+2. **Settings** — Brave Search key and/or Meta token; Places key optional while dormant; confirm acquisition mode
+3. Geofabrik extract on worker host: `pnpm discovery:osm-geofabrik` (schedule weekly — see runbook)
+4. Start background worker: `pnpm jobs:worker` (same `DATABASE_URL` as dashboard)
+5. `pnpm discovery:factory-health` — expect ready yes · Plan B survivalMode when Places dormant
+6. Run acceptance harness:
    ```bash
    pnpm discovery:acceptance
    ```
-5. Smoke test: start one **micro** discovery run (no Places spend), confirm run completes on Discovery detail page
-6. Promote to **standard** run in a known city/industry; verify yield stats and review queue populate
-7. Confirm **Discovery → Sources** budget panel shows remaining quota for Places, CSE/Bing, Meta Graph
+7. Smoke test: Kampala **standard** run; confirm discover logs `Provider totals:` and Why contact on run detail
+8. Confirm **Discovery → Sources** budget panel shows Brave/CSE/Meta remaining (Places may show dormant)
 
 Without step 3, runs stay `pending`/`running` indefinitely. Without step 4, stub or pipeline regressions may reach production undetected.
 
@@ -136,13 +139,15 @@ Without step 3, runs stay `pending`/`running` indefinitely. Without step 4, stub
 
    - `pnpm intent:rss-poll` — calls IntentService directly (no HTTP auth)
    - `pnpm custom-scrape:poll` — custom scrape poll CLI
+   - `pnpm discovery:osm-geofabrik` — **weekly** Geofabrik Uganda extract (`0 3 * * 0` Africa/Kampala)
+   - `pnpm discovery:factory-health` — Plan B readiness (no secrets printed)
 
 ## Budget alerts (required operational practice)
 
 Monitor daily via **Discovery → Sources** budget panel and `/api/acquisition/budget`:
 
 - **Google Places** monthly cap — primary cost driver
-- **CSE / Bing** daily caps — search tier
+- **Brave / CSE** daily caps — search tier
 - **browser_automation** / **custom_scrape** — surgical tiers
 
 When `remaining === 0`, discovery degrades gracefully (economy fallbacks, CSV import). Do not raise caps without reviewing spend.

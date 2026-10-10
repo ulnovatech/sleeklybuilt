@@ -1,6 +1,7 @@
 import { countryToIso2 } from '@agency/geo';
 import { logger, mapWithConcurrency, pipelineConcurrency } from '@agency/config';
 import { platformSettings } from '@agency/settings';
+import { attachDiscoveryEvidence, mergeAccountMetadata } from '@agency/validation';
 import { shouldSpendPlacesLookup } from '../../places-refresh';
 import type { DiscoveredBusiness, DiscoverySearchParams } from '../types';
 import { PlacesApiClient } from './places-client';
@@ -28,21 +29,57 @@ function mergePlaceIntoCandidate(
   place: PlacesTextSearchResult,
 ): DiscoveredBusiness {
   const placesId = place.id;
+  const phone = candidate.phone || place.nationalPhoneNumber || undefined;
+  const website = candidate.website || place.websiteUri || undefined;
+  const googleMapsUrl = candidate.googleMapsUrl || place.googleMapsUri;
+  const placesAttribution = attachDiscoveryEvidence(
+    {
+      name: candidate.name,
+      source: 'google_maps' as const,
+      sourceUrl: place.googleMapsUri,
+      externalId: place.id.startsWith('places/') ? place.id : `places/${place.id}`,
+      phone: place.nationalPhoneNumber || undefined,
+      website: place.websiteUri || undefined,
+      googleMapsUrl: place.googleMapsUri,
+    },
+    {
+      phone: {
+        method: 'places.verify.nationalPhoneNumber',
+        backend: 'places_text_search',
+        confidence: 'high',
+      },
+      website: {
+        method: 'places.verify.websiteUri',
+        backend: 'places_text_search',
+        confidence: 'high',
+      },
+      googleMapsUrl: {
+        method: 'places.verify.googleMapsUri',
+        backend: 'places_text_search',
+        confidence: 'high',
+      },
+    },
+  );
+
   return {
     ...candidate,
-    phone: candidate.phone || place.nationalPhoneNumber || undefined,
-    website: candidate.website || place.websiteUri || undefined,
+    phone,
+    website,
     city: candidate.city || parseCityFromComponents(place.addressComponents),
-    googleMapsUrl: candidate.googleMapsUrl || place.googleMapsUri,
+    googleMapsUrl,
     rating: candidate.rating ?? place.rating,
     reviewCount: candidate.reviewCount ?? place.userRatingCount,
-    metadata: {
-      ...candidate.metadata,
-      formattedAddress: place.formattedAddress,
-      businessStatus: place.businessStatus,
-      placesId,
-      placesVerified: true,
-    },
+    metadata: mergeAccountMetadata(
+      {
+        ...(candidate.metadata ?? {}),
+        formattedAddress: place.formattedAddress,
+        businessStatus: place.businessStatus,
+        placesId,
+        placesVerified: true,
+      },
+      placesAttribution.metadata,
+      { phone, website },
+    ) ?? undefined,
   };
 }
 

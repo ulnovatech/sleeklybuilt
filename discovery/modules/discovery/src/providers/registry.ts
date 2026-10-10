@@ -6,12 +6,21 @@ import { PublicSearchProvider } from './public-search';
 import { GooglePlacesDiscoveryProvider } from './places/places-discover';
 import { GooglePlacesVerifyProvider } from './places/places-verify';
 import { MetaGraphDiscoveryProvider } from './meta/meta-graph-provider';
+import { evaluateMetaPagesSearchCapability } from './meta/meta-pages-search-gate';
 import { SocialSearchProvider } from './social/social-search-provider';
+import { OsmDiscoveryProvider } from './osm/osm-discover';
+import { geofabrikIndexReady } from './osm/geofabrik-paths';
 import { getAcquisitionMode, googleMapsEnabledInMode } from '../lib/run-profile';
 import { classifyCseCredential } from '../plans/factory-credentials';
+import {
+  getPlacesLifecycle,
+  googleCircuitReason,
+  isGoogleCircuitOpen,
+} from './google-circuit';
 import type { DiscoveryProvider } from './types';
 
 const placesDiscover = new GooglePlacesDiscoveryProvider();
+const osmDiscover = new OsmDiscoveryProvider();
 const csvProvider = new CsvImportProvider();
 const searchProvider = new PublicSearchProvider();
 const metaProvider = new MetaGraphDiscoveryProvider();
@@ -24,11 +33,12 @@ async function isProviderConfigured(provider: DiscoveryProvider): Promise<boolea
 
 /**
  * Discover-stage providers in priority order:
- * 1. Google Places (standard/boost only)
- * 2. Public search
- * 3. Meta Graph (Facebook + Instagram)
- * 4. Social search (TikTok / LinkedIn / X / YouTube)
- * 5. CSV import
+ * 1. Google Places (standard/boost only, when circuit closed)
+ * 2. OpenStreetMap (free Places stand-in)
+ * 3. Public search (Brave / CSE)
+ * 4. Meta Graph
+ * 5. Social search
+ * 6. CSV import
  */
 export async function getConfiguredDiscoveryProviders(
   mode = getAcquisitionMode(),
@@ -40,6 +50,7 @@ export async function getConfiguredDiscoveryProviders(
   if (googleMapsEnabledInMode(mode) && (await isProviderConfigured(placesDiscover))) {
     ordered.push(placesDiscover);
   }
+  if (await isProviderConfigured(osmDiscover)) ordered.push(osmDiscover);
   if (await isProviderConfigured(searchProvider)) ordered.push(searchProvider);
   if (await isProviderConfigured(metaProvider)) ordered.push(metaProvider);
   if (await isProviderConfigured(socialProvider)) ordered.push(socialProvider);
@@ -57,6 +68,7 @@ export async function getDiscoveryProviderStatus(): Promise<
     configured: boolean;
     enabled: boolean;
     reason?: string;
+    lifecycle?: 'active' | 'dormant';
   }>
 > {
   await platformSettings.ensureLoaded();
@@ -64,42 +76,87 @@ export async function getDiscoveryProviderStatus(): Promise<
   const mode = getAcquisitionMode();
   const mapsAllowed = googleMapsEnabledInMode(mode);
   const placesConfigured = await placesVerify.isConfigured();
+  const placesLifecycle = getPlacesLifecycle();
+  const placesDormant = placesLifecycle === 'dormant';
 
   const statuses = [];
 
   statuses.push({
     name: 'google_maps',
     label: placesDiscover.label,
-    configured: placesConfigured,
-    enabled: placesConfigured && mapsAllowed,
-    reason:
-      placesConfigured && !mapsAllowed
+    configured: placesConfigured && !placesDormant,
+    enabled: placesConfigured && mapsAllowed && !placesDormant,
+    lifecycle: placesLifecycle,
+    reason: placesDormant
+      ? googleCircuitReason('places') ??
+        'DORMANT — Places provider preserved; Plan B harvests until billing is restored'
+      : placesConfigured && !mapsAllowed
         ? `Disabled in ${mode} mode — use standard or boost for Places discovery`
         : placesConfigured && mapsAllowed
-          ? 'Factory required — primary harvest + verify'
-          : 'Required for factory harvest — add Google Places API key in Settings',
+          ? 'ACTIVE — primary harvest when billing is healthy'
+          : 'Optional when OSM/search/Meta/CSV are ready — add Places key when billing works',
+  });
+
+  const osmConfigured = await osmDiscover.isConfigured();
+  const extractReady = geofabrikIndexReady();
+  statuses.push({
+    name: 'openstreetmap',
+    label: osmDiscover.label,
+    configured: osmConfigured,
+    enabled: osmConfigured,
+    reason: !osmConfigured
+      ? 'Set OSM_DISCOVERY_ENABLED=true (default) or unset disable flag'
+      : extractReady
+        ? 'Geofabrik Uganda POI index — $0 local extract (Overpass if extract empty)'
+        : 'Overpass + Nominatim fallback — run pnpm discovery:osm-geofabrik for local extract',
   });
 
   const cseStatus = classifyCseCredential(
     platformSettings.getCredential('google_cse_api_key'),
     platformSettings.getCredential('google_cse_cx'),
   );
+  const cseCircuit = isGoogleCircuitOpen('cse');
 
+  // Public search (Brave / CSE); Meta Pages Search; social site: via same search engines
   for (const p of [searchProvider, metaProvider, socialProvider]) {
     const configured = await isProviderConfigured(p);
+    let reason: string | undefined;
+    if (
+      p === searchProvider &&
+      cseCircuit &&
+      !platformSettings.getCredential('brave_search_key') &&
+      !(
+        (process.env.BING_SEARCH_LEGACY_ENABLED?.trim().toLowerCase() === 'true' ||
+          process.env.BING_SEARCH_LEGACY_ENABLED?.trim() === '1') &&
+        platformSettings.getCredential('bing_search_key')
+      )
+    ) {
+      reason =
+        googleCircuitReason('cse') ??
+        'Google CSE circuit open — add Brave Search key for public search without Google';
+    } else if (p === metaProvider) {
+      const gate = evaluateMetaPagesSearchCapability();
+      reason = configured
+        ? 'Facebook /pages/search (App Review required); linked Instagram when available'
+        : gate.reason;
+    } else if (p === socialProvider && configured) {
+      reason =
+        'site: social profiles via Brave/CSE — factory Plan B is YouTube-only; other platforms when plan filter allows';
+    } else if (p === searchProvider && configured) {
+      reason = platformSettings.getCredential('brave_search_key')
+        ? 'Brave Search (+ CSE when Google circuit closed)'
+        : 'Public web search via configured engines';
+    } else if (p === searchProvider && !configured) {
+      reason = cseCircuit
+        ? 'Add Brave Search API key (Settings) — CSE dormant with Places'
+        : cseStatus.reason;
+    }
     statuses.push({
       name: p.name,
       label: p.label,
       configured,
       enabled: configured,
-      reason:
-        p === metaProvider && configured
-          ? 'Facebook page + place search; linked Instagram profiles when available'
-          : p === socialProvider && configured
-            ? 'TikTok, LinkedIn, X, YouTube via CSE/Bing site: queries (shares search budget)'
-            : p === searchProvider && !configured
-              ? cseStatus.reason
-              : undefined,
+      reason,
     });
   }
 
@@ -123,4 +180,4 @@ export function getAcquisitionModeLabel(): string {
   return getAcquisitionMode();
 }
 
-export { placesDiscover, placesVerify };
+export { placesDiscover, placesVerify, osmDiscover };

@@ -3,9 +3,11 @@ import { BudgetGovernor } from '@agency/acquisition';
 import { discoverProviderTimeoutMs, logger, withTimeout } from '@agency/config';
 import { isTestFixtureCountry } from '@agency/database';
 import { platformSettings } from '@agency/settings';
+import { mergeAccountMetadata } from '@agency/validation';
 import { DiscoveryRepository } from './repository';
 import { classifyDiscoveryState } from './lib/discovery-state';
 import { ensureDiscoverySettings, profileToMode, type RunProfile } from './lib/run-profile';
+import { isGoogleCircuitOpen } from './providers/google-circuit';
 import { getConfiguredDiscoveryProviders } from './providers/registry';
 import { placesIdFromExternalId } from './providers/places/place-to-candidate';
 import { GooglePlacesVerifyProvider } from './providers/places/places-verify';
@@ -249,21 +251,31 @@ export class DiscoveryService {
 
       if (hasSearch) {
         const cseRemaining = await governor.getRemaining('google_cse');
+        const braveRemaining = await governor.getRemaining('brave_search');
         const bingRemaining = await governor.getRemaining('bing_search');
         const hasCse = !!(
           platformSettings.getCredential('google_cse_api_key') &&
-          platformSettings.getCredential('google_cse_cx')
+          platformSettings.getCredential('google_cse_cx') &&
+          !isGoogleCircuitOpen('cse')
         );
-        const hasBing = !!platformSettings.getCredential('bing_search_key');
+        const hasBrave = !!platformSettings.getCredential('brave_search_key')?.trim();
+        const hasBing =
+          (process.env.BING_SEARCH_LEGACY_ENABLED?.trim().toLowerCase() === 'true' ||
+            process.env.BING_SEARCH_LEGACY_ENABLED?.trim() === '1') &&
+          !!platformSettings.getCredential('bing_search_key')?.trim();
 
-        if (hasCse && cseRemaining <= 0 && (!hasBing || bingRemaining <= 0)) {
+        const anySearchBudget =
+          (hasCse && cseRemaining > 0) ||
+          (hasBrave && braveRemaining > 0) ||
+          (hasBing && bingRemaining > 0);
+
+        if ((hasCse || hasBrave || hasBing) && !anySearchBudget) {
           throw new Error(
-            'Google Custom Search daily budget is exhausted. Raise CSE_DAILY_CAP in Settings or retry tomorrow.',
-          );
-        }
-        if (hasBing && bingRemaining <= 0 && (!hasCse || cseRemaining <= 0)) {
-          throw new Error(
-            'Bing Search daily budget is exhausted. Raise BING_DAILY_CAP in Settings or retry tomorrow.',
+            hasBrave
+              ? 'Brave Search daily budget is exhausted. Raise BRAVE_DAILY_CAP in Settings or retry tomorrow.'
+              : hasCse
+                ? 'Google Custom Search daily budget is exhausted. Raise CSE_DAILY_CAP in Settings or retry tomorrow.'
+                : 'Search daily budget is exhausted. Raise BRAVE_DAILY_CAP in Settings or retry tomorrow.',
           );
         }
       }
@@ -348,7 +360,23 @@ export class DiscoveryService {
       else if (discoveryState === 'known_fresh') knownFresh++;
       else knownStale++;
 
-      resolved.push({ ...item, accountId: account.id, discoveryState });
+      // Persist resolve-merged provenance (incl. conflicts) on the run business row
+      // so operators see it on discovery run detail without opening account JSON.
+      const mergedMeta = mergeAccountMetadata(
+        item.metadata,
+        (account.metadata as Record<string, unknown> | null) ?? undefined,
+        {
+          phone: account.phone,
+          website: account.website,
+          email: account.email,
+        },
+      );
+      resolved.push({
+        ...item,
+        accountId: account.id,
+        discoveryState,
+        metadata: mergedMeta ?? item.metadata,
+      });
     }
 
     if (resolved.length === 0) {

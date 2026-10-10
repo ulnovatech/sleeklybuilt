@@ -2,7 +2,9 @@ import type { DiscoveryRunStats } from '@agency/discovery';
 
 const SOURCE_LABELS: Record<string, string> = {
   google_maps: 'Google Maps',
+  openstreetmap: 'OpenStreetMap',
   public_search: 'Public search',
+  social_search: 'Social search (YouTube)',
   csv_import: 'CSV import',
   facebook: 'Facebook',
   instagram: 'Instagram',

@@ -107,7 +107,7 @@ export class OpsMetricsService {
             (${prospectVerifiedSql}) AS verified,
             ROW_NUMBER() OVER (
               PARTITION BY a.id
-              ORDER BY COALESCE(ls.score, 0) DESC NULLS LAST
+              ORDER BY COALESCE(ls.score::int, 0) DESC NULLS LAST
             ) AS rn
           FROM businesses b
           INNER JOIN accounts a ON b.account_id = a.id
@@ -225,14 +225,16 @@ export class OpsMetricsService {
     outreachReady: number;
     failedJobs: number;
   }> {
+    // Bind ISO strings — postgres-js rejects Date via Buffer.from in some paths.
+    const sinceIso = since.toISOString();
     const [qualifiedRow, plansRow, outreachRow, failedRow] = await Promise.all([
       db.execute<{ count: string }>(sql`
         SELECT COUNT(DISTINCT b.id)::text AS count
         FROM businesses b
         INNER JOIN lead_scores ls ON ls.business_id = b.id
         INNER JOIN accounts a ON a.id = b.account_id
-        WHERE ls.score >= ${minScore}
-          AND COALESCE(ls.computed_at, b.created_at) >= ${since}
+        WHERE ls.score::int >= ${minScore}
+          AND COALESCE(ls.computed_at, b.created_at) >= ${sinceIso}::timestamptz
           AND a.suppressed = false
           AND NOT EXISTS (SELECT 1 FROM leads l WHERE l.account_id = a.id)
       `),
@@ -241,7 +243,7 @@ export class OpsMetricsService {
         FROM discovery_runs
         WHERE plan_id IS NOT NULL
           AND status = 'completed'
-          AND COALESCE(completed_at, created_at) >= ${since}
+          AND COALESCE(completed_at, created_at) >= ${sinceIso}::timestamptz
           AND id != ${DEMAND_INGEST_RUN_ID}
       `),
       db.execute<{ count: string }>(sql`
@@ -251,7 +253,7 @@ export class OpsMetricsService {
             COALESCE(ls.reachability, 'none') AS reachability,
             ROW_NUMBER() OVER (
               PARTITION BY a.id
-              ORDER BY COALESCE(ls.score, 0) DESC NULLS LAST
+              ORDER BY COALESCE(ls.score, 0)::int DESC NULLS LAST
             ) AS rn
           FROM businesses b
           INNER JOIN accounts a ON b.account_id = a.id
@@ -273,7 +275,7 @@ export class OpsMetricsService {
         SELECT COUNT(*)::text AS count
         FROM acquisition_jobs
         WHERE status = 'failed'
-          AND updated_at >= ${since}
+          AND updated_at >= ${sinceIso}::timestamptz
       `),
     ]);
 

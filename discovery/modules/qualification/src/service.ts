@@ -1,12 +1,17 @@
 import { AccountService } from '@agency/accounts';
 import { getDb, leads } from '@agency/database';
-import { DiscoveryRepository } from '@agency/discovery';
+import {
+  countsAsOwnedWebsiteForScoring,
+  DiscoveryRepository,
+  resolveWebsiteClass,
+} from '@agency/discovery';
 import { IntentService } from '@agency/intent';
 import { IntelligenceService, screenWhatsAppNumber } from '@agency/intelligence';
 import {
   buildWebsiteOpportunityBrief,
   biScoringInputFromProfile,
   computeLeadScore,
+  countCorroboratingSources,
   deriveAcquisitionLane,
   deriveBiScoringHints,
   deriveOpportunityBrief,
@@ -20,6 +25,7 @@ import {
 } from '@agency/scoring';
 import type { BusinessIntelligenceProfile } from '@agency/intelligence';
 import { platformSettings } from '@agency/settings';
+import { readDiscoveryEvidence } from '@agency/validation';
 import { mapWithConcurrency, pipelineConcurrency } from '@agency/config';
 import { eq } from 'drizzle-orm';
 import { QualificationRepository } from './repository';
@@ -92,9 +98,26 @@ export class QualificationService {
       suppressed = suppressed || (await this.accountService.isSuppressed(account));
     }
 
-    const hasWebsite = biContext
-      ? hasRealWebsite(biContext.biInput)
-      : (analysis?.hasWebsite ?? !!business.website);
+    const mergedMetadata = {
+      ...((business.metadata as Record<string, unknown> | null) ?? {}),
+      ...((account?.metadata as Record<string, unknown> | null) ?? {}),
+    };
+    const websiteClass = resolveWebsiteClass({
+      website: business.website,
+      metadata: mergedMetadata,
+    });
+    // Only crawl-proven healthy owned sites count — broken/low_quality/uncertain stay greenfield-scored.
+    const hasWebsite = countsAsOwnedWebsiteForScoring(websiteClass)
+      ? biContext
+        ? hasRealWebsite(biContext.biInput)
+        : (analysis?.hasWebsite ?? !!business.website)
+      : false;
+
+    const evidence = readDiscoveryEvidence(mergedMetadata);
+    const corroboratingSourceCount = countCorroboratingSources({
+      primarySource: business.source,
+      evidenceFields: evidence?.fields,
+    });
 
     const settings = await platformSettings.ensureLoaded();
     const icp = settings.qualification.icp;
@@ -131,6 +154,7 @@ export class QualificationService {
       demandWeightMultiplier: icp.demandWeightMultiplier,
       bi: biContext?.biInput,
       segmentOutcomes: segment.adjustment || undefined,
+      corroboratingSourceCount,
     });
 
     return this.repo.upsertScore({

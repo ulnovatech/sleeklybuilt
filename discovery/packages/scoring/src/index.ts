@@ -1,4 +1,5 @@
 import { applyBiScoringFactors, deriveBiScoringHints, type BiScoringInput } from './bi-scoring';
+import { corroborationBonus } from './corroboration';
 
 export type Reachability = 'high' | 'medium' | 'low' | 'none';
 
@@ -52,6 +53,11 @@ export interface ScoringInput {
    * Positive = segment wins above baseline.
    */
   segmentOutcomes?: number;
+  /**
+   * Distinct discovery sources that corroborated identity/contact (Plan B).
+   * Applied as capped multiSourceCorroboration bonus (+3 at 2, +5 at 3+).
+   */
+  corroboratingSourceCount?: number;
 }
 
 export interface ScoringResult {
@@ -130,6 +136,11 @@ export function computeLeadScore(input: ScoringInput): ScoringResult {
     factors.segmentOutcomes = input.segmentOutcomes;
   }
 
+  const corroboration = corroborationBonus(input.corroboratingSourceCount ?? 0);
+  if (corroboration > 0) {
+    factors.multiSourceCorroboration = corroboration;
+  }
+
   const raw = Object.values(factors).reduce((a, b) => a + b, 0);
   const score = Math.max(0, Math.min(100, raw));
   const reachability = computeReachability({
@@ -156,6 +167,16 @@ export {
 export type { BiScoringHints, BiScoringInput } from './bi-scoring';
 export { deriveAcquisitionLane } from './acquisition-lane';
 export type { AcquisitionLane } from './acquisition-lane';
+export {
+  CORROBORATION_BONUS_CAP,
+  CORROBORATION_BONUS_THREE_PLUS,
+  CORROBORATION_BONUS_TWO,
+  CORROBORATION_EVIDENCE_FIELDS,
+  corroborationBonus,
+  countCorroboratingSources,
+  countDistinctSources,
+} from './corroboration';
+export type { CorroborationEvidenceField } from './corroboration';
 
 export {
   buildWebsiteOpportunityBrief,

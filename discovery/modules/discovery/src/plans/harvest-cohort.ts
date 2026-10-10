@@ -56,7 +56,7 @@ export function resolveMorningPath(plan: {
     parsed.success && parsed.data.socialSearch
       ? parsed.data.socialSearch
       : factory
-        ? 'tiktok'
+        ? 'youtube'
         : 'all';
   return {
     dropRealWebsites: factory || presence === 'greenfield',

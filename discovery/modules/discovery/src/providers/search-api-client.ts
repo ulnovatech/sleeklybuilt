@@ -2,21 +2,71 @@ import { BudgetGovernor } from '@agency/acquisition';
 import { logger } from '@agency/config';
 import { countryToIso2 } from '@agency/geo';
 import { platformSettings } from '@agency/settings';
+import {
+  isGoogleCircuitOpen,
+  isGoogleConsumerSuspendedError,
+  tripGoogleCircuit,
+} from './google-circuit';
 import type { SearchResultItem } from './parse-search-results';
 import {
   parseBingSearchErrorBody,
+  parseBraveSearchErrorBody,
   parseGoogleSearchErrorBody,
   SearchApiError,
+  type SearchEngineId,
 } from './search-api-error';
 
 const CSE_URL = 'https://www.googleapis.com/customsearch/v1';
+const BRAVE_URL = 'https://api.search.brave.com/res/v1/web/search';
 const BING_URL = 'https://api.bing.microsoft.com/v7.0/search';
 export const SEARCH_RESULTS_PER_PAGE = 10;
+
+/** Brave `country` codes that accept a 2-letter filter (UG → ALL). */
+const BRAVE_COUNTRY_CODES = new Set([
+  'AR',
+  'AU',
+  'AT',
+  'BE',
+  'BR',
+  'CA',
+  'CL',
+  'DK',
+  'FI',
+  'FR',
+  'DE',
+  'GR',
+  'HK',
+  'IN',
+  'ID',
+  'IT',
+  'JP',
+  'KR',
+  'MY',
+  'MX',
+  'NL',
+  'NZ',
+  'NO',
+  'CN',
+  'PL',
+  'PT',
+  'PH',
+  'RU',
+  'SA',
+  'ZA',
+  'ES',
+  'SE',
+  'CH',
+  'TW',
+  'TR',
+  'GB',
+  'US',
+  'ALL',
+]);
 
 export type SearchEngineOperation = 'search' | 'social_search';
 
 export type SearchApiCallError = {
-  engine: 'google_cse' | 'bing_search';
+  engine: SearchEngineId;
   query: string;
   status: number;
   message: string;
@@ -25,12 +75,13 @@ export type SearchApiCallError = {
 export type SearchQueryResult = {
   items: SearchResultItem[];
   cseCalls: number;
+  braveCalls: number;
   bingCalls: number;
   budgetExhausted: boolean;
   errors: SearchApiCallError[];
 };
 
-/** Normalize URL for deduplication across CSE and Bing results. */
+/** Normalize URL for deduplication across CSE / Brave / Bing results. */
 export function normalizeSearchUrl(link: string): string {
   try {
     const u = new URL(link.trim());
@@ -60,6 +111,20 @@ export function mergeSearchResults(...lists: SearchResultItem[][]): SearchResult
   }
 
   return merged;
+}
+
+export function braveCountryForIso2(iso2: string | undefined): string | undefined {
+  if (!iso2) return undefined;
+  const upper = iso2.toUpperCase();
+  if (BRAVE_COUNTRY_CODES.has(upper)) return upper;
+  // Uganda and other markets not in Brave's country enum → unscoped web results
+  return 'ALL';
+}
+
+/** Bing Web Search API retired Aug 2025 — only call when explicitly re-enabled. */
+export function isLegacyBingEnabled(): boolean {
+  const v = process.env.BING_SEARCH_LEGACY_ENABLED?.trim().toLowerCase();
+  return v === '1' || v === 'true' || v === 'yes';
 }
 
 function bingMarketForCountry(iso2: string | undefined): { mkt: string; cc?: string } {
@@ -93,6 +158,7 @@ export class SearchApiClient {
   constructor(
     private readonly options: {
       cseOperation?: SearchEngineOperation;
+      braveOperation?: SearchEngineOperation;
       bingOperation?: SearchEngineOperation;
       logContext?: string;
     } = {},
@@ -103,18 +169,23 @@ export class SearchApiClient {
   }
 
   hasCse(): boolean {
+    if (isGoogleCircuitOpen('cse')) return false;
     return !!(
       platformSettings.getCredential('google_cse_api_key') &&
       platformSettings.getCredential('google_cse_cx')
     );
   }
 
+  hasBrave(): boolean {
+    return !!platformSettings.getCredential('brave_search_key')?.trim();
+  }
+
   hasBing(): boolean {
-    return !!platformSettings.getCredential('bing_search_key');
+    return isLegacyBingEnabled() && !!platformSettings.getCredential('bing_search_key')?.trim();
   }
 
   isConfigured(): boolean {
-    return this.hasCse() || this.hasBing();
+    return this.hasCse() || this.hasBrave() || this.hasBing();
   }
 
   async searchQuery(
@@ -124,8 +195,10 @@ export class SearchApiClient {
     const iso2 = countryToIso2(opts.country);
     const errors: SearchApiCallError[] = [];
     let cseItems: SearchResultItem[] = [];
+    let braveItems: SearchResultItem[] = [];
     let bingItems: SearchResultItem[] = [];
     let cseCalls = 0;
+    let braveCalls = 0;
     let bingCalls = 0;
     let budgetExhausted = false;
 
@@ -137,6 +210,14 @@ export class SearchApiClient {
       errors.push(...cse.errors);
     }
 
+    if (this.hasBrave()) {
+      const brave = await this.fetchBravePages(query, opts.maxPages, iso2);
+      braveItems = brave.items;
+      braveCalls = brave.apiCalls;
+      budgetExhausted = budgetExhausted || brave.budgetExhausted;
+      errors.push(...brave.errors);
+    }
+
     if (this.hasBing()) {
       const bing = await this.fetchBingPages(query, opts.maxPages, iso2);
       bingItems = bing.items;
@@ -145,7 +226,7 @@ export class SearchApiClient {
       errors.push(...bing.errors);
     }
 
-    const items = mergeSearchResults(cseItems, bingItems);
+    const items = mergeSearchResults(cseItems, braveItems, bingItems);
 
     if (items.length === 0 && errors.length > 0 && this.isConfigured()) {
       const hard = errors.find((e) => e.status === 401 || e.status === 403);
@@ -154,7 +235,7 @@ export class SearchApiClient {
       }
     }
 
-    return { items, cseCalls, bingCalls, budgetExhausted, errors };
+    return { items, cseCalls, braveCalls, bingCalls, budgetExhausted, errors };
   }
 
   private async fetchCsePages(
@@ -228,6 +309,12 @@ export class SearchApiClient {
         reason,
         err: message.slice(0, 200),
       });
+      if (isGoogleConsumerSuspendedError(res.status, reason, message)) {
+        tripGoogleCircuit(
+          'cse',
+          `CSE suspended (${reason ?? res.status}): ${message.slice(0, 120)}`,
+        );
+      }
       return {
         items: [],
         error: { engine: 'google_cse', status: res.status, message },
@@ -253,6 +340,106 @@ export class SearchApiClient {
     };
   }
 
+  private async fetchBravePages(
+    query: string,
+    maxPages: number,
+    iso2: string | undefined,
+  ): Promise<{
+    items: SearchResultItem[];
+    apiCalls: number;
+    budgetExhausted: boolean;
+    errors: SearchApiCallError[];
+  }> {
+    const items: SearchResultItem[] = [];
+    const errors: SearchApiCallError[] = [];
+    let apiCalls = 0;
+    let budgetExhausted = false;
+    const country = braveCountryForIso2(iso2);
+
+    for (let page = 0; page < maxPages; page++) {
+      if (!(await this.governor.canSpend('brave_search', 1))) {
+        logger.info('Brave Search daily budget exhausted', { context: this.logContext });
+        budgetExhausted = true;
+        break;
+      }
+
+      // Brave offset is page index (0–9), not result offset
+      const pageResult = await this.fetchBravePage(query, page, country);
+      apiCalls++;
+
+      if (pageResult.error) {
+        errors.push({ ...pageResult.error, query });
+        break;
+      }
+
+      if (pageResult.items.length === 0) break;
+      items.push(...pageResult.items);
+      if (pageResult.items.length < SEARCH_RESULTS_PER_PAGE) break;
+    }
+
+    return { items, apiCalls, budgetExhausted, errors };
+  }
+
+  private async fetchBravePage(
+    query: string,
+    pageOffset: number,
+    country: string | undefined,
+  ): Promise<{
+    items: SearchResultItem[];
+    error?: Omit<SearchApiCallError, 'query'>;
+  }> {
+    const params = new URLSearchParams({
+      q: query,
+      count: String(SEARCH_RESULTS_PER_PAGE),
+      offset: String(Math.min(9, Math.max(0, pageOffset))),
+      search_lang: 'en',
+      result_filter: 'web',
+    });
+    if (country) params.set('country', country);
+
+    const res = await fetch(`${BRAVE_URL}?${params.toString()}`, {
+      headers: {
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip',
+        'X-Subscription-Token': platformSettings.getCredential('brave_search_key')!,
+      },
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      const { message, reason } = parseBraveSearchErrorBody(errText);
+      logger.warn('Brave Search request failed', {
+        context: this.logContext,
+        status: res.status,
+        reason,
+        err: message.slice(0, 200),
+      });
+      return {
+        items: [],
+        error: { engine: 'brave_search', status: res.status, message },
+      };
+    }
+
+    await this.governor.recordSpend({
+      provider: 'brave_search',
+      operation: this.options.braveOperation ?? this.options.bingOperation ?? 'search',
+      units: 1,
+    });
+
+    const data = (await res.json()) as {
+      web?: { results?: Array<{ title?: string; url?: string; description?: string }> };
+    };
+
+    return {
+      items: (data.web?.results ?? []).map((i) => ({
+        title: i.title ?? '',
+        link: i.url ?? '',
+        snippet: i.description,
+      })),
+    };
+  }
+
+  /** @deprecated Bing Web Search API retired — gated by BING_SEARCH_LEGACY_ENABLED. */
   private async fetchBingPages(
     query: string,
     maxPages: number,

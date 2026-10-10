@@ -32,7 +32,7 @@ export type PlanTargetsConfig = {
   keywords?: string[];
 };
 
-export type PlanSocialSearch = 'off' | 'tiktok' | 'all';
+export type PlanSocialSearch = 'off' | 'tiktok' | 'youtube' | 'all';
 
 export type PlanFiltersConfig = {
   presence?: 'greenfield' | 'redesign' | 'any';
@@ -41,7 +41,7 @@ export type PlanFiltersConfig = {
   minReviews?: number;
   requirePhone?: boolean;
   requireEmail?: boolean;
-  /** Factory default tiktok. Off skips social_search even if listed in sources. */
+  /** Factory Plan B default: youtube. Off skips social_search even if listed in sources. */
   socialSearch?: PlanSocialSearch;
 };
 

@@ -1,14 +1,11 @@
+export type SearchEngineId = 'google_cse' | 'brave_search' | 'bing_search';
+
 export class SearchApiError extends Error {
   readonly status: number;
-  readonly engine: 'google_cse' | 'bing_search';
+  readonly engine: SearchEngineId;
   readonly reason?: string;
 
-  constructor(
-    engine: 'google_cse' | 'bing_search',
-    status: number,
-    message: string,
-    reason?: string,
-  ) {
+  constructor(engine: SearchEngineId, status: number, message: string, reason?: string) {
     super(formatSearchApiMessage(engine, status, message, reason));
     this.name = 'SearchApiError';
     this.engine = engine;
@@ -18,26 +15,34 @@ export class SearchApiError extends Error {
 }
 
 export class SearchBudgetExhaustedError extends Error {
-  readonly provider: 'google_cse' | 'bing_search';
+  readonly provider: SearchEngineId;
 
-  constructor(provider: 'google_cse' | 'bing_search') {
+  constructor(provider: SearchEngineId) {
     super(
       provider === 'google_cse'
         ? 'Google Custom Search daily budget is exhausted. Raise CSE_DAILY_CAP in Settings or retry tomorrow.'
-        : 'Bing Search daily budget is exhausted. Raise BING_DAILY_CAP in Settings or retry tomorrow.',
+        : provider === 'brave_search'
+          ? 'Brave Search daily budget is exhausted. Raise BRAVE_DAILY_CAP in Settings or retry tomorrow.'
+          : 'Bing Search daily budget is exhausted. Raise BING_DAILY_CAP in Settings or retry tomorrow.',
     );
     this.name = 'SearchBudgetExhaustedError';
     this.provider = provider;
   }
 }
 
+function engineLabel(engine: SearchEngineId): string {
+  if (engine === 'google_cse') return 'Google Custom Search';
+  if (engine === 'brave_search') return 'Brave Search';
+  return 'Bing Search';
+}
+
 function formatSearchApiMessage(
-  engine: 'google_cse' | 'bing_search',
+  engine: SearchEngineId,
   status: number,
   message: string,
   reason?: string,
 ): string {
-  const label = engine === 'google_cse' ? 'Google Custom Search' : 'Bing Search';
+  const label = engineLabel(engine);
 
   if (
     engine === 'google_cse' &&
@@ -48,13 +53,13 @@ function formatSearchApiMessage(
   }
 
   if (status === 403) {
-    return `${label} denied the request (403). Verify API key, Custom Search Engine ID (cx), and that the Custom Search API is enabled. Original: ${message}`;
+    return `${label} denied the request (403). Verify API key and product access. Original: ${message}`;
   }
   if (status === 401) {
     return `${label} key is invalid or unauthorized (401): ${message}`;
   }
   if (status === 429) {
-    return `${label} rate limited (429). Retry later or add another key. Original: ${message}`;
+    return `${label} rate limited (429). Retry later or raise the daily cap. Original: ${message}`;
   }
   return `${label} error (${status}): ${message}`;
 }
@@ -87,6 +92,30 @@ export function parseBingSearchErrorBody(errText: string): { message: string; re
     };
     const message = parsed.error?.message?.trim() || parsed.message?.trim() || errText.slice(0, 300);
     const reason = parsed.error?.code;
+    return { message, reason };
+  } catch {
+    return { message: errText.slice(0, 300) };
+  }
+}
+
+export function parseBraveSearchErrorBody(errText: string): { message: string; reason?: string } {
+  try {
+    const parsed = JSON.parse(errText) as {
+      error?: { code?: string | number; message?: string; detail?: string; meta?: { errors?: string[] } };
+      message?: string;
+      type?: string;
+    };
+    const metaErr = parsed.error?.meta?.errors?.[0];
+    const message =
+      parsed.error?.message?.trim() ||
+      parsed.error?.detail?.trim() ||
+      metaErr?.trim() ||
+      parsed.message?.trim() ||
+      errText.slice(0, 300);
+    const reason =
+      parsed.error?.code != null
+        ? String(parsed.error.code)
+        : parsed.type?.trim() || undefined;
     return { message, reason };
   } catch {
     return { message: errText.slice(0, 300) };

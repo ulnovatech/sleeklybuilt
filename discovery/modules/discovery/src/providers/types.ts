@@ -1,5 +1,6 @@
 export type DiscoverySource =
   | 'google_maps'
+  | 'openstreetmap'
   | 'public_search'
   | 'social_search'
   | 'facebook'
@@ -37,8 +38,8 @@ export interface DiscoverySearchParams {
   prospectFocus?: boolean;
   /** Morning path: skip owned websites at ingest (keep none + link-in-bio). */
   dropRealWebsites?: boolean;
-  /** Restrict social `site:` queries. Default all platforms. */
-  socialSearch?: 'off' | 'tiktok' | 'all';
+  /** Restrict social `site:` queries. Default all platforms. Factory Plan B uses youtube. */
+  socialSearch?: 'off' | 'tiktok' | 'youtube' | 'all';
 }
 
 export interface DiscoveryProvider {

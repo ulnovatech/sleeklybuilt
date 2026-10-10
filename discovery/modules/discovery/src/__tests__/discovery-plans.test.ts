@@ -108,7 +108,7 @@ assert(
 );
 assert(FACTORY_FILTERS.presence === 'greenfield', 'factory is greenfield');
 assert(FACTORY_FILTERS.requirePhone === true, 'factory requires phone');
-assert(FACTORY_FILTERS.socialSearch === 'tiktok', 'factory social overlay is TikTok-only');
+assert(FACTORY_FILTERS.socialSearch === 'youtube', 'factory social overlay is YouTube-only');
 assert(FACTORY_CORE_LIMITS.maxRunsPerDay === 12, 'core 12 runs/day');
 assert(FACTORY_EXPLORE_LIMITS.maxRunsPerDay === 2, 'explore 2 runs/day');
 
@@ -149,12 +149,23 @@ assert(
 // --- F1 harvest hygiene ---
 assert(classifyWebsiteClass(undefined) === 'none', 'no website is none');
 assert(classifyWebsiteClass('https://linktr.ee/shop') === 'link_in_bio', 'link-in-bio class');
-assert(classifyWebsiteClass('https://joekitchen.example') === 'real', 'owned site is real');
+assert(
+  classifyWebsiteClass('https://joekitchen.example') === 'uncertain',
+  'uncrawled owned site is uncertain until crawl',
+);
 assert(keepOnMorningPath({ website: undefined }), 'morning path keeps no website');
 assert(keepOnMorningPath({ website: 'https://linktr.ee/shop' }), 'morning path keeps link-in-bio');
 assert(
+  keepOnMorningPath({ website: 'https://joekitchen.example' }),
+  'morning path keeps uncrawled URL as uncertain',
+);
+assert(
   !keepOnMorningPath({ website: 'https://joekitchen.example', metadata: { websiteClass: 'real' } }),
-  'morning path drops owned website',
+  'morning path drops crawl-proven owned website',
+);
+assert(
+  keepOnMorningPath({ website: 'https://dead.example', metadata: { websiteClass: 'broken' } }),
+  'morning path keeps broken site',
 );
 
 assert(isExploreFloorSlot(0), 'first tick is explore');
@@ -174,8 +185,19 @@ const factoryMorning = resolveMorningPath({
   sources: ['google_maps'],
 });
 assert(factoryMorning.dropRealWebsites, 'factory morning path drops real websites');
-assert(factoryMorning.socialSearch === 'tiktok', 'factory social policy is tiktok');
-assert(factoryMorning.sources?.join(',') === 'google_maps', 'factory sources stay Places-only');
+assert(factoryMorning.socialSearch === 'youtube', 'factory social policy is YouTube-only');
+assert(factoryMorning.sources?.join(',') === 'google_maps', 'resolveMorningPath preserves plan sources');
+
+const survivalMorning = resolveMorningPath({
+  templateKey: FACTORY_CORE_TEMPLATE_KEY,
+  planType: 'discovery',
+  filters: FACTORY_FILTERS,
+  sources: ['openstreetmap', 'public_search'],
+});
+assert(
+  survivalMorning.sources?.includes('openstreetmap'),
+  'survival morning path keeps openstreetmap source',
+);
 
 const monitorPath = resolveMorningPath({
   templateKey: FACTORY_CORE_TEMPLATE_KEY,

@@ -6,13 +6,18 @@ import {
   computeNextRunAt,
   computeSkipHoursNextRunAt,
 } from './cadence';
+import { isPlacesHarvestReady } from './factory-credentials';
 import { DiscoveryPlanService } from './plan-service';
 import type { PlanEventType } from './types';
 
-const SOURCE_TO_BUDGET: Record<string, Array<'google_places' | 'google_cse' | 'bing_search' | 'meta_graph'>> = {
+const SOURCE_TO_BUDGET: Record<
+  string,
+  Array<'google_places' | 'google_cse' | 'brave_search' | 'bing_search' | 'meta_graph'>
+> = {
   google_maps: ['google_places'],
-  public_search: ['google_cse', 'bing_search'],
-  social_search: ['google_cse', 'bing_search'],
+  openstreetmap: [],
+  public_search: ['google_cse', 'brave_search', 'bing_search'],
+  social_search: ['google_cse', 'brave_search', 'bing_search'],
   facebook: ['meta_graph'],
   csv_import: [],
 };
@@ -97,13 +102,21 @@ export async function tickDiscoveryPlans(
     if (plan.planType !== 'monitor') {
       await platformSettings.ensureLoaded();
       const sources = Array.isArray(plan.sources) ? plan.sources : [];
-      if (sources.includes('google_maps') && !platformSettings.isPlacesConfigured()) {
-        await skip(
-          'skipped_credentials',
-          'Google Places API key missing — required for factory harvest. Add it in Settings → API credentials.',
-          computeNextRunAt(now, cadence),
-        );
-        continue;
+      const placesReady = isPlacesHarvestReady();
+      if (sources.includes('google_maps') && !placesReady) {
+        const fallbacks = sources.filter((s) => String(s) !== 'google_maps');
+        if (fallbacks.length === 0) {
+          await skip(
+            'skipped_credentials',
+            'Google Places unavailable (billing/circuit) and plan has no survival sources (OSM/search/Meta/CSV). Re-seed factory plans or add openstreetmap.',
+            computeNextRunAt(now, cadence),
+          );
+          continue;
+        }
+        logger.info('Plan continuing on survival sources — Places down', {
+          planId: plan.id,
+          fallbacks,
+        });
       }
       const budgetBlocked: string[] = [];
       for (const source of sources) {

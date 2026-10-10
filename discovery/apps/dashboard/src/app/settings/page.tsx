@@ -502,7 +502,8 @@ export default function SettingsPage() {
               [
                 ['google_places', 'Google Places (monthly)'],
                 ['google_cse', 'Google CSE (daily)'],
-                ['bing_search', 'Bing Search (daily)'],
+                ['brave_search', 'Brave Search (daily)'],
+                ['bing_search', 'Bing Search legacy (daily)'],
                 ['browser_automation', 'Browser automation (daily)'],
                 ['custom_scrape', 'Custom scrape (daily)'],
                 ['meta_graph', 'Meta Graph (daily)'],
@@ -850,9 +851,10 @@ export default function SettingsPage() {
         <section id="settings-credentials" className="scroll-mt-16 bg-white border border-slate-200 rounded-lg p-4 space-y-4">
           <h3 className="font-semibold text-slate-900">API credentials</h3>
           <p className="text-sm text-slate-600">
-            Factory harvest needs a Google Places key. CSE is optional overlay. Reddit demand uses{' '}
-            <code className="text-xs">CUSTOM_SCRAPE_ENABLED</code>. Leave blank to keep existing
-            stored values. Pitch keys are also on Channel pitches.
+            While Places is dormant, factory harvest uses OpenStreetMap plus optional Brave Search
+            (Plan B public/social search). CSE is optional when Google billing is healthy. Reddit
+            demand uses <code className="text-xs">CUSTOM_SCRAPE_ENABLED</code>. Leave blank to keep
+            existing stored values. Pitch keys are also on Channel pitches.
           </p>
           {credentials
             .filter(

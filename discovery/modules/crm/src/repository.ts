@@ -4,6 +4,7 @@ import {
   leads,
   leadNotes,
   leadActivities,
+  leadScores,
   businesses,
   factoryCohortMembers,
   factoryCohorts,
@@ -35,6 +36,8 @@ export type LeadListRow = {
     recommendedChannel: string | null;
     memberId: string;
   };
+  /** Present on Pitch today (and when joined) for why-contact parity with run detail. */
+  scoreFactors?: Record<string, number> | null;
 };
 
 export type ListLeadsPagedInput = CrmLeadsListQuery & {
@@ -146,6 +149,7 @@ export class CrmRepository {
           factoryRank: factoryCohortMembers.rank,
           recommendedChannel: factoryCohortMembers.recommendedChannel,
           memberId: factoryCohortMembers.id,
+          scoreFactors: leadScores.factors,
         })
         .from(leads)
         .innerJoin(businesses, eq(leads.businessId, businesses.id))
@@ -161,6 +165,7 @@ export class CrmRepository {
             eq(factoryCohorts.sellDate, sellDate),
           ),
         )
+        .leftJoin(leadScores, eq(leadScores.businessId, businesses.id))
         .where(where)
         .orderBy(...orderBy)
         .limit(limit)
@@ -174,6 +179,7 @@ export class CrmRepository {
           recommendedChannel: row.recommendedChannel,
           memberId: row.memberId,
         },
+        scoreFactors: (row.scoreFactors as Record<string, number> | null) ?? null,
       }));
 
       return paginatedResult(items, Number(totalRow?.value ?? 0), page, limit);

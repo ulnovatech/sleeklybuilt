@@ -2,6 +2,7 @@
 export type BudgetProvider =
   | 'google_places'
   | 'google_cse'
+  | 'brave_search'
   | 'bing_search'
   | 'browser_automation'
   | 'custom_scrape'

@@ -1,6 +1,11 @@
 import { BudgetGovernor } from '@agency/acquisition';
 import { logger } from '@agency/config';
 import { platformSettings } from '@agency/settings';
+import {
+  isGoogleCircuitOpen,
+  isGoogleConsumerSuspendedError,
+  tripGoogleCircuit,
+} from '../google-circuit';
 import { PlacesApiError, parsePlacesApiErrorBody } from './places-api-error';
 import type { PlacesDetailsResult, PlacesTextSearchResponse } from './places-types';
 
@@ -37,6 +42,7 @@ export class PlacesApiClient {
 
   async isConfigured(): Promise<boolean> {
     await platformSettings.ensureLoaded();
+    if (isGoogleCircuitOpen('places')) return false;
     return platformSettings.isPlacesConfigured();
   }
 
@@ -84,6 +90,12 @@ export class PlacesApiClient {
         reason,
         err: message.slice(0, 200),
       });
+      if (isGoogleConsumerSuspendedError(res.status, reason, message)) {
+        tripGoogleCircuit(
+          'places',
+          `Places suspended (${reason ?? res.status}): ${message.slice(0, 120)}`,
+        );
+      }
       throw new PlacesApiError(res.status, message, reason);
     }
 

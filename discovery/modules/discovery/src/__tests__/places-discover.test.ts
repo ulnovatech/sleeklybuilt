@@ -40,7 +40,10 @@ assert(placesIdFromExternalId(mapped?.externalId) === 'ChIJtest123', 'places id 
 assert(mapped?.phone === '+256700000000', 'phone mapped');
 assert(mapped?.city === 'Kampala', 'city from address components');
 assert(mapped?.metadata?.placesVerified === true, 'marked places verified');
-assert(mapped?.metadata?.websiteClass === 'real', 'real Places website is classified');
+assert(
+  mapped?.metadata?.websiteClass === 'uncertain',
+  'Places website is uncertain until crawl proves quality',
+);
 
 const linkInBio = placeSearchResultToDiscoveredBusiness(
   { ...samplePlace, websiteUri: 'https://linktr.ee/joe-kitchen' },
@@ -126,12 +129,13 @@ async function testDiscoverPagination() {
   });
   assert(
     morningDropped.businesses.every((b) => b.metadata?.websiteClass !== 'real'),
-    'Places ingest on morning path drops owned websites',
+    'Places ingest never tags crawl-unproven URLs as real',
   );
   assert(
     morningDropped.businesses.some((b) => b.metadata?.websiteClass === 'none') &&
-      morningDropped.businesses.some((b) => b.metadata?.websiteClass === 'link_in_bio'),
-    'Places ingest keeps none and link-in-bio',
+      morningDropped.businesses.some((b) => b.metadata?.websiteClass === 'link_in_bio') &&
+      morningDropped.businesses.some((b) => b.metadata?.websiteClass === 'uncertain'),
+    'Places ingest keeps none, link-in-bio, and uncertain (uncrawled URL)',
   );
   dropClient.textSearch = originalTextSearch;
   provider.isConfigured = originalConfigured;

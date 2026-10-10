@@ -4,6 +4,7 @@ import type { BudgetCapConfig, BudgetProvider } from './types';
 const PROVIDER_PERIOD: Record<BudgetProvider, 'monthly' | 'daily'> = {
   google_places: 'monthly',
   google_cse: 'daily',
+  brave_search: 'daily',
   bing_search: 'daily',
   browser_automation: 'daily',
   custom_scrape: 'daily',
@@ -15,6 +16,7 @@ const PROVIDER_PERIOD: Record<BudgetProvider, 'monthly' | 'daily'> = {
 const CAP_KEY: Record<BudgetProvider, keyof ReturnType<typeof platformSettings.getSync>['acquisition']['caps']> = {
   google_places: 'google_places',
   google_cse: 'google_cse',
+  brave_search: 'brave_search',
   bing_search: 'bing_search',
   browser_automation: 'browser_automation',
   custom_scrape: 'custom_scrape',

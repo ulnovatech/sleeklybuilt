@@ -28,6 +28,21 @@ assert(
   'aggregates counts per source',
 );
 
+const planB = [
+  { source: 'openstreetmap' },
+  { source: 'openstreetmap' },
+  { source: 'public_search' },
+  { source: 'facebook' },
+  { source: 'social_search' },
+  { source: 'csv_import' },
+];
+const planBCounts = countBySource(planB);
+assert(planBCounts.openstreetmap === 2, 'Plan B yield includes openstreetmap');
+assert(planBCounts.public_search === 1, 'Plan B yield includes public_search');
+assert(planBCounts.facebook === 1, 'Plan B yield includes facebook');
+assert(planBCounts.social_search === 1, 'Plan B yield includes social_search');
+assert(planBCounts.csv_import === 1, 'Plan B yield includes csv_import');
+
 assert(Object.keys(countBySource([])).length === 0, 'empty sources returns empty object');
 
 const now = new Date('2026-08-07T12:00:00.000Z');

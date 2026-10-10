@@ -40,9 +40,9 @@ const STEPS = ['Goal', 'Targets', 'Sources & depth', 'Cadence & caps'] as const;
 
 const SOURCE_OPTIONS = [
   { id: 'google_maps', label: 'Google Maps / Places' },
-  { id: 'public_search', label: 'Public search (CSE)' },
+  { id: 'public_search', label: 'Public search (Brave / CSE)' },
   { id: 'facebook', label: 'Facebook pages' },
-  { id: 'social_search', label: 'Social search' },
+  { id: 'social_search', label: 'Social search (YouTube for factory)' },
 ] as const;
 
 type CatalogCampaign = {

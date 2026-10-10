@@ -1,7 +1,13 @@
 import { logger } from '@agency/config';
 import { DEFAULT_INDUSTRIES, platformSettings } from '@agency/settings';
 import { getDiscoveryCampaign } from './campaigns';
-import { syncFactoryCredentialFallbacks } from './factory-credentials';
+import {
+  factoryPlanNeedsFilterHeal,
+  factoryPlanNeedsSourceHeal,
+  factorySourcesForSeed,
+  isPlacesHarvestReady,
+  syncFactoryCredentialFallbacks,
+} from './factory-credentials';
 import { intersectIndustries } from './packs';
 import { DiscoveryPlanService } from './plan-service';
 import {
@@ -25,6 +31,9 @@ export type EnsureFactoryPlansResult = {
   placesCapRaised: boolean;
   defaultGeoPatched: boolean;
   cseCxPersisted: boolean;
+  survivalMode: boolean;
+  sourcesHealed: number;
+  filtersHealed: number;
 };
 
 function factoryIndustries(available: string[]): string[] {
@@ -86,6 +95,9 @@ export async function ensureFactoryPlans(
     throw new Error('Factory plans need at least one website-build industry in settings');
   }
 
+  const placesReady = isPlacesHarvestReady();
+  const seedSources = factorySourcesForSeed(placesReady);
+
   const plans = new DiscoveryPlanService();
   const repo = plans.repoPublic;
 
@@ -112,10 +124,12 @@ export async function ensureFactoryPlans(
         description: spec.description,
         planType: 'discovery',
         status: 'active',
-        sources: ['google_maps'],
+        sources: seedSources as Array<
+          'google_maps' | 'openstreetmap' | 'public_search' | 'facebook' | 'social_search' | 'csv_import'
+        >,
         targets: spec.targets,
         filters: { ...FACTORY_FILTERS, presence: 'greenfield' },
-        runProfile: 'standard',
+        runProfile: placesReady ? 'standard' : 'micro',
         prospectFocus: true,
         boiNarrative: false,
         campaignKey: 'website_build',
@@ -130,10 +144,16 @@ export async function ensureFactoryPlans(
     return { id: plan.id, status: 'created' };
   };
 
+  const coreDesc = placesReady
+    ? 'Automated weekday harvest (EAT). Uganda, Kenya, Nigeria — Places primary with Plan B backup (OSM / search / Meta / social).'
+    : 'Plan B harvest (EAT): OSM + public search + Meta + social + CSV — Google Places DORMANT.';
+  const exploreDesc = placesReady
+    ? 'Lower-priority harvest: Ghana, Tanzania, Philippines plus Houston/Birmingham probes. Places + Plan B sources.'
+    : 'Plan B explore harvest — OSM / search / Meta / social; Google Places DORMANT.';
+
   const core = await upsert(FACTORY_CORE_TEMPLATE_KEY, {
     name: 'Factory A — Core reach',
-    description:
-      'Automated weekday harvest (EAT). Uganda, Kenya, Nigeria — named cities, website-build greenfield, Places primary.',
+    description: coreDesc,
     targets: coreTargets,
     limits: FACTORY_CORE_LIMITS,
     priority: 20,
@@ -141,12 +161,38 @@ export async function ensureFactoryPlans(
 
   const explore = await upsert(FACTORY_EXPLORE_TEMPLATE_KEY, {
     name: 'Factory B — Explore',
-    description:
-      'Lower-priority harvest: Ghana, Tanzania, Philippines plus Houston/Birmingham probes. Same greenfield campaign.',
+    description: exploreDesc,
     targets: exploreTargets,
     limits: FACTORY_EXPLORE_LIMITS,
     priority: 5,
   });
+
+  let sourcesHealed = 0;
+  let filtersHealed = 0;
+  for (const planId of [core.id, explore.id]) {
+    const plan = await repo.getPlan(planId);
+    if (!plan) continue;
+    const current = Array.isArray(plan.sources) ? plan.sources.map(String) : [];
+    const needSources = factoryPlanNeedsSourceHeal(current, placesReady);
+    const needFilters = factoryPlanNeedsFilterHeal(plan.filters);
+    if (!needSources && !needFilters) continue;
+
+    await repo.updatePlan(planId, {
+      ...(needSources
+        ? {
+            sources: seedSources,
+            runProfile: placesReady ? 'standard' : 'micro',
+            description:
+              plan.templateKey === FACTORY_CORE_TEMPLATE_KEY ? coreDesc : exploreDesc,
+          }
+        : {}),
+      ...(needFilters
+        ? { filters: { ...FACTORY_FILTERS, presence: 'greenfield' as const } }
+        : {}),
+    });
+    if (needSources) sourcesHealed++;
+    if (needFilters) filtersHealed++;
+  }
 
   logger.info('Factory plans ready', {
     core: core.status,
@@ -154,6 +200,10 @@ export async function ensureFactoryPlans(
     corePlanId: core.id,
     explorePlanId: explore.id,
     industries: industries.length,
+    survivalMode: !placesReady,
+    sourcesHealed,
+    filtersHealed,
+    seedSources,
   });
 
   return {
@@ -165,5 +215,8 @@ export async function ensureFactoryPlans(
     placesCapRaised,
     defaultGeoPatched,
     cseCxPersisted,
+    survivalMode: !placesReady,
+    sourcesHealed,
+    filtersHealed,
   };
 }

@@ -1,3 +1,4 @@
+import { attachDiscoveryEvidence } from '@agency/validation';
 import type { DiscoveredBusiness, DiscoverySearchParams } from '../providers/types';
 
 const HEADER_ALIASES: Record<string, string[]> = {
@@ -73,20 +74,30 @@ export function mapCsvRowToCandidate(
   const rowCountry = pickField(row, 'country') || params.country;
   const rowCity = pickField(row, 'city') || (isAllCities(params.city) ? undefined : params.city);
 
-  return {
-    name,
-    industry: rowIndustry || params.industry,
-    website: pickField(row, 'website'),
-    phone: pickField(row, 'phone'),
-    email: pickField(row, 'email'),
-    city: rowCity || undefined,
-    country: rowCountry,
-    source: 'csv_import',
-    sourceUrl: pickField(row, 'source_url') || undefined,
-    googleMapsUrl: pickField(row, 'google_maps_url') || undefined,
-    facebookUrl: pickField(row, 'facebook_url') || undefined,
-    instagramUrl: pickField(row, 'instagram_url') || undefined,
-  };
+  return attachDiscoveryEvidence(
+    {
+      name,
+      industry: rowIndustry || params.industry,
+      website: pickField(row, 'website'),
+      phone: pickField(row, 'phone'),
+      email: pickField(row, 'email'),
+      city: rowCity || undefined,
+      country: rowCountry,
+      source: 'csv_import',
+      sourceUrl: pickField(row, 'source_url') || undefined,
+      googleMapsUrl: pickField(row, 'google_maps_url') || undefined,
+      facebookUrl: pickField(row, 'facebook_url') || undefined,
+      instagramUrl: pickField(row, 'instagram_url') || undefined,
+    },
+    {
+      phone: { method: 'csv.column.phone', confidence: 'high' },
+      website: { method: 'csv.column.website', confidence: 'high' },
+      email: { method: 'csv.column.email', confidence: 'high' },
+      facebookUrl: { method: 'csv.column.facebook_url', confidence: 'high' },
+      instagramUrl: { method: 'csv.column.instagram_url', confidence: 'high' },
+      googleMapsUrl: { method: 'csv.column.google_maps_url', confidence: 'high' },
+    },
+  );
 }
 
 export function mapCsvRowsToCandidates(

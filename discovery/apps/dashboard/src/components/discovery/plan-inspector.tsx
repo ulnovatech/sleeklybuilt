@@ -22,7 +22,7 @@ export type PlanInspectorRow = {
     industries?: string[];
     citiesByCountry?: Record<string, string[]>;
   };
-  filters?: { presence?: string };
+  filters?: { presence?: string; socialSearch?: string };
   sources?: string[];
 };
 
@@ -164,6 +164,10 @@ export function PlanInspector({
         <div>
           <dt className="text-xs text-ink-faint">Presence</dt>
           <dd className="text-ink">{plan.filters?.presence ?? 'greenfield'}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-faint">Social search</dt>
+          <dd className="text-ink">{plan.filters?.socialSearch ?? 'all'}</dd>
         </div>
       </dl>
 

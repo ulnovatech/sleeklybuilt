@@ -1,10 +1,13 @@
 import {
+  braveCountryForIso2,
+  isLegacyBingEnabled,
   mergeSearchResults,
   normalizeSearchUrl,
   SEARCH_RESULTS_PER_PAGE,
 } from '../providers/search-api-client';
 import {
   parseBingSearchErrorBody,
+  parseBraveSearchErrorBody,
   parseGoogleSearchErrorBody,
   SearchApiError,
 } from '../providers/search-api-error';
@@ -47,7 +50,7 @@ function testMergeSearchResults() {
   assert(merged.length === 3, 'merge dedupes by normalized URL');
   assert(merged[0]?.link === 'https://example.com/a', 'merge preserves CSE order first');
   assert(merged[1]?.title === 'B', 'merge keeps first engine title for duplicate URL');
-  assert(merged[2]?.link === 'https://example.com/c', 'merge includes unique Bing-only URL');
+  assert(merged[2]?.link === 'https://example.com/c', 'merge includes unique Brave-only URL');
 }
 
 function testGoogleErrorParsing() {
@@ -71,11 +74,24 @@ function testBingErrorParsing() {
   assert(parsed.reason === 'InvalidRequest', 'parses Bing error code');
 }
 
+function testBraveErrorParsing() {
+  const parsed = parseBraveSearchErrorBody(
+    JSON.stringify({
+      error: { code: 401, detail: 'Invalid subscription token' },
+    }),
+  );
+  assert(parsed.message.includes('Invalid subscription'), 'parses Brave error detail');
+  assert(parsed.reason === '401', 'parses Brave error code');
+}
+
 function testSearchApiErrorMessage() {
   const err = new SearchApiError('google_cse', 403, 'Forbidden', 'accessNotConfigured');
   assert(err.message.includes('Google Custom Search'), 'SearchApiError names engine');
   assert(err.message.includes('403'), 'SearchApiError includes status');
   assert(err.engine === 'google_cse', 'SearchApiError stores engine');
+
+  const braveErr = new SearchApiError('brave_search', 401, 'bad token');
+  assert(braveErr.message.includes('Brave Search'), 'SearchApiError names Brave');
 }
 
 function testCseGeoParams() {
@@ -93,13 +109,32 @@ function testCseGeoParams() {
   assert(params.get('cr') === 'countryUG', 'CSE geo cr param');
 }
 
+function testBraveCountry() {
+  assert(braveCountryForIso2('US') === 'US', 'Brave accepts US');
+  assert(braveCountryForIso2('UG') === 'ALL', 'Uganda maps to ALL (not in Brave enum)');
+  assert(braveCountryForIso2(undefined) === undefined, 'missing iso leaves country unset');
+}
+
+function testLegacyBingGate() {
+  const saved = process.env.BING_SEARCH_LEGACY_ENABLED;
+  delete process.env.BING_SEARCH_LEGACY_ENABLED;
+  assert(!isLegacyBingEnabled(), 'Bing legacy off by default');
+  process.env.BING_SEARCH_LEGACY_ENABLED = 'true';
+  assert(isLegacyBingEnabled(), 'Bing legacy opt-in');
+  if (saved === undefined) delete process.env.BING_SEARCH_LEGACY_ENABLED;
+  else process.env.BING_SEARCH_LEGACY_ENABLED = saved;
+}
+
 function main() {
   testNormalizeSearchUrl();
   testMergeSearchResults();
   testGoogleErrorParsing();
   testBingErrorParsing();
+  testBraveErrorParsing();
   testSearchApiErrorMessage();
   testCseGeoParams();
+  testBraveCountry();
+  testLegacyBingGate();
 
   console.log(`${passed} passed, ${failed} failed`);
   process.exit(failed > 0 ? 1 : 0);

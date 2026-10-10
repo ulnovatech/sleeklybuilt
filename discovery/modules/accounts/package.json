@@ -10,6 +10,7 @@
   "dependencies": {
     "@agency/database": "workspace:*",
     "@agency/settings": "workspace:*",
+    "@agency/validation": "workspace:*",
     "drizzle-orm": "^0.38.3"
   },
   "devDependencies": {

@@ -29,6 +29,7 @@ const acquisitionPatchSchema = z
       .object({
         google_places: z.number().int().min(0).optional(),
         google_cse: z.number().int().min(0).optional(),
+        brave_search: z.number().int().min(0).optional(),
         bing_search: z.number().int().min(0).optional(),
         browser_automation: z.number().int().min(0).optional(),
         custom_scrape: z.number().int().min(0).optional(),
@@ -274,7 +275,8 @@ const CREDENTIAL_LABELS: Record<CredentialKey, string> = {
   google_places_api_keys: 'Google Places API Keys (comma-separated rotation; factory required)',
   google_cse_api_key: 'Google Custom Search API Key (optional overlay)',
   google_cse_cx: 'Google Custom Search Engine ID / CX (optional overlay)',
-  bing_search_key: 'Bing Search API Key',
+  brave_search_key: 'Brave Search API Key (Plan B public search)',
+  bing_search_key: 'Bing Search API Key (legacy — retired; use Brave)',
   meta_graph_api_token: 'Meta Graph API Token',
   gmail_oauth_client_id: 'Gmail OAuth Client ID',
   gmail_oauth_client_secret: 'Gmail OAuth Client Secret',
@@ -303,6 +305,11 @@ function factoryCredentialHint(key: CredentialKey, configured: boolean, cseReaso
   }
   if ((key === 'google_cse_api_key' || key === 'google_cse_cx') && cseReason) {
     return cseReason;
+  }
+  if (key === 'brave_search_key') {
+    return configured
+      ? 'Plan B public + social search without Google billing'
+      : 'Recommended while Places/CSE are dormant — Brave Search API key';
   }
   return undefined;
 }

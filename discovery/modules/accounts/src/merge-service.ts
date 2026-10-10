@@ -6,6 +6,7 @@ import {
   getDb,
   leads,
 } from '@agency/database';
+import { mergeAccountMetadata } from '@agency/validation';
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { extractBusinessDomain } from './domain';
 import { isSoftNameMatch, nameSimilarity } from './name-similarity';
@@ -289,11 +290,20 @@ export class AccountMergeService {
       return survivorVal ?? mergedVal ?? null;
     };
 
+    const website = pick(survivor.website, merged.website);
+    const phone = pick(survivor.phone, merged.phone);
+    const email = pick(survivor.email, merged.email);
+    const evidenceMeta = mergeAccountMetadata(
+      survivor.metadata as Record<string, unknown> | null,
+      merged.metadata as Record<string, unknown> | null,
+      { phone, website, email },
+    );
+
     return {
       canonicalName: survivor.canonicalName,
-      website: pick(survivor.website, merged.website),
-      phone: pick(survivor.phone, merged.phone),
-      email: pick(survivor.email, merged.email),
+      website,
+      phone,
+      email,
       city: pick(survivor.city, merged.city),
       country: pick(survivor.country, merged.country),
       industry: pick(survivor.industry, merged.industry),
@@ -305,8 +315,7 @@ export class AccountMergeService {
       reviewCount: survivor.reviewCount ?? merged.reviewCount,
       externalId: survivor.externalId ?? merged.externalId,
       metadata: {
-        ...((merged.metadata as Record<string, unknown> | null) ?? {}),
-        ...((survivor.metadata as Record<string, unknown> | null) ?? {}),
+        ...(evidenceMeta ?? {}),
         mergedFrom: merged.id,
         mergedAt: new Date().toISOString(),
       },

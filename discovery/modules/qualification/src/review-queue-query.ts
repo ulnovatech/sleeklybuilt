@@ -54,7 +54,7 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
     conditions.push(sql`b.discovery_run_id = ${filters.runId}`);
   }
   if (filters.minScore != null) {
-    conditions.push(sql`COALESCE(ls.score, 0) >= ${filters.minScore}`);
+    conditions.push(sql`COALESCE(ls.score::int, 0) >= ${filters.minScore}`);
   }
   if (filters.reachability) {
     conditions.push(sql`ls.reachability = ${filters.reachability}`);
@@ -103,8 +103,8 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
     WITH ranked AS (
       SELECT
         a.id AS account_id,
-        COALESCE(ls.score, 0) AS score,
-        ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY COALESCE(ls.score, 0) DESC NULLS LAST) AS rn
+        COALESCE(ls.score::int, 0) AS score,
+        ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY COALESCE(ls.score::int, 0) DESC NULLS LAST) AS rn
       FROM businesses b
       INNER JOIN accounts a ON b.account_id = a.id
       INNER JOIN discovery_runs dr ON b.discovery_run_id = dr.id
@@ -132,7 +132,7 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
         dr.id AS run_id,
         dr.industry AS run_industry,
         dr.city AS run_city,
-        COALESCE(ls.score, 0) AS score,
+        COALESCE(ls.score::int, 0) AS score,
         ls.reachability AS reachability,
         COALESCE(ls.factors, '{}'::jsonb) AS factors,
         (${prospectVerifiedSql}) AS verified,
@@ -160,7 +160,7 @@ export async function queryReviewQueue(filters: ReviewQueueFilters = {}) {
               AND lower(sl.domain) = lower(split_part(a.email, '@', 2))
             )
         ) AS list_suppressed,
-        ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY COALESCE(ls.score, 0) DESC NULLS LAST) AS rn
+        ROW_NUMBER() OVER (PARTITION BY a.id ORDER BY COALESCE(ls.score::int, 0) DESC NULLS LAST) AS rn
       FROM businesses b
       INNER JOIN accounts a ON b.account_id = a.id
       INNER JOIN discovery_runs dr ON b.discovery_run_id = dr.id

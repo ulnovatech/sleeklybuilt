@@ -26,11 +26,12 @@ function toSocialStats(stats: SearchDiscoverStats): SocialSearchDiscoverStats {
 
 export class SocialSearchProvider implements DiscoveryProvider {
   readonly name = 'social_search' as const;
-  readonly label = 'Social search (TikTok / LinkedIn / X / YouTube)';
+  readonly label = 'Social search (YouTube / TikTok / LinkedIn / X)';
 
   private client = new SearchApiClient({
     logContext: 'social_search',
     cseOperation: 'social_search',
+    braveOperation: 'social_search',
     bingOperation: 'social_search',
   });
 

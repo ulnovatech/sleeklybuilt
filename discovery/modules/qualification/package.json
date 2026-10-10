@@ -8,7 +8,7 @@
     "./review-verification": "./src/review-verification.ts"
   },
   "scripts": {
-    "test": "tsx src/__tests__/reachability.test.ts && tsx src/__tests__/review-verification.test.ts && tsx src/__tests__/icp-scoring.test.ts && tsx src/__tests__/work-queue-priority.test.ts && tsx src/__tests__/unique-business-ids.test.ts && tsx src/__tests__/outcome-learning.test.ts"
+    "test": "tsx src/__tests__/reachability.test.ts && tsx src/__tests__/review-verification.test.ts && tsx src/__tests__/icp-scoring.test.ts && tsx src/__tests__/work-queue-priority.test.ts && tsx src/__tests__/unique-business-ids.test.ts && tsx src/__tests__/outcome-learning.test.ts && tsx src/__tests__/corroboration-scoring.test.ts"
   },
   "dependencies": {
     "@agency/accounts": "workspace:*",
@@ -19,6 +19,7 @@
     "@agency/settings": "workspace:*",
     "@agency/intelligence": "workspace:*",
     "@agency/scoring": "workspace:*",
+    "@agency/validation": "workspace:*",
     "drizzle-orm": "^0.38.3"
   },
   "devDependencies": {

@@ -10,6 +10,8 @@
     "jobs:worker": "tsx src/scripts/job-worker-cli.ts",
     "discovery:seed-factory": "tsx src/scripts/seed-factory-plans-cli.ts",
     "discovery:factory-health": "tsx src/scripts/factory-health-cli.ts",
+    "discovery:meta-probe": "tsx src/scripts/meta-probe-cli.ts",
+    "discovery:osm-geofabrik": "tsx src/scripts/osm-geofabrik-cli.ts",
     "discovery:purify": "tsx src/scripts/factory-purify-cli.ts",
     "hunter:worker": "tsx src/scripts/hunter-worker-cli.ts",
     "db:wipe-runs": "tsx src/scripts/wipe-discovery-cli.ts",

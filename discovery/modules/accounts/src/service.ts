@@ -1,4 +1,5 @@
 import { platformSettings } from '@agency/settings';
+import { mergeAccountMetadata } from '@agency/validation';
 
 import { extractBusinessDomain } from './domain';
 
@@ -213,11 +214,13 @@ export class AccountService {
 
         canonicalName: input.name,
 
-        website: input.website || existing.website,
+        // Fill-empty for contact scalars — keep first trusted value; disagreeing
+        // incoming values are retained in metadata.discoveryEvidence.conflicts.
+        website: existing.website || input.website,
 
-        phone: input.phone || existing.phone,
+        phone: existing.phone || input.phone,
 
-        email: input.email || existing.email,
+        email: existing.email || input.email,
 
         city: input.city || existing.city,
 
@@ -247,11 +250,15 @@ export class AccountService {
 
             : existing.lastPlacesFetchAt,
 
-        metadata: placesEnriched
-
-          ? { ...(existing.metadata as Record<string, unknown> | null), ...input.metadata }
-
-          : (input.metadata ?? existing.metadata),
+        metadata: mergeAccountMetadata(
+          existing.metadata as Record<string, unknown> | null,
+          input.metadata,
+          {
+            phone: existing.phone || input.phone,
+            website: existing.website || input.website,
+            email: existing.email || input.email,
+          },
+        ),
 
         lastEnrichedAt: now,
         harvestDate: existing.harvestDate ?? input.harvestDate ?? null,

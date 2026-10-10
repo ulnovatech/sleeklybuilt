@@ -75,7 +75,9 @@ export async function queryWorkQueueCandidates(filters: WorkQueueFilters = {}) {
     sql`(a.review_snoozed_until IS NULL OR a.review_snoozed_until <= NOW())`,
   ];
   if (filters.runId) oppConditions.push(sql`b.discovery_run_id = ${filters.runId}`);
-  if (filters.minScore != null) oppConditions.push(sql`COALESCE(ls.score, 0) >= ${filters.minScore}`);
+  if (filters.minScore != null) {
+    oppConditions.push(sql`COALESCE(ls.score::int, 0) >= ${filters.minScore}`);
+  }
   if (filters.reachability) oppConditions.push(sql`ls.reachability = ${filters.reachability}`);
   if (filters.verification === 'verified') oppConditions.push(prospectVerifiedSql);
   if (filters.verification === 'unverified') oppConditions.push(sql`NOT ${prospectVerifiedSql}`);
@@ -127,14 +129,18 @@ export async function queryWorkQueueCandidates(filters: WorkQueueFilters = {}) {
     END
   `;
 
+  // Cast score/strength to int — live drift to text otherwise yields "text + integer".
   const oppPriority = sql`
     CASE WHEN (${prospectVerifiedSql}) THEN ${VERIFIED_OPPORTUNITY_BASE} ELSE ${UNVERIFIED_OPPORTUNITY_BASE} END
     + CASE WHEN (${GREENFIELD_SQL}) THEN ${GREENFIELD_LANE_BONUS} ELSE 0 END
-    + LEAST(100, GREATEST(0, COALESCE(ls.score, 0)))
+    + LEAST(100, GREATEST(0, COALESCE(ls.score::int, 0)))
     + CASE WHEN (${prospectVerifiedSql}) THEN ${reachBonus} ELSE 0 END
   `;
 
-  const demandPriority = sql`${DEMAND_PRIORITY_BASE} + LEAST(100, GREATEST(0, COALESCE(s.signal_strength, 0)))`;
+  const demandPriority = sql`
+    ${DEMAND_PRIORITY_BASE}
+    + LEAST(100, GREATEST(0, COALESCE(s.signal_strength::int, 0)))
+  `;
 
   // Phone-ready triage is opportunity-only; demand rows have no WhatsApp channel yet.
   const includeDemand = kind !== 'opportunity' && !filters.hasPhone;

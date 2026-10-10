@@ -36,6 +36,7 @@ export const POSITIVE_FACTOR_LABELS: Record<string, string> = {
   hasPhone: 'Phone on file',
   industryMatch: 'Industry match',
   segmentOutcomes: 'Segment win record',
+  multiSourceCorroboration: 'Multi-source corroboration',
 };
 
 export const NEGATIVE_FACTOR_LABELS: Record<string, string> = {

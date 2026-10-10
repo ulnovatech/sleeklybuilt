@@ -5,6 +5,7 @@ export type CredentialKey =
   | 'google_places_api_keys'
   | 'google_cse_api_key'
   | 'google_cse_cx'
+  | 'brave_search_key'
   | 'bing_search_key'
   | 'meta_graph_api_token'
   | 'gmail_oauth_client_id'
@@ -39,6 +40,7 @@ export interface AcquisitionSettings {
   caps: {
     google_places: number;
     google_cse: number;
+    brave_search: number;
     bing_search: number;
     browser_automation: number;
     custom_scrape: number;
@@ -302,6 +304,7 @@ export const CREDENTIAL_ENV_MAP: Record<CredentialKey, string> = {
   google_places_api_keys: 'GOOGLE_PLACES_API_KEYS',
   google_cse_api_key: 'GOOGLE_CSE_API_KEY',
   google_cse_cx: 'GOOGLE_CSE_CX',
+  brave_search_key: 'BRAVE_SEARCH_API_KEY',
   bing_search_key: 'BING_SEARCH_KEY',
   meta_graph_api_token: 'META_GRAPH_API_TOKEN',
   gmail_oauth_client_id: 'GMAIL_OAUTH_CLIENT_ID',

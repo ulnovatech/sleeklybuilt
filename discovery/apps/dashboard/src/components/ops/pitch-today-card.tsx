@@ -244,6 +244,7 @@ export function PitchTodayCard({ className }: { className?: string }) {
         <p className="mt-1 text-sm text-ink-muted">
           {unpitched} left on yesterday’s harvest
           {demandJumps > 0 ? ` · ${demandJumps} demand jump${demandJumps === 1 ? '' : 's'}` : ''}.
+          List rows include why-contact (class, contact path, evidence) — no JSON required.
         </p>
         {scoreboardGrid}
         <p className="mt-3 text-xs text-ink-faint">

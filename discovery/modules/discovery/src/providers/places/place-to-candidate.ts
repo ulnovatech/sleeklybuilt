@@ -1,4 +1,5 @@
 import { platformSettings } from '@agency/settings';
+import { attachDiscoveryEvidence } from '@agency/validation';
 import { classifyWebsiteClass } from '../../lib/website-class';
 import type { DiscoveredBusiness, DiscoverySearchParams } from '../types';
 import type { PlacesTextSearchResult } from './places-types';
@@ -38,25 +39,40 @@ export function placeSearchResultToDiscoveredBusiness(
   const website = place.websiteUri || undefined;
   const websiteClass = classifyWebsiteClass(website);
 
-  return {
-    name,
-    industry: params.industry,
-    country: params.country,
-    city,
-    website,
-    phone: place.nationalPhoneNumber || undefined,
-    source: 'google_maps',
-    googleMapsUrl: place.googleMapsUri,
-    rating: place.rating,
-    reviewCount: place.userRatingCount,
-    externalId: normalizePlacesExternalId(place.id),
-    metadata: {
-      formattedAddress: place.formattedAddress,
-      businessStatus: place.businessStatus,
-      placesId,
-      placesVerified: true,
-      discoverSource: 'places_text_search',
-      websiteClass,
+  return attachDiscoveryEvidence(
+    {
+      name,
+      industry: params.industry,
+      country: params.country,
+      city,
+      website,
+      phone: place.nationalPhoneNumber || undefined,
+      source: 'google_maps',
+      googleMapsUrl: place.googleMapsUri,
+      rating: place.rating,
+      reviewCount: place.userRatingCount,
+      externalId: normalizePlacesExternalId(place.id),
+      metadata: {
+        formattedAddress: place.formattedAddress,
+        businessStatus: place.businessStatus,
+        placesId,
+        placesVerified: true,
+        discoverSource: 'places_text_search',
+        websiteClass,
+      },
     },
-  };
+    {
+      phone: {
+        method: 'places.nationalPhoneNumber',
+        backend: 'places_text_search',
+        confidence: 'high',
+      },
+      website: { method: 'places.websiteUri', backend: 'places_text_search', confidence: 'high' },
+      googleMapsUrl: {
+        method: 'places.googleMapsUri',
+        backend: 'places_text_search',
+        confidence: 'high',
+      },
+    },
+  );
 }

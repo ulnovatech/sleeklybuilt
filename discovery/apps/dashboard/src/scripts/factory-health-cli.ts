@@ -1,6 +1,12 @@
 import { loadRootEnv } from '@agency/config/load-env';
 import { closeDb } from '@agency/database';
-import { getFactoryCredentialHealth, PlacesApiClient } from '@agency/discovery';
+import {
+  formatFactoryHealthCheckLine,
+  formatFactoryHealthHeader,
+  geofabrikExtractStatus,
+  getFactoryCredentialHealth,
+  PlacesApiClient,
+} from '@agency/discovery';
 
 loadRootEnv();
 
@@ -23,18 +29,42 @@ async function probePlaces(): Promise<string> {
 async function main() {
   const probe = process.argv.includes('--probe');
   const health = await getFactoryCredentialHealth();
-  for (const check of health.checks) {
-    const flag = check.ready ? 'ready' : check.required ? 'MISSING' : 'optional-off';
-    console.log(`${check.label}: ${flag}${check.reason ? ` — ${check.reason}` : ''}`);
+  const extract = geofabrikExtractStatus();
+
+  for (const line of formatFactoryHealthHeader(health, extract)) {
+    console.log(line);
   }
-  console.log(`Factory harvest ready: ${health.ready ? 'yes' : 'no'}`);
+  console.log('--- checks ---');
+  for (const check of health.checks) {
+    console.log(formatFactoryHealthCheckLine(check));
+  }
+
   if (probe) {
-    console.log(`Places Text Search probe: ${await probePlaces()}`);
+    if (health.placesLifecycle === 'dormant') {
+      console.log(
+        'Places Text Search probe: skipped — Places dormant (use OSM Geofabrik / Brave / Meta instead)',
+      );
+      console.log(
+        `OSM extract probe: ${extract.indexReady ? 'index ready' : 'index missing'} · stale=${extract.stale}`,
+      );
+    } else {
+      console.log(`Places Text Search probe: ${await probePlaces()}`);
+    }
+  } else if (health.ready && health.survivalMode) {
+    console.log(
+      'Plan B path is ready (OSM and/or Brave/Meta). Re-run with --probe to confirm Places only when active.',
+    );
+    if (extract.stale) {
+      console.log('Tip: refresh Geofabrik weekly — pnpm discovery:osm-geofabrik');
+    }
   } else if (health.ready) {
     console.log('Places key is present. Re-run with --probe to spend 1 Text Search and confirm Maps rows.');
   } else {
-    console.log('Add a Google Places API key in Settings → API credentials, then re-run this command.');
+    console.log(
+      'Factory blocked — enable OSM (default) or add Brave Search / Meta token. CSV is resilience for manual runs, not a factory-ready channel alone. Places is optional while dormant.',
+    );
   }
+
   await closeDb();
   process.exit(health.ready ? 0 : 1);
 }

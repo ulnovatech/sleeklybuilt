@@ -5,11 +5,18 @@ import { Fragment, Suspense, useCallback, useEffect, useMemo, useState } from 'r
 import { useParams } from 'next/navigation';
 import { isAllCities } from '@agency/geo';
 import type { DiscoveryRunStats } from '@agency/discovery';
+import {
+  formatEvidenceAttribution,
+  formatEvidenceConflicts,
+  readDiscoveryEvidence,
+  type DiscoveryEvidence,
+} from '@agency/validation';
 import { BoiBriefExpand } from '@/components/intelligence/boi-brief-expand';
 import { BoiBriefSummaryChip } from '@/components/intelligence/boi-brief-summary-chip';
 import { PlanEditorWizard } from '@/components/discovery/plan-editor-wizard';
 import { RunProgress } from '@/components/discovery/run-progress';
 import { RunYieldPanel } from '@/components/discovery/run-yield-panel';
+import { WhyContactStrip } from '@/components/discovery/why-contact-strip';
 import { PageHeader } from '@/components/layout/page-header';
 import {
   Button,
@@ -17,7 +24,6 @@ import {
   ErrorState,
   Input,
   Skeleton,
-  StatusBadge,
 } from '@/components/ui/primitives';
 import { BOI_COPY } from '@/lib/product-copy';
 import { api } from '@/lib/api';
@@ -48,6 +54,8 @@ type Business = {
   rating: number | null;
   reviewCount: number | null;
   score: number | null;
+  scoreFactors?: Record<string, number> | null;
+  metadata?: Record<string, unknown> | null;
   signals: Signal[];
   analysis: { hasWebsite: boolean; httpsEnabled: boolean | null; mobileFriendly: boolean | null } | null;
 };
@@ -75,11 +83,34 @@ type DiscoveryOptions = {
 function formatSource(source: string) {
   const labels: Record<string, string> = {
     google_maps: 'Google Maps',
+    openstreetmap: 'OpenStreetMap',
+    public_search: 'Public search',
+    social_search: 'Social search',
     facebook: 'Facebook',
     instagram: 'Instagram',
     csv_import: 'CSV Import',
   };
   return labels[source] ?? source;
+}
+
+function evidenceFor(business: Business): DiscoveryEvidence | undefined {
+  return readDiscoveryEvidence(business.metadata ?? undefined);
+}
+
+function ProvenanceLine({
+  label,
+  text,
+}: {
+  label: string;
+  text: string | null | undefined;
+}) {
+  if (!text) return null;
+  return (
+    <p className="mt-0.5 text-[11px] leading-snug text-ink-faint">
+      <span className="sr-only">{label}: </span>
+      {text}
+    </p>
+  );
 }
 
 function formatLocation(city: string | null, country: string | null) {
@@ -125,6 +156,10 @@ function RunBusinessCard({
   expanded: boolean;
   onToggleBrief: () => void;
 }) {
+  const evidence = evidenceFor(business);
+  const phoneAttr = formatEvidenceAttribution(evidence?.phone);
+  const websiteAttr = formatEvidenceAttribution(evidence?.website);
+
   return (
     <article className="rounded-lg border border-line bg-surface p-4 shadow-panel">
       <div className="flex items-start justify-between gap-3">
@@ -136,10 +171,36 @@ function RunBusinessCard({
           <span className="shrink-0 font-semibold tabular-nums text-ink">{business.score}</span>
         ) : null}
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+      <WhyContactStrip
+        density="compact"
+        website={business.website}
+        phone={business.phone}
+        email={business.email}
+        metadata={business.metadata}
+        scoreFactors={business.scoreFactors}
+        analysisHasWebsite={business.analysis?.hasWebsite}
+      />
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <BoiBriefSummaryChip businessId={business.id} onOpen={onToggleBrief} />
+      </div>
+      {expanded && (
+        <div className="mt-3 border-t border-line pt-3">
+          <BoiBriefExpand
+            businessId={business.id}
+            pipelineRunning={pipelineRunning}
+            defaultOpen
+            embedded
+            onClose={onToggleBrief}
+          />
+        </div>
+      )}
+      <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-line pt-3 text-xs">
         <div>
           <dt className="text-ink-faint">Contact</dt>
-          <dd className="text-ink-muted">{business.phone || business.email || '—'}</dd>
+          <dd className="text-ink-muted">
+            {business.phone || business.email || '—'}
+            <ProvenanceLine label="Phone source" text={phoneAttr} />
+          </dd>
         </div>
         <div>
           <dt className="text-ink-faint">Source</dt>
@@ -153,8 +214,9 @@ function RunBusinessCard({
                 {business.website.replace(/^https?:\/\//, '')}
               </a>
             ) : (
-              <StatusBadge tone="success">Greenfield</StatusBadge>
+              <span className="text-ink-muted">No URL</span>
             )}
+            <ProvenanceLine label="Website source" text={websiteAttr} />
           </dd>
         </div>
       </dl>
@@ -162,20 +224,6 @@ function RunBusinessCard({
         <div className="mt-3">
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-faint">Signals</p>
           <SignalPreview signals={business.signals} />
-        </div>
-      )}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <BoiBriefSummaryChip businessId={business.id} onOpen={onToggleBrief} />
-      </div>
-      {expanded && (
-        <div className="mt-3 border-t border-line pt-3">
-          <BoiBriefExpand
-            businessId={business.id}
-            pipelineRunning={pipelineRunning}
-            defaultOpen
-            embedded
-            onClose={onToggleBrief}
-          />
         </div>
       )}
     </article>
@@ -426,10 +474,11 @@ function DiscoveryDetailContent() {
           </div>
 
           <div className="hidden overflow-x-auto rounded-lg border border-line bg-surface shadow-panel md:block">
-          <table className="w-full min-w-[1020px] text-sm">
+          <table className="w-full min-w-[1180px] text-sm">
             <thead className="bg-surface-raised text-left text-[11px] uppercase tracking-[0.08em] text-ink-faint">
               <tr>
                 <th className="p-3 font-semibold">Business</th>
+                <th className="p-3 font-semibold">Why contact</th>
                 <th className="p-3 font-semibold">Contact</th>
                 <th className="p-3 font-semibold">City</th>
                 <th className="p-3 font-semibold">Source</th>
@@ -445,10 +494,26 @@ function DiscoveryDetailContent() {
                 <Fragment key={b.id}>
                   <tr className="border-t border-line align-top">
                     <td className="p-3 font-medium text-ink">{b.name}</td>
+                    <td className="p-3">
+                      <WhyContactStrip
+                        density="compact"
+                        website={b.website}
+                        phone={b.phone}
+                        email={b.email}
+                        metadata={b.metadata}
+                        scoreFactors={b.scoreFactors}
+                        analysisHasWebsite={b.analysis?.hasWebsite}
+                        className="mt-0"
+                      />
+                    </td>
                     <td className="p-3 text-ink-muted">
                       {b.phone && <div>{b.phone}</div>}
                       {b.email && <div className="text-xs">{b.email}</div>}
                       {!b.phone && !b.email && '—'}
+                      <ProvenanceLine
+                        label="Phone source"
+                        text={formatEvidenceAttribution(evidenceFor(b)?.phone)}
+                      />
                     </td>
                     <td className="p-3 text-ink">{formatLocation(b.city, b.country)}</td>
                     <td className="p-3">
@@ -475,8 +540,17 @@ function DiscoveryDetailContent() {
                           {b.website.replace(/^https?:\/\//, '')}
                         </a>
                       ) : (
-                        <StatusBadge tone="success">Greenfield</StatusBadge>
+                        <span className="text-ink-muted">No URL</span>
                       )}
+                      <ProvenanceLine
+                        label="Website source"
+                        text={formatEvidenceAttribution(evidenceFor(b)?.website)}
+                      />
+                      {formatEvidenceConflicts(evidenceFor(b)?.conflicts) ? (
+                        <p className="mt-1 text-[11px] text-warning-foreground" role="status">
+                          {formatEvidenceConflicts(evidenceFor(b)?.conflicts)}
+                        </p>
+                      ) : null}
                     </td>
                     <td className="p-3 tabular-nums text-ink">
                       {b.rating != null ? `${b.rating} ★ (${b.reviewCount ?? 0})` : '—'}
@@ -500,7 +574,7 @@ function DiscoveryDetailContent() {
                   </tr>
                   {expandedBoiId === b.id && (
                     <tr className="border-t border-line bg-surface-raised">
-                      <td colSpan={9} className="p-4">
+                      <td colSpan={10} className="p-4">
                         <BoiBriefExpand
                           businessId={b.id}
                           pipelineRunning={pipelineRunning}

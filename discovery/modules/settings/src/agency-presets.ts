@@ -34,7 +34,7 @@ export function buildSleeklyBuiltAgencyPreset(): AgencySettings {
   const packages: AgencyPackage[] = [
     {
       id: 'basic',
-      title: 'Basic Launch Package',
+      title: 'Buisness Basic',
       priceUgx: 250_000,
       depositUgx: 50_000,
       badge: null,
@@ -52,7 +52,7 @@ export function buildSleeklyBuiltAgencyPreset(): AgencySettings {
     },
     {
       id: 'premium',
-      title: 'Premium Growth Package',
+      title: 'Premium System',
       priceUgx: 700_000,
       depositUgx: 140_000,
       badge: 'best-value',
@@ -124,11 +124,11 @@ export function buildSleeklyBuiltAgencyPreset(): AgencySettings {
     tagline: 'Websites, apps & systems — built sleek, built right',
     currency: 'UGX',
     email: 'sales@sleeklybuilt.pro',
-    phone: '+256 791779448',
+    phone: '+256 776770930',
     location: 'Kampala, Uganda',
     senderName: 'SleeklyBuilt',
     signature:
-      '—\nSleeklyBuilt\nWebsites, apps & systems — built sleek, built right\nsales@sleeklybuilt.pro · +256 791779448\nKampala, Uganda',
+      '—\nSleeklyBuilt\nWebsites, apps & systems — built sleek, built right\nsales@sleeklybuilt.pro · +256 776770930\nKampala, Uganda',
     siteUrl: 'https://sleeklybuilt.pro',
     productLines,
     packages,

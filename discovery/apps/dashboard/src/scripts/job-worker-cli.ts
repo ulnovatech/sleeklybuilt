@@ -10,13 +10,19 @@ async function loop() {
   try {
     const factory = await ensureFactoryPlans();
     console.log(
-      `Factory plans ready — core ${factory.core}, explore ${factory.explore}; Places cap ${factory.placesCap}`,
+      `Factory plans ready — core ${factory.core}, explore ${factory.explore}; Places cap ${factory.placesCap}` +
+        (factory.survivalMode ? '; PLAN B (Places dormant)' : '') +
+        (factory.sourcesHealed ? `; healed ${factory.sourcesHealed} plan source(s)` : ''),
     );
     if (factory.cseCxPersisted) {
       console.log('Persisted GOOGLE_CSE_CX from env into Settings.');
     }
     const health = await getFactoryCredentialHealth();
-    console.log(`Factory harvest ready: ${health.ready ? 'yes' : 'no'}`);
+    console.log(
+      `Factory harvest ready: ${health.ready ? 'yes' : 'no'}` +
+        (health.placesLifecycle === 'dormant' ? ' · Places DORMANT' : '') +
+        (health.survivalMode ? ' · Plan B sources' : ''),
+    );
     for (const check of health.checks.filter((c) => !c.ready)) {
       console.warn(`  ${check.label}: ${check.reason ?? 'not ready'}`);
     }

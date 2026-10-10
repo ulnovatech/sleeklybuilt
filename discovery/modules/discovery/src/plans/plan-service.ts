@@ -12,6 +12,7 @@ import { expandPlanTargets } from './expand-targets';
 import { computeNextRunAt } from './cadence';
 import { DiscoveryPlanRepository } from './plan-repository';
 import { cohortDatesForHarvest, resolveMorningPath } from './harvest-cohort';
+import { FACTORY_CORE_TEMPLATE_KEY, FACTORY_EXPLORE_TEMPLATE_KEY } from './factory-markets';
 import type { PlanCadence, PlanFiltersConfig, PlanLimitsConfig, PlanTargetsConfig } from './types';
 
 function asCadence(raw: unknown): PlanCadence {
@@ -244,6 +245,33 @@ export class DiscoveryPlanService {
       runId: result.run.id,
     });
     return result;
+  }
+
+  /**
+   * Operator "Run discovery now" — next factory cohort (soonest due, core before explore).
+   * Same target selection as the scheduler; no country/city/industry form.
+   */
+  async runNextScheduledFactory() {
+    const core = await this.repo.getPlanByTemplateKey(FACTORY_CORE_TEMPLATE_KEY);
+    const explore = await this.repo.getPlanByTemplateKey(FACTORY_EXPLORE_TEMPLATE_KEY);
+    const candidates = [core, explore].filter(
+      (p): p is NonNullable<typeof p> => !!p && p.status === 'active',
+    );
+    if (candidates.length === 0) {
+      throw new Error(
+        'No active factory plan. Start the job worker (pnpm jobs:worker) so factory plans can seed, or open Discovery → Plans.',
+      );
+    }
+    candidates.sort((a, b) => {
+      const aAt = a.nextRunAt ? new Date(a.nextRunAt).getTime() : 0;
+      const bAt = b.nextRunAt ? new Date(b.nextRunAt).getTime() : 0;
+      if (aAt !== bAt) return aAt - bAt;
+      // Tie-break: core before explore
+      if (a.templateKey === FACTORY_CORE_TEMPLATE_KEY) return -1;
+      if (b.templateKey === FACTORY_CORE_TEMPLATE_KEY) return 1;
+      return 0;
+    });
+    return this.runNow(candidates[0]!.id);
   }
 
   /** Exposed for scheduler gating tests and tick. */

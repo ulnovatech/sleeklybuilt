@@ -100,6 +100,58 @@ const tiktokOnly = buildSocialSearchQueries({ ...params, socialSearch: 'tiktok' 
 assert(tiktokOnly.length > 0, 'tiktok-only still emits queries');
 assert(tiktokOnly.every((q) => q.includes('site:tiktok.com')), 'tiktok-only has no LinkedIn/YouTube/X');
 
+const youtubeOnly = buildSocialSearchQueries({ ...params, socialSearch: 'youtube' }, 8);
+assert(youtubeOnly.length > 0, 'youtube-only emits queries');
+assert(
+  youtubeOnly.every((q) => q.includes('site:youtube.com')),
+  'youtube-only has no TikTok/LinkedIn/X',
+);
+assert(!youtubeOnly.some((q) => q.includes('tiktok')), 'youtube-only excludes tiktok site');
+
+const youtubeParsed = parseSocialSearchResultItem(
+  {
+    title: 'Kampala Kitchen - YouTube',
+    link: 'https://www.youtube.com/@kampalakitchen',
+    snippet: 'Local food channel',
+  },
+  { ...params, socialSearch: 'youtube' },
+  'site:youtube.com Restaurant Kampala',
+);
+assert(youtubeParsed?.metadata?.primaryPlatform === 'youtube', 'youtube filter keeps YouTube rows');
+
+const tiktokBlocked = parseSocialSearchResultItem(
+  {
+    title: 'Kampala Eats (@kampalaeats) | TikTok',
+    link: 'https://www.tiktok.com/@kampalaeats',
+    snippet: 'Local food',
+  },
+  { ...params, socialSearch: 'youtube' },
+  'site:tiktok.com Restaurant Kampala',
+);
+assert(tiktokBlocked === null, 'youtube filter drops TikTok rows');
+
+const linkedinBlocked = parseSocialSearchResultItem(
+  {
+    title: 'Acme Ltd | LinkedIn',
+    link: 'https://www.linkedin.com/company/acme-ltd',
+    snippet: 'Company',
+  },
+  { ...params, socialSearch: 'youtube' },
+  'site:linkedin.com/company Restaurant Kampala',
+);
+assert(linkedinBlocked === null, 'youtube filter drops LinkedIn rows');
+
+const xBlocked = parseSocialSearchResultItem(
+  {
+    title: 'Kampala Eats (@kampalaeats) / X',
+    link: 'https://x.com/kampalaeats',
+    snippet: 'Tweets',
+  },
+  { ...params, socialSearch: 'youtube' },
+  'site:x.com Restaurant Kampala',
+);
+assert(xBlocked === null, 'youtube filter drops X rows');
+
 const socialOff = buildSocialSearchQueries({ ...params, socialSearch: 'off' }, 8);
 assert(socialOff.length === 0, 'social off emits no CSE queries');
 
@@ -134,13 +186,13 @@ async function testDiscoverWithMockedSearch() {
   const provider = new SocialSearchProvider();
   provider.isConfigured = async () => true;
 
-  const governor = (provider as unknown as {
-    governor: { canSpend: Function; recordSpend: Function };
-  }).governor;
-  governor.canSpend = async () => true;
-  governor.recordSpend = async () => undefined;
-
-  (provider as unknown as { searchQuery: Function }).searchQuery = async () => ({
+  const client = (
+    provider as unknown as {
+      client: { isConfigured: () => boolean; searchQuery: Function };
+    }
+  ).client;
+  client.isConfigured = () => true;
+  client.searchQuery = async () => ({
     items: [
       {
         title: 'Kampala Eats (@kampalaeats) | TikTok',
@@ -153,8 +205,11 @@ async function testDiscoverWithMockedSearch() {
         snippet: 'Listicle',
       },
     ],
-    apiCalls: 1,
+    cseCalls: 0,
+    braveCalls: 1,
+    bingCalls: 0,
     budgetExhausted: false,
+    errors: [],
   });
 
   const result = await provider.discoverWithStats({
@@ -165,6 +220,7 @@ async function testDiscoverWithMockedSearch() {
   assert(result.businesses.length >= 1, 'mock discover returns social profiles');
   assert(result.businesses.every((b) => b.source === 'social_search'), 'all results social_search source');
   assert(result.droppedNonSocial >= 1, 'non-social results dropped');
+  assert(result.braveCalls >= 1, 'records Brave API calls from mocked client');
 }
 
 main().catch((err) => {

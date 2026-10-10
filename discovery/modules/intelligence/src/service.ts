@@ -1,159 +1,103 @@
 import { AccountRepository } from '@agency/accounts';
-
-import { logger } from '@agency/config';
-
-import { DiscoveryRepository } from '@agency/discovery';
-import { mapWithConcurrency, pipelineConcurrency } from '@agency/config';
+import { logger, mapWithConcurrency, pipelineConcurrency } from '@agency/config';
+import {
+  deriveWebsiteClassFromCrawl,
+  DiscoveryRepository,
+} from '@agency/discovery';
 
 import { analyzeWebsite } from './analyzer';
 import { BiProfileService } from './bi/bi-profile-service';
-
 import { IntelligenceRepository } from './repository';
 
-
-
 export class IntelligenceService {
-
   private repo = new IntelligenceRepository();
-
   private discoveryRepo = new DiscoveryRepository();
-
   private accountRepo = new AccountRepository();
   private biProfiles = new BiProfileService();
 
-
-
   async analyzeBusiness(businessId: string, runId?: string) {
-
     const business = await this.discoveryRepo.getBusiness(businessId);
-
     if (!business) throw new Error('Business not found');
 
-
-
     const result = await analyzeWebsite(business.website, {
-
       businessId,
-
       accountId: business.accountId ?? undefined,
-
       runId,
-
     });
-
-
 
     const analysis = await this.repo.upsertAnalysis({
-
       businessId,
-
       hasWebsite: result.hasWebsite,
-
       mobileFriendly: result.mobileFriendly,
-
       httpsEnabled: result.httpsEnabled,
-
       performanceScore: null,
-
       notes: result.notes,
-
     });
 
-
-
     const contactPatch: { email?: string; phone?: string } = {};
-
     if (result.extractedEmail && !business.email) contactPatch.email = result.extractedEmail;
-
     if (result.extractedPhone && !business.phone) contactPatch.phone = result.extractedPhone;
-
-
-
     if (contactPatch.email || contactPatch.phone) {
-
       await this.repo.updateBusinessContact(businessId, contactPatch);
-
     }
 
+    const websiteClass = deriveWebsiteClassFromCrawl({
+      website: business.website,
+      crawlStatus: result.crawlStatus,
+      httpsEnabled: result.httpsEnabled,
+      mobileFriendly: result.mobileFriendly,
+    });
 
+    const crawlMeta = {
+      pagesFetched: result.pagesFetched,
+      pageUrls: result.pageUrls,
+      title: result.title,
+      metaDescription: result.metaDescription,
+      whatsappUrl: result.whatsappUrl,
+      tiktokUrl: result.tiktokUrl,
+      linkedinUrl: result.linkedinUrl,
+      youtubeUrl: result.youtubeUrl,
+      twitterUrl: result.twitterUrl,
+      socialUrls: result.socialUrls,
+      linkInBioUrls: result.linkInBioUrls,
+      infrastructureAudit: result.infrastructureAudit,
+    };
+
+    await this.discoveryRepo.updateBusiness(businessId, {
+      metadata: {
+        ...((business.metadata as Record<string, unknown> | null) ?? {}),
+        websiteClass,
+        crawl: crawlMeta,
+      },
+    });
 
     if (business.accountId) {
-
       const account = await this.accountRepo.getById(business.accountId);
-
       const accountPatch: Record<string, unknown> = {
-
         lastCrawledAt: new Date(),
-
         crawlStatus: result.crawlStatus,
-
         metadata: {
-
           ...(account?.metadata as Record<string, unknown> | null),
-
-          crawl: {
-
-            pagesFetched: result.pagesFetched,
-
-            pageUrls: result.pageUrls,
-
-            title: result.title,
-
-            metaDescription: result.metaDescription,
-
-            whatsappUrl: result.whatsappUrl,
-
-            tiktokUrl: result.tiktokUrl,
-
-            linkedinUrl: result.linkedinUrl,
-
-            youtubeUrl: result.youtubeUrl,
-
-            twitterUrl: result.twitterUrl,
-
-            socialUrls: result.socialUrls,
-
-            linkInBioUrls: result.linkInBioUrls,
-
-            infrastructureAudit: result.infrastructureAudit,
-
-          },
-
+          websiteClass,
+          crawl: crawlMeta,
         },
-
       };
-
-
-
       if (result.extractedEmail && !account?.email) accountPatch.email = result.extractedEmail;
-
       if (result.extractedPhone && !account?.phone) accountPatch.phone = result.extractedPhone;
-
       if (result.facebookUrl && !account?.facebookUrl) accountPatch.facebookUrl = result.facebookUrl;
-
       if (result.instagramUrl && !account?.instagramUrl) accountPatch.instagramUrl = result.instagramUrl;
-
       await this.accountRepo.update(business.accountId, accountPatch);
-
     }
 
-
-
     logger.info('Website crawl complete', {
-
       businessId,
-
       crawlStatus: result.crawlStatus,
-
+      websiteClass,
       pagesFetched: result.pagesFetched,
-
     });
 
     return analysis;
-
   }
-
-
 
   async analyzeRunBusinesses(runId: string) {
     const all = await this.discoveryRepo.listBusinessesByRun(runId);
@@ -187,12 +131,8 @@ export class IntelligenceService {
     };
   }
 
-
-
   getAnalysis(businessId: string) {
-
     return this.repo.getAnalysis(businessId);
-
   }
 
   async browserEnrichRun(runId: string) {
@@ -224,5 +164,3 @@ export class IntelligenceService {
     return this.biProfiles.getOpportunityBrief(businessId);
   }
 }
-
-

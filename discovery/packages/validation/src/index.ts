@@ -180,6 +180,7 @@ export const createDiscoveryRunSchema = z
 
 export const DISCOVERY_PLAN_SOURCES = [
   'google_maps',
+  'openstreetmap',
   'public_search',
   'facebook',
   'social_search',
@@ -212,7 +213,7 @@ export const discoveryPlanFiltersSchema = z.object({
   minReviews: z.number().int().min(0).optional(),
   requirePhone: z.boolean().optional(),
   requireEmail: z.boolean().optional(),
-  socialSearch: z.enum(['off', 'tiktok', 'all']).optional(),
+  socialSearch: z.enum(['off', 'tiktok', 'youtube', 'all']).optional(),
 });
 
 export const discoveryPlanLimitsSchema = z.object({
@@ -376,3 +377,23 @@ export const createRevenueRecordSchema = z.object({
   type: z.enum(['one_time', 'retainer']),
   proposalId: z.string().uuid().optional(),
 });
+
+export {
+  attachDiscoveryEvidence,
+  finalizeEvidence,
+  formatEvidenceAttribution,
+  formatEvidenceConflicts,
+  isDiscoveryEvidence,
+  makeEvidenceEntry,
+  mergeAccountMetadata,
+  mergeDiscoveryEvidence,
+  mergeWebsiteClassField,
+  readDiscoveryEvidence,
+  type DiscoveryEvidence,
+  type DiscoveryEvidenceConfidence,
+  type DiscoveryEvidenceConflict,
+  type DiscoveryEvidenceEntry,
+  type DiscoveryEvidenceField,
+  type DiscoveryEvidenceSource,
+  type FieldEvidenceSpec,
+} from './discovery-evidence';

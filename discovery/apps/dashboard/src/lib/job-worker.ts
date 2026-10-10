@@ -22,6 +22,9 @@ import {
   DiscoveryService,
   DiscoveryRepository,
   DiscoveryPlanRepository,
+  formatProviderStatLogLine,
+  formatProviderStatsSummary,
+  getPlacesLifecycle,
   GooglePlacesDetailsProvider,
   refreshRunYieldStats,
   tickDiscoveryPlans,
@@ -97,9 +100,12 @@ function summarizeStagePayload(stage: string, payload: Record<string, unknown> |
         ? (payload.candidates as DiscoveredBusiness[])
         : [];
       const stats = Array.isArray(payload.providerStats) ? payload.providerStats : [];
-      const parts = stats.map(
-        (s) => `${(s as { provider: string; count: number }).provider}: ${(s as { count: number }).count}`,
-      );
+      const parts = stats.map((s) => {
+        const row = s as { provider: string; count: number; error?: string };
+        return row.error
+          ? `${row.provider}: failed`
+          : `${row.provider}: ${row.count}`;
+      });
       const prospect = countProspectCandidates(candidates);
       const highPotential = countHighPotentialEstimate(candidates);
       const prospectNote =
@@ -132,6 +138,10 @@ function summarizeStagePayload(stage: string, payload: Record<string, unknown> |
       return `${base}${boiNote}`;
     }
     case 'places_enrich': {
+      if (payload.skipped) {
+        const reason = String(payload.reason || 'skipped');
+        return `Places enrich skipped (${reason})`;
+      }
       const reviewBi = payload.reviewBi as { patched?: number } | undefined;
       const rescore = payload.rescore as { rescored?: number; scoreIncreased?: number } | undefined;
       const boiSynth = payload.boiSynth as { synthesized?: number } | undefined;
@@ -162,12 +172,19 @@ async function executeStage(job: ClaimedJob): Promise<Record<string, unknown> | 
     case 'discover': {
       const { candidates, providerStats } = await discovery.executeDiscoverStage(runId);
       for (const stat of providerStats) {
-        if (stat.error) {
-          await logRun(runId, 'warn', `${stat.provider}: failed — ${stat.error}`, 'discover');
-        } else {
-          await logRun(runId, 'info', `${stat.provider}: ${stat.count} candidates`, 'discover');
-        }
+        await logRun(
+          runId,
+          stat.error ? 'warn' : 'info',
+          formatProviderStatLogLine(stat),
+          'discover',
+        );
       }
+      await logRun(
+        runId,
+        'info',
+        `Provider totals: ${formatProviderStatsSummary(providerStats)}`,
+        'discover',
+      );
       return { candidates, providerStats };
     }
     case 'resolve_accounts': {
@@ -246,7 +263,45 @@ async function executeStage(job: ClaimedJob): Promise<Record<string, unknown> | 
       } as unknown as Record<string, unknown>;
     }
     case 'places_enrich': {
+      // Fast path when Places is dormant — no API, no review/rescore/BOI fan-out.
+      if (getPlacesLifecycle() === 'dormant') {
+        logger.info('Places enrich skipped — Places dormant', { runId });
+        await logRun(runId, 'info', 'Places enrich skipped (Places dormant)', 'places_enrich');
+        return {
+          skipped: true,
+          reason: 'places_dormant',
+          attempted: 0,
+          enriched: 0,
+          skippedCache: 0,
+          capped: 0,
+          enrichedBusinessIds: [],
+          reviewBi: { patched: 0 },
+          reviewSignalsCreated: 0,
+          reviewSignalsSkipped: 0,
+          rescore: { rescored: 0, scoreIncreased: 0 },
+          boiSynth: { synthesized: 0, skipped: 0 },
+        };
+      }
+
       const result = await placesDetails.enrichTopScoredForRun(runId);
+      if (result.skipped) {
+        logger.info('Places enrich skipped', { runId, reason: result.reason });
+        await logRun(
+          runId,
+          'info',
+          `Places enrich skipped (${result.reason ?? 'unconfigured'})`,
+          'places_enrich',
+        );
+        return {
+          ...result,
+          reviewBi: { patched: 0 },
+          reviewSignalsCreated: 0,
+          reviewSignalsSkipped: 0,
+          rescore: { rescored: 0, scoreIncreased: 0 },
+          boiSynth: { synthesized: 0, skipped: 0 },
+        };
+      }
+
       const reviewBi = await intelligence.patchPlacesReviewSignalsForRun(runId);
       const reviewSignals = await intent.deriveReviewPainSignalsForRun(runId);
 

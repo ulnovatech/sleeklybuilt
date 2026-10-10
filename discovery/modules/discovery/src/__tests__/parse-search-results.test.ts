@@ -91,6 +91,44 @@ const tiktokParsed = parseSearchResultItem(
 assert(tiktokParsed?.metadata?.tiktokUrl?.includes('tiktok.com') === true, 'tiktok url in metadata');
 assert(tiktokParsed?.metadata?.primaryPlatform === 'tiktok', 'tiktok primary platform');
 
+const factoryYtParams = { ...params, socialSearch: 'youtube' as const };
+assert(
+  parseSearchResultItem(
+    {
+      title: 'Kampala Eats (@kampalaeats) | TikTok',
+      link: 'https://www.tiktok.com/@kampalaeats',
+      snippet: 'Local food',
+    },
+    factoryYtParams,
+    'q',
+  ) === null,
+  'factory youtube filter drops TikTok from public_search',
+);
+assert(
+  parseSearchResultItem(
+    {
+      title: 'Kampala Kitchen - YouTube',
+      link: 'https://www.youtube.com/@kampalakitchen',
+      snippet: 'Channel',
+    },
+    factoryYtParams,
+    'q',
+  )?.metadata?.primaryPlatform === 'youtube',
+  'factory youtube filter keeps YouTube from public_search',
+);
+assert(
+  parseSearchResultItem(
+    {
+      title: 'Acme Ltd | LinkedIn',
+      link: 'https://www.linkedin.com/company/acme-ltd',
+      snippet: 'Company',
+    },
+    factoryYtParams,
+    'q',
+  ) === null,
+  'factory youtube filter drops LinkedIn from public_search',
+);
+
 const droppedYelp = parseSearchResultItem(
   {
     title: 'THE 10 BEST Restaurants in Kampala',

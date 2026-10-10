@@ -28,6 +28,7 @@ import {
 import { Archive, CheckCircle2, Send } from 'lucide-react';
 import { useApiQuery } from '@/lib/use-api-query';
 import { useListView } from '@/lib/use-list-view';
+import { WhyContactStrip } from '@/components/discovery/why-contact-strip';
 import { DumpsterWorkspace } from '@/components/ops/dumpster-workspace';
 import { PitchTodayYieldBanner } from '@/components/ops/pitch-today-card';
 import {
@@ -48,8 +49,17 @@ import { useToast } from '@/components/ui/toast';
 
 type LeadRow = {
   lead: { id: string; status: string; priority: string; updatedAt?: string; nextFollowUpAt?: string | null };
-  business: { name: string; city: string | null };
+  business: {
+    name: string;
+    city: string | null;
+    phone?: string | null;
+    email?: string | null;
+    website?: string | null;
+    source?: string | null;
+    metadata?: Record<string, unknown> | null;
+  };
   factory?: { rank: number | null; recommendedChannel: string | null; memberId: string };
+  scoreFactors?: Record<string, number> | null;
 };
 
 type LeadsListResponse = {
@@ -339,15 +349,27 @@ function LeadsPageContent() {
       {
         id: 'business',
         header: 'Business',
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <p className="truncate font-medium text-ink">{row.original.business.name}</p>
-            {row.original.business.city ? (
-              <p className="truncate text-xs text-ink-muted">{row.original.business.city}</p>
-            ) : null}
-          </div>
-        ),
-        size: 220,
+        cell: ({ row }) => {
+          const b = row.original.business;
+          return (
+            <div className="min-w-0">
+              <p className="truncate font-medium text-ink">{b.name}</p>
+              {b.city ? <p className="truncate text-xs text-ink-muted">{b.city}</p> : null}
+              {pitchToday ? (
+                <WhyContactStrip
+                  density="compact"
+                  website={b.website}
+                  phone={b.phone}
+                  email={b.email}
+                  metadata={b.metadata}
+                  scoreFactors={row.original.scoreFactors}
+                  className="mt-1.5"
+                />
+              ) : null}
+            </div>
+          );
+        },
+        size: pitchToday ? 320 : 220,
       },
       {
         id: 'status',
@@ -384,16 +406,18 @@ function LeadsPageContent() {
         header: '',
         cell: ({ row }) =>
           pitchToday ? (
-            <button
+            <Button
               type="button"
-              className="text-xs font-medium text-accent hover:underline"
+              variant="primary"
+              size="sm"
+              className="min-h-11 min-w-11 px-3"
               onClick={(event) => {
                 event.stopPropagation();
                 setSelected(row.original.lead.id);
               }}
             >
               Pitch
-            </button>
+            </Button>
           ) : (
             <Link
               href={`/leads/${row.original.lead.id}`}
@@ -403,7 +427,7 @@ function LeadsPageContent() {
               Open
             </Link>
           ),
-        size: 64,
+        size: pitchToday ? 88 : 64,
         enableSorting: false,
       },
     ],
@@ -421,7 +445,8 @@ function LeadsPageContent() {
           <p className="text-sm font-medium text-ink">Pitch today</p>
           <PitchTodayYieldBanner sellDate={state.filters.sellDate} />
           <p className="mt-0.5 text-sm text-ink-muted">
-            Tap a row to pitch in the overlay — list stays here. Record advances to the next unpitched keeper.
+            Each row shows website class, contactability, and why to contact — decide before opening the
+            overlay. Tap a row to pitch; record advances to the next unpitched keeper.
             {state.filters.sellDate ? ` · sell ${state.filters.sellDate}` : ''}
           </p>
           <div className="mt-2">

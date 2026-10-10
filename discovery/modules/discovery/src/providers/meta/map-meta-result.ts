@@ -1,4 +1,5 @@
 import { platformSettings } from '@agency/settings';
+import { attachDiscoveryEvidence } from '@agency/validation';
 import type { DiscoveredBusiness, DiscoverySearchParams } from '../types';
 import type {
   MetaGraphPageResult,
@@ -45,53 +46,79 @@ export function mapMetaPageToDiscoveredBusiness(
     (params.city && !platformSettings.isAllCities(params.city) ? params.city : undefined);
   const country = locationCountry(page.location, params.country);
 
-  results.push({
-    name,
-    industry: page.category?.trim() || params.industry,
-    website: page.website?.trim() || undefined,
-    phone: page.phone?.trim() || undefined,
-    city,
-    country,
-    source: 'facebook',
-    sourceUrl: facebookPageUrl(page),
-    externalId: `meta:page:${page.id}`,
-    facebookUrl: facebookPageUrl(page),
-    instagramUrl: page.instagram_business_account
-      ? instagramProfileUrl(page.instagram_business_account)
-      : undefined,
-    metadata: {
-      metaGraphQuery: query,
-      metaGraphType: 'page' satisfies MetaGraphSearchType,
-      metaPageId: page.id,
-      fanCount: page.fan_count,
-      category: page.category,
-      instagramBusinessId: page.instagram_business_account?.id,
-    },
-  });
+  results.push(
+    attachDiscoveryEvidence(
+      {
+        name,
+        industry: page.category?.trim() || params.industry,
+        website: page.website?.trim() || undefined,
+        phone: page.phone?.trim() || undefined,
+        city,
+        country,
+        source: 'facebook',
+        sourceUrl: facebookPageUrl(page),
+        externalId: `meta:page:${page.id}`,
+        facebookUrl: facebookPageUrl(page),
+        instagramUrl: page.instagram_business_account
+          ? instagramProfileUrl(page.instagram_business_account)
+          : undefined,
+        metadata: {
+          metaGraphQuery: query,
+          metaGraphType: 'page' satisfies MetaGraphSearchType,
+          metaApi: 'pages_search',
+          metaPageId: page.id,
+          fanCount: page.fan_count,
+          category: page.category,
+          instagramBusinessId: page.instagram_business_account?.id,
+        },
+      },
+      {
+        phone: { method: 'meta_graph.page.phone', backend: 'pages_search', confidence: 'high' },
+        website: { method: 'meta_graph.page.website', backend: 'pages_search', confidence: 'medium' },
+        facebookUrl: { method: 'meta_graph.page.link', backend: 'pages_search', confidence: 'high' },
+        instagramUrl: {
+          method: 'meta_graph.page.instagram',
+          backend: 'pages_search',
+          confidence: 'high',
+        },
+      },
+    ),
+  );
 
   const ig = page.instagram_business_account;
   if (ig?.id) {
     const igName = ig.name?.trim() || ig.username?.trim() || name;
-    results.push({
-      name: igName,
-      industry: page.category?.trim() || params.industry,
-      website: ig.website?.trim() || page.website?.trim() || undefined,
-      phone: page.phone?.trim() || undefined,
-      city,
-      country,
-      source: 'instagram',
-      sourceUrl: instagramProfileUrl(ig),
-      externalId: `meta:ig:${ig.id}`,
-      facebookUrl: facebookPageUrl(page),
-      instagramUrl: instagramProfileUrl(ig),
-      metadata: {
-        metaGraphQuery: query,
-        metaGraphType: 'page',
-        metaPageId: page.id,
-        instagramBusinessId: ig.id,
-        linkedFacebookPageId: page.id,
-      },
-    });
+    results.push(
+      attachDiscoveryEvidence(
+        {
+          name: igName,
+          industry: page.category?.trim() || params.industry,
+          website: ig.website?.trim() || page.website?.trim() || undefined,
+          phone: page.phone?.trim() || undefined,
+          city,
+          country,
+          source: 'instagram',
+          sourceUrl: instagramProfileUrl(ig),
+          externalId: `meta:ig:${ig.id}`,
+          facebookUrl: facebookPageUrl(page),
+          instagramUrl: instagramProfileUrl(ig),
+          metadata: {
+            metaGraphQuery: query,
+            metaGraphType: 'page',
+            metaApi: 'pages_search',
+            metaPageId: page.id,
+            instagramBusinessId: ig.id,
+            linkedFacebookPageId: page.id,
+          },
+        },
+        {
+          phone: { method: 'meta_graph.linked_page.phone', backend: 'pages_search', confidence: 'medium' },
+          website: { method: 'meta_graph.ig.website', backend: 'pages_search', confidence: 'medium' },
+          facebookUrl: { method: 'meta_graph.linked_page', backend: 'pages_search', confidence: 'high' },
+          instagramUrl: { method: 'meta_graph.ig.profile', backend: 'pages_search', confidence: 'high' },
+        },
+      ),
+    );
   }
 
   return results;
@@ -111,22 +138,34 @@ export function mapMetaPlaceToDiscoveredBusiness(
   const country = locationCountry(place.location, params.country);
   const url = place.link?.trim() || `https://www.facebook.com/${place.id}`;
 
-  return {
-    name,
-    industry: place.category?.trim() || params.industry,
-    website: place.website?.trim() || undefined,
-    phone: place.phone?.trim() || undefined,
-    city,
-    country,
-    source: 'facebook',
-    sourceUrl: url,
-    externalId: `meta:place:${place.id}`,
-    facebookUrl: url,
-    metadata: {
-      metaGraphQuery: query,
-      metaGraphType: 'place' satisfies MetaGraphSearchType,
-      metaPlaceId: place.id,
-      category: place.category,
+  return attachDiscoveryEvidence(
+    {
+      name,
+      industry: place.category?.trim() || params.industry,
+      website: place.website?.trim() || undefined,
+      phone: place.phone?.trim() || undefined,
+      city,
+      country,
+      source: 'facebook',
+      sourceUrl: url,
+      externalId: `meta:place:${place.id}`,
+      facebookUrl: url,
+      metadata: {
+        metaGraphQuery: query,
+        metaGraphType: 'place' satisfies MetaGraphSearchType,
+        metaApi: 'legacy_place_mapper',
+        metaPlaceId: place.id,
+        category: place.category,
+      },
     },
-  };
+    {
+      phone: { method: 'meta_graph.place.phone', backend: 'legacy_place_mapper', confidence: 'medium' },
+      website: {
+        method: 'meta_graph.place.website',
+        backend: 'legacy_place_mapper',
+        confidence: 'medium',
+      },
+      facebookUrl: { method: 'meta_graph.place.link', backend: 'legacy_place_mapper', confidence: 'high' },
+    },
+  );
 }

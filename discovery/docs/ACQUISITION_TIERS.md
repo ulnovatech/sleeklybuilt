@@ -7,28 +7,40 @@ Five tiers for lead acquisition, ordered by cost and invasiveness. Higher tiers 
 - **Module:** `modules/discovery/src/providers/places/`
 - **Budget:** `google_places` monthly cap
 - **Modes:** standard, boost (disabled in economy)
+- **Dormant:** circuit / `GOOGLE_ACQUISITION_DISABLED` → lifecycle `dormant`; discover skips Places; `places_enrich` returns clean no-op (no review/rescore fan-out). Plan B scoring uses multi-source corroboration (`+3` / `+5` cap) from `discoveryEvidence` instead of Places reviews
 
-## Tier 2 — Public search (CSE / Bing)
+## Tier 1b — OpenStreetMap (Geofabrik / Overpass) — Plan B
+
+- **Module:** `modules/discovery/src/providers/osm/`
+- **Primary:** local Geofabrik Uganda POI index (`pnpm discovery:osm-geofabrik`)
+- **Refresh:** weekly (stale &gt; 7 days); cron hint `0 3 * * 0` Africa/Kampala — [PLAN_B_OPS_RUNBOOK.md](PLAN_B_OPS_RUNBOOK.md)
+- **Fallback:** Overpass + Nominatim when extract absent, extract returns zero hits, or `OSM_FORCE_OVERPASS=true`
+- **Cost:** $0 · ODbL
+
+## Tier 2 — Public search (Brave / CSE)
 
 - **Module:** `modules/discovery/src/providers/public-search.ts`
-- **Budget:** `google_cse`, `bing_search` daily caps
+- **Credential:** `BRAVE_SEARCH_API_KEY` (Plan B primary) and/or CSE when Google circuit closed
+- **Budget:** `brave_search`, `google_cse` daily caps (Bing retired / legacy-gated)
 - **Config:** API keys in Settings
 - **Pagination:** 1–3 pages per query (10 results/page) by acquisition mode
 - **Classifier:** `search-result-classifier.ts` — drops directories/articles; keeps business + social profile URLs
 - **Scope:** general web queries (industry + location, contact intent) — no `site:` social queries (see Tier 2b)
 
-## Tier 2b — Social search (CSE / Bing `site:`)
+## Tier 2b — Social search (Brave / CSE `site:`)
 
 - **Module:** `modules/discovery/src/providers/social/social-search-provider.ts`
-- **Budget:** shares Tier 2 `google_cse` / `bing_search` daily caps
+- **Budget:** shares Tier 2 `brave_search` / `google_cse` daily caps
 - **Queries:** `build-social-search-queries.ts` — TikTok, LinkedIn company, YouTube, X/Twitter
-- **Parser:** `parse-social-search-result.ts` — social profiles only; Facebook/Instagram handled by Meta Graph (Tier 2c)
+- **Factory Plan B:** `filters.socialSearch = youtube` — YouTube channels only (no TikTok / LinkedIn / X)
+- **Parser:** `parse-social-search-result.ts` — social profiles only; respects plan `socialSearch` filter; Facebook/Instagram handled by Meta Graph (Tier 2c)
 - **ToS note:** uses public search engine results only — no headless scraping of social platforms
 
 ## Tier 2c — Meta Graph (Facebook / Instagram)
 
 - **Module:** `modules/discovery/src/providers/meta/meta-graph-provider.ts`
-- **Credential:** `META_GRAPH_API_TOKEN`
+- **Credential:** `META_GRAPH_API_TOKEN` + Pages Search App Review (gate via `pnpm discovery:meta-probe` / `META_PAGES_SEARCH_READY`)
+- **Endpoint:** `GET /pages/search` (not deprecated `/search?type=page|place`)
 - **Budget:** `meta_graph` daily cap
 
 ## Tier 3 — HTTP crawl

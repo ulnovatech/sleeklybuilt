@@ -1,5 +1,7 @@
 import { createHash } from 'crypto';
 import { platformSettings } from '@agency/settings';
+import { attachDiscoveryEvidence } from '@agency/validation';
+import { platformsForSocialSearch } from '../../lib/build-social-search-queries';
 import type { DiscoveredBusiness, DiscoverySearchParams, DiscoverySource } from '../types';
 import {
   classifySearchResult,
@@ -8,6 +10,15 @@ import {
 import type { SearchResultItem } from '../parse-search-results';
 
 const SOCIAL_PLATFORMS: SocialPlatform[] = ['tiktok', 'linkedin', 'youtube', 'twitter'];
+
+/** Map classifier platform → query-builder platform id (twitter → x). */
+function queryPlatformFor(platform: SocialPlatform): 'tiktok' | 'linkedin' | 'youtube' | 'x' | null {
+  if (platform === 'tiktok') return 'tiktok';
+  if (platform === 'linkedin') return 'linkedin';
+  if (platform === 'youtube') return 'youtube';
+  if (platform === 'twitter') return 'x';
+  return null;
+}
 
 function hashLink(link: string): string {
   return createHash('sha256').update(link).digest('hex').slice(0, 24);
@@ -66,6 +77,10 @@ export function parseSocialSearchResultItem(
   if (classification.kind !== 'social_profile' || !classification.platform) return null;
   if (!SOCIAL_PLATFORMS.includes(classification.platform)) return null;
 
+  const allowed = platformsForSocialSearch(params.socialSearch);
+  const queryPlatform = queryPlatformFor(classification.platform);
+  if (!queryPlatform || !allowed.includes(queryPlatform)) return null;
+
   const link = item.link.trim();
   const name = cleanTitle(item.title);
   if (name.length < 2) return null;
@@ -89,5 +104,13 @@ export function parseSocialSearchResultItem(
   };
 
   applySocialUrl(business, platform, link);
-  return business;
+  return attachDiscoveryEvidence(business, {
+    sourceUrl: { method: 'social_search.profile', confidence: 'high' },
+    youtubeUrl: { method: 'social_search.youtube', confidence: 'high' },
+    tiktokUrl: { method: 'social_search.tiktok', confidence: 'high' },
+    linkedinUrl: { method: 'social_search.linkedin', confidence: 'high' },
+    twitterUrl: { method: 'social_search.x', confidence: 'high' },
+    facebookUrl: { method: 'social_search.profile', confidence: 'high' },
+    instagramUrl: { method: 'social_search.profile', confidence: 'high' },
+  });
 }

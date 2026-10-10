@@ -93,6 +93,7 @@ const registryFn = registrySource.slice(
 );
 const providerPushOrder = [
   'placesDiscover',
+  'osmDiscover',
   'searchProvider',
   'metaProvider',
   'socialProvider',
@@ -108,6 +109,26 @@ for (const provider of providerPushOrder) {
 // --- places_enrich post-hooks (review pain graceful path) ---
 const workerSource = fs.readFileSync(workerPath, 'utf-8');
 assert(workerSource.includes("case 'places_enrich'"), 'job worker handles places_enrich');
+assert(
+  workerSource.includes('formatProviderStatsSummary'),
+  'discover stage logs provider totals summary',
+);
+assert(
+  workerSource.includes('formatProviderStatLogLine'),
+  'discover stage logs per-provider stats',
+);
+assert(
+  workerSource.includes("getPlacesLifecycle() === 'dormant'"),
+  'places_enrich early-exits when Places dormant',
+);
+assert(
+  workerSource.includes("reason: 'places_dormant'"),
+  'places_enrich dormant payload uses places_dormant reason',
+);
+assert(
+  workerSource.includes('Places enrich skipped'),
+  'places_enrich summarizes dormant skip in stage log',
+);
 assert(
   workerSource.includes('patchPlacesReviewSignalsForRun'),
   'places_enrich patches BI review signals',

@@ -1,5 +1,7 @@
 import { createHash } from 'crypto';
 import { platformSettings } from '@agency/settings';
+import { attachDiscoveryEvidence } from '@agency/validation';
+import { platformsForSocialSearch } from '../lib/build-social-search-queries';
 import type { DiscoveredBusiness, DiscoverySearchParams } from './types';
 import {
   classifySearchResult,
@@ -8,6 +10,29 @@ import {
   isKeepableSearchResult,
   type SocialPlatform,
 } from './search-result-classifier';
+
+/** Align public-search social hits with plan socialSearch filter (factory = youtube). */
+function isPublicSearchSocialAllowed(
+  platform: SocialPlatform,
+  mode: DiscoverySearchParams['socialSearch'],
+): boolean {
+  if (platform === 'facebook' || platform === 'instagram') {
+    // Meta Graph owns FB/IG; keep only when unrestricted
+    return mode == null || mode === 'all';
+  }
+  const queryPlatform =
+    platform === 'tiktok'
+      ? 'tiktok'
+      : platform === 'linkedin'
+        ? 'linkedin'
+        : platform === 'youtube'
+          ? 'youtube'
+          : platform === 'twitter'
+            ? 'x'
+            : null;
+  if (!queryPlatform) return false;
+  return platformsForSocialSearch(mode).includes(queryPlatform);
+}
 
 export interface SearchResultItem {
   title: string;
@@ -157,25 +182,31 @@ export function extractDirectoryCandidate(
   const website = extractExternalWebsiteFromSnippet(item.snippet, directoryHost);
   const phone = extractPhoneFromSnippet(item.snippet);
 
-  return {
-    name,
-    industry: params.industry,
-    country: params.country,
-    city: cityHint,
-    source: 'public_search',
-    sourceUrl: link,
-    externalId: `search:${hashLink(link)}`,
-    website,
-    phone,
-    metadata: {
-      searchQuery: query,
-      snippet: item.snippet,
-      domain: directoryHost,
-      resultKind: 'directory',
-      extractedFromDirectory: true,
-      directoryHost,
+  return attachDiscoveryEvidence(
+    {
+      name,
+      industry: params.industry,
+      country: params.country,
+      city: cityHint,
+      source: 'public_search',
+      sourceUrl: link,
+      externalId: `search:${hashLink(link)}`,
+      website,
+      phone,
+      metadata: {
+        searchQuery: query,
+        snippet: item.snippet,
+        domain: directoryHost,
+        resultKind: 'directory',
+        extractedFromDirectory: true,
+        directoryHost,
+      },
     },
-  };
+    {
+      phone: { method: 'directory_snippet', confidence: 'medium' },
+      website: { method: 'directory_snippet_website', confidence: 'low' },
+    },
+  );
 }
 
 function applySocialUrl(
@@ -244,8 +275,15 @@ export function parseSearchResultItem(
   };
 
   if (classification.kind === 'social_profile' && classification.platform) {
+    if (!isPublicSearchSocialAllowed(classification.platform, params.socialSearch)) {
+      return null;
+    }
     applySocialUrl(business, classification.platform, link);
-    return business;
+    return attachDiscoveryEvidence(business, {
+      facebookUrl: { method: 'public_search.social', confidence: 'high' },
+      instagramUrl: { method: 'public_search.social', confidence: 'high' },
+      website: { method: 'public_search.social', confidence: 'low' },
+    });
   }
 
   if (lower.includes('google.com/maps') || lower.includes('maps.google')) {
@@ -254,5 +292,9 @@ export function parseSearchResultItem(
     business.website = link;
   }
 
-  return business;
+  return attachDiscoveryEvidence(business, {
+    website: { method: 'public_search.result_link', confidence: 'medium' },
+    googleMapsUrl: { method: 'public_search.maps_link', confidence: 'high' },
+    phone: { method: 'snippet_regex', confidence: 'low' },
+  });
 }

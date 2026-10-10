@@ -13,6 +13,8 @@
     "jobs:worker": "pnpm --filter @agency/dashboard jobs:worker",
     "discovery:seed-factory": "pnpm --filter @agency/dashboard discovery:seed-factory",
     "discovery:factory-health": "pnpm --filter @agency/dashboard discovery:factory-health",
+    "discovery:meta-probe": "pnpm --filter @agency/dashboard discovery:meta-probe",
+    "discovery:osm-geofabrik": "pnpm --filter @agency/discovery discovery:osm-geofabrik",
     "discovery:purify": "pnpm --filter @agency/dashboard discovery:purify",
     "hunter:worker": "pnpm --filter @agency/dashboard hunter:worker",
     "intent:rss-poll": "pnpm --filter @agency/dashboard intent:rss-poll",

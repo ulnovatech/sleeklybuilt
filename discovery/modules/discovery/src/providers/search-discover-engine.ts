@@ -17,6 +17,7 @@ export type SearchDiscoverStats = {
   queriesExecuted: number;
   apiCalls: number;
   cseCalls: number;
+  braveCalls: number;
   bingCalls: number;
   dropped: number;
   budgetExhausted: boolean;
@@ -42,7 +43,7 @@ export type RunParallelSearchDiscoverOpts = {
 };
 
 /**
- * Runs CSE/Bing queries in parallel with shared dedupe, budget tracking, and early exit
+ * Runs CSE/Brave queries in parallel with shared dedupe, budget tracking, and early exit
  * once enough keepable candidates are collected.
  */
 export async function runParallelSearchDiscover(
@@ -64,6 +65,7 @@ export async function runParallelSearchDiscover(
     results: [] as DiscoveredBusiness[],
     apiCalls: 0,
     cseCalls: 0,
+    braveCalls: 0,
     bingCalls: 0,
     dropped: 0,
     budgetExhausted: false,
@@ -88,8 +90,9 @@ export async function runParallelSearchDiscover(
         country: params.country,
       });
 
-      state.apiCalls += searched.cseCalls + searched.bingCalls;
+      state.apiCalls += searched.cseCalls + searched.braveCalls + searched.bingCalls;
       state.cseCalls += searched.cseCalls;
+      state.braveCalls += searched.braveCalls;
       state.bingCalls += searched.bingCalls;
       state.budgetExhausted = state.budgetExhausted || searched.budgetExhausted;
       state.errors.push(...searched.errors);
@@ -144,6 +147,7 @@ export async function runParallelSearchDiscover(
     queriesExecuted: state.queriesExecuted,
     apiCalls: state.apiCalls,
     cseCalls: state.cseCalls,
+    braveCalls: state.braveCalls,
     bingCalls: state.bingCalls,
     dropped: state.dropped,
     budgetExhausted: state.budgetExhausted,
@@ -157,6 +161,7 @@ export async function runParallelSearchDiscover(
     queriesExecuted: state.queriesExecuted,
     apiCalls: state.apiCalls,
     cseCalls: state.cseCalls,
+    braveCalls: state.braveCalls,
     bingCalls: state.bingCalls,
     dropped: state.dropped,
     budgetExhausted: state.budgetExhausted,

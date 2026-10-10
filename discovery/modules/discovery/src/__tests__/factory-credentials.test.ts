@@ -30,7 +30,7 @@ assert(Boolean(keyOnly.reason?.includes('CX')), 'key without CX asks for engine 
 
 const empty = classifyCseCredential(undefined, undefined);
 assert(!empty.configured && !empty.ready, 'missing CSE is optional-off');
-assert(Boolean(empty.reason?.includes('Optional overlay')), 'missing CSE is optional overlay');
+assert(Boolean(empty.reason?.toLowerCase().includes('optional')), 'missing CSE is optional');
 
 const widgetCx = classifyCseCredential('', '7215411f0fcaf4220');
 assert(!widgetCx.ready, 'empty key string with CX is not ready');

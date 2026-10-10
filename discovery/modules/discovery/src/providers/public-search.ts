@@ -26,9 +26,12 @@ function toPublicStats(stats: SearchDiscoverStats): PublicSearchDiscoverStats {
 
 export class PublicSearchProvider implements DiscoveryProvider {
   readonly name = 'public_search' as const;
-  readonly label = 'Public Search (Google CSE / Bing)';
+  readonly label = 'Public Search (Brave / Google CSE)';
 
-  private client = new SearchApiClient({ logContext: 'public_search' });
+  private client = new SearchApiClient({
+    logContext: 'public_search',
+    braveOperation: 'search',
+  });
 
   async isConfigured(): Promise<boolean> {
     await platformSettings.ensureLoaded();

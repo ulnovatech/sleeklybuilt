@@ -1,4 +1,4 @@
-import { classifyWebsiteClass, keepOnMorningPath } from '../lib/website-class';
+import { keepOnMorningPath } from '../lib/website-class';
 
 export const FACTORY_MISS_REASONS = [
   'suppressed',
@@ -33,10 +33,9 @@ function businessStatus(metadata?: Record<string, unknown> | null): string | und
   return typeof raw === 'string' ? raw : undefined;
 }
 
+/** Healthy owned site only — broken / low_quality / uncertain stay on Morning Path. */
 function hasOwnedWebsite(input: PurifyGateInput): boolean {
-  if (!keepOnMorningPath({ website: input.website, metadata: input.metadata })) return true;
-  if (!input.analysisHasWebsite) return false;
-  return classifyWebsiteClass(input.website) !== 'link_in_bio';
+  return !keepOnMorningPath({ website: input.website, metadata: input.metadata });
 }
 
 /** First blocking miss reason, or null if the row may enter the morning ranking pool. */
