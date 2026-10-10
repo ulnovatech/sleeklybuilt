@@ -24,6 +24,7 @@ import {
   ErrorState,
   Input,
   Skeleton,
+  StatusBadge,
 } from '@/components/ui/primitives';
 import { BOI_COPY } from '@/lib/product-copy';
 import { api } from '@/lib/api';

@@ -28,7 +28,12 @@ function mergePlaceIntoCandidate(
   candidate: DiscoveredBusiness,
   place: PlacesTextSearchResult,
 ): DiscoveredBusiness {
-  const placesId = place.id;
+  const placesId = place.id?.trim() || '';
+  const externalId = placesId
+    ? placesId.startsWith('places/')
+      ? placesId
+      : `places/${placesId}`
+    : candidate.externalId;
   const phone = candidate.phone || place.nationalPhoneNumber || undefined;
   const website = candidate.website || place.websiteUri || undefined;
   const googleMapsUrl = candidate.googleMapsUrl || place.googleMapsUri;
@@ -37,7 +42,7 @@ function mergePlaceIntoCandidate(
       name: candidate.name,
       source: 'google_maps' as const,
       sourceUrl: place.googleMapsUri,
-      externalId: place.id.startsWith('places/') ? place.id : `places/${place.id}`,
+      externalId,
       phone: place.nationalPhoneNumber || undefined,
       website: place.websiteUri || undefined,
       googleMapsUrl: place.googleMapsUri,

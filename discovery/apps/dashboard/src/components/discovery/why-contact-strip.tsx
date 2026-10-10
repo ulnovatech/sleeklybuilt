@@ -1,6 +1,10 @@
 'use client';
 
-import { buildWhyContactScan, contactabilityTone, websiteClassTone } from '@agency/discovery';
+import {
+  buildWhyContactScan,
+  contactabilityTone,
+  websiteClassTone,
+} from '@agency/discovery/why-contact';
 import { StatusBadge } from '@/components/ui/primitives';
 import { cn } from '@/lib/utils';
 

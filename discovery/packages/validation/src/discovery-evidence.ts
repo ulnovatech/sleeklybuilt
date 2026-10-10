@@ -152,7 +152,7 @@ export function attachDiscoveryEvidence<
 >(
   business: T,
   specs: Partial<Record<DiscoveryEvidenceField, FieldEvidenceSpec>> = {},
-): T {
+): T & { metadata: Record<string, unknown> } {
   const entries: DiscoveryEvidenceEntry[] = [];
   const push = (field: DiscoveryEvidenceField, value: string | undefined) => {
     const spec = specs[field] ?? {};
@@ -185,7 +185,12 @@ export function attachDiscoveryEvidence<
   push('linkedinUrl', metaStr('linkedinUrl'));
   push('twitterUrl', metaStr('twitterUrl'));
 
-  if (entries.length === 0) return business;
+  if (entries.length === 0) {
+    return {
+      ...business,
+      metadata: { ...(business.metadata ?? {}) },
+    };
+  }
 
   const evidence = finalizeEvidence(entries, {
     phone: business.phone,
