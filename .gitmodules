@@ -1,3 +1,6 @@
 [submodule "sleekly-blog"]
 	path = sleekly-blog
 	url = https://github.com/ulnovatech/sleekly-blog.git
+[submodule ".agents/marketingskills"]
+	path = .agents/marketingskills
+	url = https://github.com/coreyhaines31/marketingskills.git

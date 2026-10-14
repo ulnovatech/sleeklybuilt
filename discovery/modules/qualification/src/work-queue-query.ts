@@ -129,16 +129,21 @@ export async function queryWorkQueueCandidates(filters: WorkQueueFilters = {}) {
     END
   `;
 
-  // Cast score/strength to int — live drift to text otherwise yields "text + integer".
+  // Cast bound priority bases AND score/strength to int.
+  // Drizzle parameterizes JS numbers; without ::int Postgres treats them as text and
+  // fails with "operator does not exist: text + integer" when adding integer CASE/LEAST arms.
   const oppPriority = sql`
-    CASE WHEN (${prospectVerifiedSql}) THEN ${VERIFIED_OPPORTUNITY_BASE} ELSE ${UNVERIFIED_OPPORTUNITY_BASE} END
-    + CASE WHEN (${GREENFIELD_SQL}) THEN ${GREENFIELD_LANE_BONUS} ELSE 0 END
+    CASE
+      WHEN (${prospectVerifiedSql}) THEN (${VERIFIED_OPPORTUNITY_BASE})::int
+      ELSE (${UNVERIFIED_OPPORTUNITY_BASE})::int
+    END
+    + CASE WHEN (${GREENFIELD_SQL}) THEN (${GREENFIELD_LANE_BONUS})::int ELSE 0 END
     + LEAST(100, GREATEST(0, COALESCE(ls.score::int, 0)))
-    + CASE WHEN (${prospectVerifiedSql}) THEN ${reachBonus} ELSE 0 END
+    + CASE WHEN (${prospectVerifiedSql}) THEN (${reachBonus})::int ELSE 0 END
   `;
 
   const demandPriority = sql`
-    ${DEMAND_PRIORITY_BASE}
+    (${DEMAND_PRIORITY_BASE})::int
     + LEAST(100, GREATEST(0, COALESCE(s.signal_strength::int, 0)))
   `;
 
