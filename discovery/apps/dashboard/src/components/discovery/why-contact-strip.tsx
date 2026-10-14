@@ -52,16 +52,28 @@ export function WhyContactStrip({
     >
       {compact ? (
         <p className="text-[11px] leading-snug text-ink-muted">
-          <span className="font-medium text-ink">{scan.websiteClassLabel}</span>
+          <span className="font-medium text-ink">{scan.greenfieldStatusLabel}</span>
           <span className="mx-1 text-ink-faint">·</span>
           <span className="font-medium text-ink">{scan.contactabilityLabel}</span>
         </p>
       ) : (
         <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge
+            tone={
+              scan.greenfieldStatus === 'confirmed_greenfield'
+                ? 'success'
+                : scan.greenfieldStatus === 'existing_website'
+                  ? 'neutral'
+                  : 'warning'
+            }
+          >
+            {scan.greenfieldStatusLabel}
+          </StatusBadge>
           <StatusBadge tone={websiteClassTone(scan.websiteClass)}>{scan.websiteClassLabel}</StatusBadge>
           <StatusBadge tone={contactabilityTone(scan.contactability)}>
             {scan.contactabilityLabel}
           </StatusBadge>
+          <span className="text-[10px] text-ink-faint">{scan.searchCoverageLabel}</span>
         </div>
       )}
 

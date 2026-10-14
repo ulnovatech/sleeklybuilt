@@ -67,6 +67,27 @@ export const FACTORY_CADENCE: PlanCadence = {
   daysOfWeek: [1, 2, 3, 4, 5],
 };
 
+/** True when factory plan cadence drifts from the locked every-2h weekday EAT window. */
+export function factoryPlanNeedsCadenceHeal(cadence: unknown): boolean {
+  if (!cadence || typeof cadence !== 'object') return true;
+  const c = cadence as Record<string, unknown>;
+  if (c.everyHours !== FACTORY_CADENCE.everyHours) return true;
+  const days = Array.isArray(c.daysOfWeek) ? c.daysOfWeek.map(Number) : [];
+  const expectedDays = FACTORY_CADENCE.daysOfWeek ?? [];
+  if (days.length !== expectedDays.length || days.some((d, i) => d !== expectedDays[i])) {
+    return true;
+  }
+  const hours = c.activeHours;
+  if (!hours || typeof hours !== 'object') return true;
+  const h = hours as Record<string, unknown>;
+  const expected = FACTORY_CADENCE.activeHours!;
+  return (
+    h.start !== expected.start ||
+    h.end !== expected.end ||
+    h.timezone !== expected.timezone
+  );
+}
+
 export const FACTORY_FILTERS: PlanFiltersConfig = {
   presence: 'greenfield',
   requirePhone: true,

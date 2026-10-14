@@ -22,6 +22,8 @@ import {
   DiscoveryService,
   DiscoveryRepository,
   DiscoveryPlanRepository,
+  WebsiteDiscoverService,
+  ContactEnrichService,
   formatProviderStatLogLine,
   formatProviderStatsSummary,
   getPlacesLifecycle,
@@ -40,6 +42,8 @@ const queue = new JobQueue();
 const jobRepo = new JobRepository();
 const discovery = new DiscoveryService();
 const discoveryRepo = new DiscoveryRepository();
+const websiteDiscover = new WebsiteDiscoverService();
+const contactEnrich = new ContactEnrichService();
 const intelligence = new IntelligenceService();
 const intent = new IntentService();
 const qualification = new QualificationService();
@@ -114,6 +118,10 @@ function summarizeStagePayload(stage: string, payload: Record<string, unknown> |
     }
     case 'resolve_accounts':
       return `Saved ${payload.businessCount ?? 0} businesses (${payload.suppressedSkipped ?? 0} suppressed)`;
+    case 'website_discover':
+      return `Website discover ${payload.updated ?? 0} · confirmed ${payload.confirmedGreenfield ?? 0} · existing ${payload.existingWebsite ?? 0} · uncertain ${payload.uncertain ?? 0}`;
+    case 'contact_enrich':
+      return `Contact enrich ${payload.updated ?? 0} · emails +${payload.emailsAdded ?? 0} · socials +${payload.socialsAdded ?? 0}`;
     case 'crawl':
       return `Crawled ${payload.analyzed ?? 0} websites`;
     case 'bi_enrich':
@@ -198,6 +206,14 @@ async function executeStage(job: ClaimedJob): Promise<Record<string, unknown> | 
         knownFresh: result.knownFresh,
         knownStale: result.knownStale,
       };
+    }
+    case 'website_discover': {
+      const result = await websiteDiscover.discoverForRun(runId);
+      return result as unknown as Record<string, unknown>;
+    }
+    case 'contact_enrich': {
+      const result = await contactEnrich.enrichForRun(runId);
+      return result as unknown as Record<string, unknown>;
     }
     case 'crawl': {
       const result = await intelligence.analyzeRunBusinesses(runId);

@@ -10,12 +10,14 @@ export type ProspectContactInput = {
   accountMetadata?: Record<string, unknown> | null;
 };
 
-/** SQL fragment — requires `businesses` as `b` and `accounts` as `a`. */
+/**
+ * SQL fragment — requires `businesses` as `b` and `accounts` as `a`.
+ * Contact verification = usable email or phone only.
+ * Places ID / placesVerified alone do NOT establish verification.
+ */
 export const prospectVerifiedSql = sql`(
   NULLIF(trim(COALESCE(b.email, a.email, '')), '') IS NOT NULL
   OR NULLIF(trim(COALESCE(b.phone, a.phone, '')), '') IS NOT NULL
-  OR (a.metadata->>'placesVerified') = 'true'
-  OR NULLIF(trim(COALESCE(a.metadata->>'placesId', '')), '') IS NOT NULL
 )`;
 
 export function isProspectVerified(input: ProspectContactInput): boolean {
@@ -24,10 +26,6 @@ export function isProspectVerified(input: ProspectContactInput): boolean {
 
   const phone = (input.businessPhone || input.accountPhone || '').trim();
   if (phone.length > 0) return true;
-
-  const meta = input.accountMetadata;
-  if (meta?.placesVerified === true) return true;
-  if (typeof meta?.placesId === 'string' && meta.placesId.trim().length > 0) return true;
 
   return false;
 }
@@ -38,12 +36,21 @@ export function canPromoteFromReview(input: {
   hasEmail: boolean;
   hasPhone: boolean;
 }): { allowed: boolean; reason?: string } {
-  if (input.verified) return { allowed: true };
-  if (input.reachability === 'none' && !input.hasEmail && !input.hasPhone) {
-    return {
-      allowed: false,
-      reason: 'No contact path — verify via Places or enrichment before accepting.',
-    };
-  }
-  return { allowed: true };
+  if (input.hasEmail || input.hasPhone) return { allowed: true };
+  return {
+    allowed: false,
+    reason: 'No usable phone or email — Places ID alone is not enough to promote.',
+  };
+}
+
+/** Export / CSV eligibility — same contact floor as promote. */
+export function canExportProspect(input: {
+  hasEmail: boolean;
+  hasPhone: boolean;
+}): { allowed: boolean; reason?: string } {
+  if (input.hasEmail || input.hasPhone) return { allowed: true };
+  return {
+    allowed: false,
+    reason: 'Export requires a usable phone or email.',
+  };
 }

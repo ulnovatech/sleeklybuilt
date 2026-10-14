@@ -9,18 +9,19 @@ import { prospectVerifiedSql } from './review-verification';
 import { sql } from 'drizzle-orm';
 import type { WorkQueueFilters } from './work-queue';
 
-/** Link-in-bio hosts treated as non-real websites for SQL lane filtering. */
-const LINK_IN_BIO_HOST_SQL = sql`(
-  lower(regexp_replace(split_part(regexp_replace(COALESCE(b.website, ''), '^https?://', ''), '/', 1), '^www\\.', ''))
-  ~ '(linktr\\.ee|linktree\\.com|bio\\.link|beacons\\.ai|carrd\\.co|stan\\.store|withkoji\\.com|solo\\.to|tap\\.bio|campsite\\.bio|heylink\\.me|allmylinks\\.com)$'
+/**
+ * Lane filters align with authoritative greenfieldStatus / websiteClass
+ * (not “any URL = redesign”). Missing greenfieldStatus ≠ confirmed greenfield.
+ */
+const CONFIRMED_GREENFIELD_SQL = sql`(a.metadata->>'greenfieldStatus') = 'confirmed_greenfield'`;
+
+const EXISTING_OR_REDESIGN_SQL = sql`(
+  (a.metadata->>'greenfieldStatus') = 'existing_website'
+  OR (a.metadata->>'websiteClass') IN ('real', 'broken', 'low_quality')
 )`;
 
-const REAL_WEBSITE_SQL = sql`(
-  NULLIF(trim(COALESCE(b.website, '')), '') IS NOT NULL
-  AND NOT ${LINK_IN_BIO_HOST_SQL}
-)`;
-
-const GREENFIELD_SQL = sql`(NOT ${REAL_WEBSITE_SQL})`;
+/** Priority bonus only for evidence-backed confirmed greenfield (not uncertain / empty URL). */
+const GREENFIELD_SQL = CONFIRMED_GREENFIELD_SQL;
 
 export type WorkQueueCandidateRow = {
   kind: 'demand' | 'opportunity';
@@ -81,8 +82,8 @@ export async function queryWorkQueueCandidates(filters: WorkQueueFilters = {}) {
   if (filters.reachability) oppConditions.push(sql`ls.reachability = ${filters.reachability}`);
   if (filters.verification === 'verified') oppConditions.push(prospectVerifiedSql);
   if (filters.verification === 'unverified') oppConditions.push(sql`NOT ${prospectVerifiedSql}`);
-  if (acquisitionLane === 'greenfield') oppConditions.push(GREENFIELD_SQL);
-  if (acquisitionLane === 'redesign') oppConditions.push(REAL_WEBSITE_SQL);
+  if (acquisitionLane === 'greenfield') oppConditions.push(CONFIRMED_GREENFIELD_SQL);
+  if (acquisitionLane === 'redesign') oppConditions.push(EXISTING_OR_REDESIGN_SQL);
   if (filters.hasPhone) {
     oppConditions.push(sql`(
       NULLIF(trim(COALESCE(b.phone, '')), '') IS NOT NULL

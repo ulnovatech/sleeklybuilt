@@ -200,6 +200,9 @@ else
       echo "==> factory health (Plan B)"
       dc_discovery exec -T discovery-worker pnpm discovery:factory-health \
         || echo "WARN: factory-health failed — check OSM / credentials"
+      echo "==> seed/heal factory plans (every 2h weekday EAT cadence)"
+      dc_discovery exec -T discovery-worker pnpm discovery:seed-factory \
+        || echo "WARN: seed-factory failed — worker will retry ensureFactoryPlans on start"
       echo "==> Geofabrik status (refresh if missing/stale)"
       if ! dc_discovery exec -T discovery-worker pnpm discovery:osm-geofabrik -- --status; then
         echo "==> Geofabrik refresh (first-time / status failed)"

@@ -16,6 +16,7 @@ import {
   FACTORY_TIMEZONE,
   buildFactoryTargets,
   countFactorySegments,
+  factoryPlanNeedsCadenceHeal,
   marketsForTiers,
 } from '../plans/factory-markets';
 import { cohortDatesForHarvest, resolveMorningPath } from '../plans/harvest-cohort';
@@ -105,6 +106,19 @@ assert(FACTORY_CADENCE.activeHours?.start === 7 && FACTORY_CADENCE.activeHours?.
 assert(
   JSON.stringify(FACTORY_CADENCE.daysOfWeek) === JSON.stringify([1, 2, 3, 4, 5]),
   'weekdays only',
+);
+assert(!factoryPlanNeedsCadenceHeal(FACTORY_CADENCE), 'locked cadence does not need heal');
+assert(
+  factoryPlanNeedsCadenceHeal({ everyHours: 24 }),
+  'daily cadence needs heal back to 2h',
+);
+assert(
+  factoryPlanNeedsCadenceHeal({
+    everyHours: 2,
+    activeHours: { start: 0, end: 24, timezone: 'UTC' },
+    daysOfWeek: [1, 2, 3, 4, 5],
+  }),
+  'wrong active-hours window needs heal',
 );
 assert(FACTORY_FILTERS.presence === 'greenfield', 'factory is greenfield');
 assert(FACTORY_FILTERS.requirePhone === true, 'factory requires phone');

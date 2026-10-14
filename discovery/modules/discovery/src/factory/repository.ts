@@ -26,6 +26,9 @@ export type HarvestPoolRow = {
   website: string | null;
   phone: string | null;
   email: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
   country: string | null;
   metadata: Record<string, unknown> | null;
   suppressed: boolean;
@@ -325,6 +328,9 @@ export class FactoryCohortRepository {
         website: sql<string | null>`coalesce(${accounts.website}, ${businesses.website})`,
         phone: sql<string | null>`coalesce(${accounts.phone}, ${businesses.phone})`,
         email: sql<string | null>`coalesce(${accounts.email}, ${businesses.email})`,
+        facebookUrl: accounts.facebookUrl,
+        instagramUrl: accounts.instagramUrl,
+        youtubeUrl: sql<string | null>`coalesce(${accounts.metadata}->>'youtubeUrl', ${businesses.metadata}->>'youtubeUrl')`,
         country: sql<string | null>`coalesce(${accounts.country}, ${businesses.country})`,
         metadata: sql<Record<string, unknown> | null>`coalesce(${accounts.metadata}, ${businesses.metadata})`,
         suppressed: accounts.suppressed,
@@ -356,6 +362,9 @@ export class FactoryCohortRepository {
         website: row.website,
         phone: row.phone,
         email: row.email,
+        facebookUrl: row.facebookUrl,
+        instagramUrl: row.instagramUrl,
+        youtubeUrl: row.youtubeUrl,
         country: row.country,
         metadata: row.metadata,
         suppressed: row.suppressed,
@@ -391,6 +400,9 @@ export class FactoryCohortRepository {
         website: sql<string | null>`coalesce(${accounts.website}, ${businesses.website})`,
         phone: sql<string | null>`coalesce(${accounts.phone}, ${businesses.phone})`,
         email: sql<string | null>`coalesce(${accounts.email}, ${businesses.email})`,
+        facebookUrl: accounts.facebookUrl,
+        instagramUrl: accounts.instagramUrl,
+        youtubeUrl: sql<string | null>`coalesce(${accounts.metadata}->>'youtubeUrl', ${businesses.metadata}->>'youtubeUrl')`,
         country: sql<string | null>`coalesce(${accounts.country}, ${businesses.country})`,
         metadata: sql<Record<string, unknown> | null>`coalesce(${accounts.metadata}, ${businesses.metadata})`,
         suppressed: accounts.suppressed,
@@ -430,6 +442,9 @@ export class FactoryCohortRepository {
         website: row.website,
         phone: row.phone,
         email: row.email,
+        facebookUrl: row.facebookUrl,
+        instagramUrl: row.instagramUrl,
+        youtubeUrl: row.youtubeUrl,
         country: row.country,
         metadata: row.metadata,
         suppressed: row.suppressed,

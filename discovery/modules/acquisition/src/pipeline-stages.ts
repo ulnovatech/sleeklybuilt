@@ -5,6 +5,8 @@ export type RunProfile = 'micro' | 'standard' | 'boost';
 
 /** Monitor plans: re-check known accounts — no discover / places. */
 export const MONITOR_PIPELINE_STAGES: AcquisitionJobStage[] = [
+  'website_discover',
+  'contact_enrich',
   'crawl',
   'bi_enrich',
   'derive_signals',

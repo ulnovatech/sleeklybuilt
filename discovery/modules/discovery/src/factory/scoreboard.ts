@@ -29,11 +29,15 @@ export type FactoryYieldRow = {
 export type DemandJumpBlock =
   | 'cohort_not_frozen'
   | 'no_phone'
+  | 'no_contact_channel'
   | 'has_website'
+  | 'uncertain_website'
+  | 'search_incomplete'
   | 'suppressed'
   | 'snoozed'
   | 'not_operational'
-  | 'already_pitched';
+  | 'already_pitched'
+  | 'already_pursued';
 
 export function isUnpitchedLeadStatus(status?: string | null): boolean {
   if (!status) return true;
@@ -91,6 +95,10 @@ export function yieldHeadline(input: {
 export function demandJumpBlockReason(input: {
   cohortStatus?: string | null;
   phone?: string | null;
+  email?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  youtubeUrl?: string | null;
   website?: string | null;
   metadata?: Record<string, unknown> | null;
   suppressed: boolean;
@@ -102,6 +110,10 @@ export function demandJumpBlockReason(input: {
   if (input.leadStatus && PITCHED_BLOCK_STATUSES.has(input.leadStatus)) return 'already_pitched';
   const miss = classifyMissReason({
     phone: input.phone,
+    email: input.email,
+    facebookUrl: input.facebookUrl,
+    instagramUrl: input.instagramUrl,
+    youtubeUrl: input.youtubeUrl,
     website: input.website,
     metadata: input.metadata,
     suppressed: input.suppressed,
@@ -109,7 +121,17 @@ export function demandJumpBlockReason(input: {
     hasActiveLead: false,
     analysisHasWebsite: input.analysisHasWebsite,
   });
-  if (miss === 'suppressed' || miss === 'snoozed' || miss === 'has_website' || miss === 'no_phone' || miss === 'not_operational') {
+  if (
+    miss === 'suppressed' ||
+    miss === 'snoozed' ||
+    miss === 'has_website' ||
+    miss === 'no_phone' ||
+    miss === 'no_contact_channel' ||
+    miss === 'uncertain_website' ||
+    miss === 'search_incomplete' ||
+    miss === 'not_operational' ||
+    miss === 'already_pursued'
+  ) {
     return miss;
   }
   return null;

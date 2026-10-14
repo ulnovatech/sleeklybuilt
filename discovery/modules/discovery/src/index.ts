@@ -113,6 +113,42 @@ export {
   type WebsiteClass,
 } from './lib/website-class';
 export {
+  GREENFIELD_FRESHNESS_DAYS_DEFAULT,
+  GREENFIELD_STATUSES,
+  greenfieldStatusLabel,
+  isConfirmedGreenfieldForPitch,
+  isGreenfieldStatus,
+  parseGreenfieldStatus,
+  readGreenfieldStatusFromMetadata,
+  type GreenfieldStatus,
+} from './lib/greenfield-status';
+export {
+  emptyProspectProof,
+  isProspectProofFresh,
+  mergeProspectProofIntoMetadata,
+  readProspectProof,
+  resolveEffectiveGreenfieldStatus,
+  type ProspectProof,
+} from './lib/prospect-evidence';
+export {
+  buildWebsiteSearchPlan,
+  computeWebsiteSearchCoverage,
+  emptyResultsAreNegativeEvidence,
+  planHasSufficientIdentity,
+  MIN_WEIGHTED_COVERAGE,
+} from './lib/website-search-contract';
+export {
+  classifyWebsiteHit,
+  isCredibleOwnedWebsiteHit,
+} from './lib/classify-website-hit';
+export {
+  evaluatePitchTodayEligibility,
+  hasAdditionalContactChannel,
+  hasUsablePhone,
+} from './lib/pitch-today-eligibility';
+export { WebsiteDiscoverService } from './enrichment/website-discover-service';
+export { ContactEnrichService } from './enrichment/contact-enrich-service';
+export {
   buildWhyContactScan,
   contactabilityLabel,
   contactabilityOf,

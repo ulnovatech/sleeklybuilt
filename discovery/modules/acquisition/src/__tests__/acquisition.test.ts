@@ -146,7 +146,7 @@ async function main() {
     await queue.enqueueStages(pipelineRun.id, PIPELINE_JOB_STAGES);
     const claimedForRun = await queue.claimForRun(pipelineRun.id);
     assert(claimedForRun?.stage === 'discover', 'claimForRun returns first pending stage');
-    assert(PIPELINE_JOB_STAGES.length === 7, 'pipeline has seven stages');
+    assert(PIPELINE_JOB_STAGES.length === 9, 'pipeline has nine stages');
 
     const browserCap = getCapForProvider('browser_automation').cap;
     const browserBefore = await governor.getProviderSummary('browser_automation');

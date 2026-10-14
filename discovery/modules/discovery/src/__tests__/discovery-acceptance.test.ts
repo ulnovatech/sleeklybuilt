@@ -55,6 +55,8 @@ for (const phrase of forbidden) {
 const expectedStages = [
   'discover',
   'resolve_accounts',
+  'website_discover',
+  'contact_enrich',
   'crawl',
   'bi_enrich',
   'derive_signals',
@@ -71,12 +73,22 @@ for (let i = 0; i < expectedStages.length; i++) {
 }
 
 const standard = getPipelineStagesForRun('standard', false);
-assert(standard.length === 7, 'standard run has seven stages');
+assert(standard.length === 9, 'standard run has nine stages');
+assert(standard.includes('website_discover'), 'standard includes website_discover');
+assert(standard.includes('contact_enrich'), 'standard includes contact_enrich');
+assert(
+  standard.indexOf('website_discover') < standard.indexOf('contact_enrich'),
+  'website_discover before contact_enrich',
+);
+assert(
+  standard.indexOf('contact_enrich') < standard.indexOf('crawl'),
+  'contact_enrich before crawl',
+);
 assert(!standard.includes('browser_enrich'), 'standard excludes browser_enrich');
 
 const boostBrowser = getPipelineStagesForRun('boost', true);
 assert(boostBrowser.includes('browser_enrich'), 'boost with browser includes browser_enrich');
-assert(boostBrowser.length === 8, 'boost with browser has eight stages');
+assert(boostBrowser.length === 10, 'boost with browser has ten stages');
 assert(
   boostBrowser.indexOf('browser_enrich') === boostBrowser.indexOf('score') + 1,
   'browser_enrich immediately after score',

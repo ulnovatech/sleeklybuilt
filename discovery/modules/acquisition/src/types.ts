@@ -21,6 +21,8 @@ export type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
 export type AcquisitionJobStage =
   | 'discover'
   | 'resolve_accounts'
+  | 'website_discover'
+  | 'contact_enrich'
   | 'crawl'
   | 'bi_enrich'
   | 'derive_signals'
@@ -31,6 +33,8 @@ export type AcquisitionJobStage =
 export const PIPELINE_JOB_STAGES: AcquisitionJobStage[] = [
   'discover',
   'resolve_accounts',
+  'website_discover',
+  'contact_enrich',
   'crawl',
   'bi_enrich',
   'derive_signals',

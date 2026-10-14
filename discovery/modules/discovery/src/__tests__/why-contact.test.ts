@@ -71,7 +71,8 @@ const scan = buildWhyContactScan({
 assert.equal(scan.websiteClass, 'none');
 assert.equal(scan.contactability, 'phone');
 assert.equal(scan.evidenceFacts.length, 2);
-assert.match(scan.whyContact, /No website|greenfield|phone/i);
+assert.match(scan.whyContact, /Uncertain|incomplete|No website|greenfield|phone/i);
+assert.equal(scan.greenfieldStatus, 'uncertain');
 assert.equal(scan.thinEvidence, false);
 
 const thin = buildWhyContactScan({
@@ -81,7 +82,7 @@ const thin = buildWhyContactScan({
   metadata: { websiteClass: 'none' },
 });
 assert.equal(thin.contactability, 'none');
-assert.match(thin.whyContact, /verify/i);
+assert.match(thin.whyContact, /verify|phone or email/i);
 assert.equal(thin.thinEvidence, true);
 
 const withFactors = deriveWhyContactLine({
@@ -95,9 +96,24 @@ assert.match(withFactors, /phone|greenfield|call/i);
 const owned = buildWhyContactScan({
   website: 'https://real.example',
   phone: '+2567',
-  metadata: { websiteClass: 'real' },
+  metadata: {
+    websiteClass: 'real',
+    greenfieldStatus: 'existing_website',
+    prospectProof: {
+      version: 1,
+      greenfieldStatus: 'existing_website',
+      websiteSearchCoverage: 1,
+      searchCompletion: 'complete',
+      websiteSearchAt: new Date().toISOString(),
+      classificationReason: 'owned',
+      queries: [],
+      websiteHits: [],
+      contacts: [],
+      ownedWebsiteUrl: 'https://real.example',
+    },
+  },
 });
 assert.equal(owned.websiteClass, 'real');
-assert.match(owned.whyContact, /owned|Morning Path|skip/i);
+assert.match(owned.whyContact, /Existing website|owned|exclude/i);
 
 console.log('why-contact tests passed');

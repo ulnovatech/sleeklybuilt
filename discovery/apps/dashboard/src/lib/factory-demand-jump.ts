@@ -42,9 +42,15 @@ export class FactoryDemandJump {
     const website = account.website ?? business.website;
     const metadata = account.metadata ?? business.metadata;
 
+    const metaYoutube =
+      typeof metadata?.youtubeUrl === 'string' ? metadata.youtubeUrl : null;
     const block = demandJumpBlockReason({
       cohortStatus: cohort?.status ?? null,
       phone,
+      email: account.email ?? business.email,
+      facebookUrl: account.facebookUrl ?? business.facebookUrl,
+      instagramUrl: account.instagramUrl ?? business.instagramUrl,
+      youtubeUrl: metaYoutube,
       website,
       metadata,
       suppressed: account.suppressed,

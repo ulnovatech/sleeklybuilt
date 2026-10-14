@@ -10,6 +10,7 @@ import {
 } from './factory-credentials';
 import { intersectIndustries } from './packs';
 import { DiscoveryPlanService } from './plan-service';
+import { computeNextRunAt } from './cadence';
 import {
   FACTORY_CADENCE,
   FACTORY_CORE_LIMITS,
@@ -19,6 +20,7 @@ import {
   FACTORY_FILTERS,
   FACTORY_PLACES_MONTHLY_FLOOR,
   buildFactoryTargets,
+  factoryPlanNeedsCadenceHeal,
   marketsForTiers,
 } from './factory-markets';
 
@@ -34,6 +36,8 @@ export type EnsureFactoryPlansResult = {
   survivalMode: boolean;
   sourcesHealed: number;
   filtersHealed: number;
+  cadenceHealed: number;
+  statusHealed: number;
 };
 
 function factoryIndustries(available: string[]): string[] {
@@ -169,29 +173,44 @@ export async function ensureFactoryPlans(
 
   let sourcesHealed = 0;
   let filtersHealed = 0;
+  let cadenceHealed = 0;
+  let statusHealed = 0;
   for (const planId of [core.id, explore.id]) {
     const plan = await repo.getPlan(planId);
     if (!plan) continue;
     const current = Array.isArray(plan.sources) ? plan.sources.map(String) : [];
     const needSources = factoryPlanNeedsSourceHeal(current, placesReady);
     const needFilters = factoryPlanNeedsFilterHeal(plan.filters);
-    if (!needSources && !needFilters) continue;
+    const needCadence = factoryPlanNeedsCadenceHeal(plan.cadence);
+    const needActive = plan.status !== 'active';
+    const needNextRun = !plan.nextRunAt;
+    if (!needSources && !needFilters && !needCadence && !needActive && !needNextRun) continue;
 
-    await repo.updatePlan(planId, {
-      ...(needSources
-        ? {
-            sources: seedSources,
-            runProfile: placesReady ? 'standard' : 'micro',
-            description:
-              plan.templateKey === FACTORY_CORE_TEMPLATE_KEY ? coreDesc : exploreDesc,
-          }
-        : {}),
-      ...(needFilters
-        ? { filters: { ...FACTORY_FILTERS, presence: 'greenfield' as const } }
-        : {}),
-    });
+    const patch: Parameters<typeof repo.updatePlan>[1] = {};
+    if (needSources) {
+      patch.sources = seedSources;
+      patch.runProfile = placesReady ? 'standard' : 'micro';
+      patch.description =
+        plan.templateKey === FACTORY_CORE_TEMPLATE_KEY ? coreDesc : exploreDesc;
+    }
+    if (needFilters) {
+      patch.filters = { ...FACTORY_FILTERS, presence: 'greenfield' as const };
+    }
+    if (needCadence) {
+      patch.cadence = FACTORY_CADENCE;
+    }
+    if (needActive) {
+      patch.status = 'active';
+    }
+    if (needCadence || needActive || needNextRun) {
+      patch.nextRunAt = computeNextRunAt(new Date(), FACTORY_CADENCE);
+    }
+
+    await repo.updatePlan(planId, patch);
     if (needSources) sourcesHealed++;
     if (needFilters) filtersHealed++;
+    if (needCadence) cadenceHealed++;
+    if (needActive) statusHealed++;
   }
 
   logger.info('Factory plans ready', {
@@ -203,7 +222,10 @@ export async function ensureFactoryPlans(
     survivalMode: !placesReady,
     sourcesHealed,
     filtersHealed,
+    cadenceHealed,
+    statusHealed,
     seedSources,
+    cadence: FACTORY_CADENCE,
   });
 
   return {
@@ -218,5 +240,7 @@ export async function ensureFactoryPlans(
     survivalMode: !placesReady,
     sourcesHealed,
     filtersHealed,
+    cadenceHealed,
+    statusHealed,
   };
 }

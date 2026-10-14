@@ -26,3 +26,12 @@ export function resolveOutreachQueueStatuses(status?: string): string[] {
 export function hasContactPath(email?: string | null, phone?: string | null): boolean {
   return !!(email?.trim() || phone?.trim());
 }
+
+/** Export eligibility — Places ID alone is never enough. */
+export function assertExportContactGate(input: {
+  email?: string | null;
+  phone?: string | null;
+}): { allowed: boolean; reason?: string } {
+  if (hasContactPath(input.email, input.phone)) return { allowed: true };
+  return { allowed: false, reason: 'Export requires a usable phone or email.' };
+}

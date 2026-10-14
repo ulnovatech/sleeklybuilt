@@ -122,7 +122,11 @@ export class FactoryPurifyService {
     for (const row of pool) {
       const miss = classifyMissReason({
         phone: row.phone,
+        email: row.email,
         website: row.website,
+        facebookUrl: row.facebookUrl,
+        instagramUrl: row.instagramUrl,
+        youtubeUrl: row.youtubeUrl,
         metadata: row.metadata,
         suppressed: row.suppressed,
         snoozedUntil: row.snoozedUntil,

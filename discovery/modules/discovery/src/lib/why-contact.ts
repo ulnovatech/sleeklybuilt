@@ -12,6 +12,14 @@ import {
   type DiscoveryEvidenceField,
 } from '@agency/validation';
 import {
+  greenfieldStatusLabel,
+  type GreenfieldStatus,
+} from './greenfield-status';
+import {
+  readProspectProof,
+  resolveEffectiveGreenfieldStatus,
+} from './prospect-evidence';
+import {
   parseWebsiteClass,
   resolveWebsiteClass,
   websiteClassLabel,
@@ -29,6 +37,10 @@ export type EvidenceFact = {
 export type WhyContactScan = {
   websiteClass: WebsiteClass;
   websiteClassLabel: string;
+  greenfieldStatus: GreenfieldStatus;
+  greenfieldStatusLabel: string;
+  searchCoverageLabel: string;
+  websiteCheckedAt: string | null;
   contactability: Contactability;
   contactabilityLabel: string;
   whyContact: string;
@@ -219,30 +231,64 @@ export function buildWhyContactScan(input: {
   const websiteClass =
     parseWebsiteClass(input.metadata?.websiteClass) ??
     resolveWebsiteClass({ website: input.website, metadata: input.metadata });
+  const greenfieldStatus = resolveEffectiveGreenfieldStatus(input.metadata);
+  const proof = readProspectProof(input.metadata);
   const contactability = contactabilityOf(input);
   const evidence = readDiscoveryEvidence(input.metadata ?? undefined);
   const evidenceFacts = topEvidenceFacts(evidence, 2);
   const conflictHint =
-    evidence?.conflicts?.length
+    proof?.conflictReason ||
+    (evidence?.conflicts?.length
       ? evidence.conflicts
           .slice(0, 1)
           .map((c) => `${c.field} conflict across sources`)
           .join('; ')
-      : null;
-  const thinEvidence = evidenceFacts.length === 0;
-  const whyContact = deriveWhyContactLine({
+      : null);
+  const thinEvidence = evidenceFacts.length === 0 && !proof?.classificationReason;
+  let whyContact = deriveWhyContactLine({
     websiteClass,
     contactability,
     evidence,
     scoreFactors: input.scoreFactors,
     hasWebsite:
       input.analysisHasWebsite ??
-      (websiteClass === 'real' ? true : websiteClass === 'none' ? false : undefined),
+      (websiteClass === 'real' || greenfieldStatus === 'existing_website'
+        ? true
+        : websiteClass === 'none'
+          ? false
+          : undefined),
   });
+  if (greenfieldStatus === 'confirmed_greenfield') {
+    whyContact = `Confirmed greenfield after website search — ${whyContact}`;
+  } else if (greenfieldStatus === 'existing_website') {
+    whyContact = proof?.ownedWebsiteUrl
+      ? `Existing website found (${proof.ownedWebsiteUrl}) — exclude from no-website Pitch Today.`
+      : 'Existing website evidence — exclude from no-website Pitch Today.';
+  } else if (greenfieldStatus === 'uncertain') {
+    if (contactability === 'none') {
+      whyContact =
+        'Not enough to justify outreach — verify a phone or email and complete website search first.';
+    } else {
+      whyContact = proof?.classificationReason
+        ? `Uncertain website status: ${proof.classificationReason}`
+        : 'Website search incomplete — investigate before Pitch Today.';
+    }
+  }
+
+  const coveragePct = Math.round((proof?.websiteSearchCoverage ?? 0) * 100);
+  const searchCoverageLabel = proof
+    ? proof.searchCompletion === 'complete'
+      ? `Search complete (${coveragePct}% coverage)`
+      : `Search ${proof.searchCompletion} (${coveragePct}% coverage)`
+    : 'No website search yet';
 
   return {
     websiteClass,
     websiteClassLabel: websiteClassLabel(websiteClass),
+    greenfieldStatus,
+    greenfieldStatusLabel: greenfieldStatusLabel(greenfieldStatus),
+    searchCoverageLabel,
+    websiteCheckedAt: proof?.websiteSearchAt ?? null,
     contactability,
     contactabilityLabel: contactabilityLabel(contactability),
     whyContact,

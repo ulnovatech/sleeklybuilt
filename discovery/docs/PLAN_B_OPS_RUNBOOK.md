@@ -10,7 +10,10 @@ Weekday harvest while Google Places is **dormant** (code intact; billing/circuit
 
 ```bash
 pnpm discovery:factory-health
+pnpm discovery:seed-factory   # create/heal Factory A/B — every 2h weekdays EAT
 ```
+
+Worker startup also runs `ensureFactoryPlans` (heals cadence to `everyHours: 2`, reactivates paused factory plans, restores `next_run_at`). Plan ticks run about once per minute inside `discovery-worker`; each due plan schedules the next city × industry run on that cadence.
 
 Expect:
 
@@ -69,19 +72,35 @@ Caps: `BRAVE_DAILY_CAP`, `META_GRAPH_DAILY_CAP` — see [DEPLOYMENT.md](DEPLOYME
 
 ---
 
-## 4. Reading a discovery run
+## 4. Prospect proof pipeline (reliability)
 
-1. **Discovery → Sources** — Plan B ready / Places dormant badges; budget remaining.
-2. Start or wait for factory plan tick (`pnpm jobs:worker` must be running).
-3. Open run detail — **Provider totals** in pipeline logs (`openstreetmap: N, public_search: M, …`).
-4. Scan **Why contact** strip (website class, contactability, evidence) — no JSON.
-5. Night purify → morning **Pitch today** (`/ops` → Open Pitch today).
+Stages (standard run): `discover → resolve_accounts → website_discover → contact_enrich → crawl → bi_enrich → derive_signals → score → places_enrich`.
 
-Zero from all providers → check factory-health, Geofabrik status, Brave quota, Meta probe. One provider failing is OK (`allSettled`); others continue.
+| Classification | Meaning |
+|----------------|---------|
+| `confirmed_greenfield` | Adequate Brave website search completed; no credible owned site |
+| `existing_website` | Credible owned site evidence (exclude from no-website Pitch today) |
+| `uncertain` | Incomplete, stale, failed, or ambiguous search — **never** Pitch today |
+
+**Rules:** Empty website field / budget skip / timeout ≠ no website. Pitch today keepers require `confirmed_greenfield` + usable phone + additional channel (email / evidenced social / WhatsApp-ready) + fresh proof (default 14 days). Evidence lives on `accounts.metadata.prospectProof` (versioned); Why-contact strip shows status, coverage, and reason — not raw JSON.
+
+Purify miss reasons include `search_incomplete`, `uncertain_website`, `no_contact_channel` (bench-eligible) vs `has_website` / `already_pursued` (not bench).
 
 ---
 
-## 5. Places dormant vs reactivate
+## 5. Reading a discovery run
+
+1. **Discovery → Sources** — Plan B ready / Places dormant badges; budget remaining.
+2. Start or wait for factory plan tick (`pnpm jobs:worker` must be running).
+3. Open run detail — **Provider totals** + website_discover / contact_enrich stage summaries.
+4. Scan **Why contact** strip (greenfield status, website class, contactability, coverage) — no JSON.
+5. Night purify → morning **Pitch today** (`/ops` → Open Pitch today).
+
+Zero from all providers → check factory-health, Geofabrik status, Brave quota, Meta probe. One provider failing is OK (`allSettled`); others continue. Provider outages shrink the eligible pool — they must not lower the qualification bar.
+
+---
+
+## 6. Places dormant vs reactivate
 
 | State | Behavior |
 |-------|----------|
@@ -92,7 +111,7 @@ Set `GOOGLE_ACQUISITION_DISABLED=true` to force dormant. Clear circuit / restore
 
 ---
 
-## 6. Failure cheat sheet
+## 7. Failure cheat sheet
 
 | Symptom | Action |
 |---------|--------|
@@ -105,7 +124,7 @@ Set `GOOGLE_ACQUISITION_DISABLED=true` to force dormant. Clear circuit / restore
 
 ---
 
-## 7. Acceptance smoke (ops)
+## 8. Acceptance smoke (ops)
 
 ```bash
 pnpm discovery:factory-health

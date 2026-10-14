@@ -15,11 +15,15 @@ function assert(condition: boolean, name: string) {
 
 const standard = getPipelineStagesForRun('standard', false);
 assert(!standard.includes('browser_enrich'), 'standard excludes browser_enrich');
-assert(standard.length === 7, 'standard has seven stages');
+assert(standard.includes('website_discover'), 'standard includes website_discover');
+assert(standard.includes('contact_enrich'), 'standard includes contact_enrich');
+assert(standard.indexOf('website_discover') < standard.indexOf('contact_enrich'), 'website before contact');
+assert(standard.indexOf('contact_enrich') < standard.indexOf('crawl'), 'contact before crawl');
+assert(standard.length === 9, 'standard has nine stages');
 
 const boostOff = getPipelineStagesForRun('boost', false);
 assert(!boostOff.includes('browser_enrich'), 'boost without flag excludes browser');
-assert(boostOff.length === 7, 'boost without browser has seven stages');
+assert(boostOff.length === 9, 'boost without browser has nine stages');
 
 const boostOn = getPipelineStagesForRun('boost', true);
 assert(boostOn.includes('browser_enrich'), 'boost with browser includes browser_enrich');
@@ -28,12 +32,13 @@ const browserIdx = boostOn.indexOf('browser_enrich');
 const placesIdx = boostOn.indexOf('places_enrich');
 assert(scoreIdx >= 0 && browserIdx === scoreIdx + 1, 'browser_enrich after score');
 assert(placesIdx === browserIdx + 1, 'places_enrich after browser_enrich');
-assert(boostOn.length === 8, 'boost pipeline has eight stages with browser');
+assert(boostOn.length === 10, 'boost pipeline has ten stages with browser');
 
 const monitor = getPipelineStagesForRun('standard', false, { planType: 'monitor' });
 assert(
-  monitor.join(',') === 'crawl,bi_enrich,derive_signals,score',
-  'monitor pipeline is crawl → bi_enrich → derive_signals → score',
+  monitor.join(',') ===
+    'website_discover,contact_enrich,crawl,bi_enrich,derive_signals,score',
+  'monitor pipeline includes website/contact before crawl',
 );
 assert(!monitor.includes('discover'), 'monitor excludes discover');
 assert(!monitor.includes('resolve_accounts'), 'monitor excludes resolve_accounts');

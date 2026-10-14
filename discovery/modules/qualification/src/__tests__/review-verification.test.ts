@@ -1,4 +1,5 @@
 import {
+  canExportProspect,
   canPromoteFromReview,
   isProspectVerified,
 } from '../review-verification';
@@ -25,12 +26,12 @@ assert(
   'account phone counts as verified',
 );
 assert(
-  isProspectVerified({ accountMetadata: { placesVerified: true } }),
-  'placesVerified metadata counts as verified',
+  !isProspectVerified({ accountMetadata: { placesVerified: true } }),
+  'placesVerified alone is NOT verified',
 );
 assert(
-  isProspectVerified({ accountMetadata: { placesId: 'ChIJabc123' } }),
-  'placesId metadata counts as verified',
+  !isProspectVerified({ accountMetadata: { placesId: 'ChIJabc123' } }),
+  'placesId alone is NOT verified',
 );
 assert(!isProspectVerified({}), 'empty contact is not verified');
 
@@ -40,16 +41,33 @@ const blocked = canPromoteFromReview({
   hasEmail: false,
   hasPhone: false,
 });
-assert(!blocked.allowed, 'blocks promote when unverified with no contact');
+assert(!blocked.allowed, 'blocks promote when no contact');
 assert(!!blocked.reason, 'blocked promote includes reason');
 
-const allowed = canPromoteFromReview({
+const placesOnly = canPromoteFromReview({
   verified: true,
   reachability: 'none',
   hasEmail: false,
   hasPhone: false,
 });
-assert(allowed.allowed, 'allows promote when verified');
+assert(!placesOnly.allowed, 'places-only verified flag cannot promote without phone/email');
+
+const allowed = canPromoteFromReview({
+  verified: true,
+  reachability: 'none',
+  hasEmail: false,
+  hasPhone: true,
+});
+assert(allowed.allowed, 'allows promote when phone present');
+
+assert(
+  !canExportProspect({ hasEmail: false, hasPhone: false }).allowed,
+  'export blocked without contact',
+);
+assert(
+  canExportProspect({ hasEmail: true, hasPhone: false }).allowed,
+  'export allowed with email',
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

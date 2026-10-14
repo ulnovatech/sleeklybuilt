@@ -65,6 +65,7 @@ export {
   marketsForTiers,
   buildFactoryTargets,
   countFactorySegments,
+  factoryPlanNeedsCadenceHeal,
   type FactoryMarketTier,
   type FactoryCountryMarkets,
 } from './factory-markets';

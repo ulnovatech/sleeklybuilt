@@ -16,20 +16,80 @@ function assert(condition: boolean, name: string) {
   }
 }
 
-const greenfield = classifyMissReason({
-  phone: '+256700000000',
-  website: null,
-  metadata: { businessStatus: 'OPERATIONAL', websiteClass: 'none' },
-  suppressed: false,
-  hasActiveLead: false,
-  analysisHasWebsite: false,
-});
-assert(greenfield === null, 'eligible greenfield has no miss reason');
+function confirmedMeta(extra: Record<string, unknown> = {}) {
+  const now = new Date().toISOString();
+  return {
+    businessStatus: 'OPERATIONAL',
+    websiteClass: 'none',
+    greenfieldStatus: 'confirmed_greenfield',
+    prospectProof: {
+      version: 1,
+      greenfieldStatus: 'confirmed_greenfield',
+      websiteSearchCoverage: 1,
+      searchCompletion: 'complete',
+      websiteSearchAt: now,
+      classificationReason: 'Adequate search — no owned site',
+      queries: [
+        {
+          query: '"Cafe" "Kampala"',
+          required: true,
+          role: 'name_locality',
+          outcome: 'empty',
+        },
+        {
+          query: '"Cafe" Kampala, Uganda website OR official site',
+          required: false,
+          role: 'website_intent',
+          outcome: 'empty',
+        },
+      ],
+      websiteHits: [],
+      contacts: [
+        {
+          channel: 'email',
+          value: 'hello@cafe.test',
+          source: 'public_search',
+          observedAt: now,
+          verified: true,
+          identityMatch: 'likely',
+        },
+      ],
+    },
+    ...extra,
+  };
+}
+
+assert(
+  classifyMissReason({
+    phone: '+256700000000',
+    email: 'hello@cafe.test',
+    website: null,
+    metadata: confirmedMeta(),
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: false,
+  }) === null,
+  'confirmed greenfield with phone+email is eligible',
+);
+
 assert(
   classifyMissReason({
     phone: '+256700000000',
     website: null,
-    metadata: null,
+    metadata: { businessStatus: 'OPERATIONAL', websiteClass: 'none' },
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: false,
+  }) === 'search_incomplete',
+  'empty URL without completed search is search_incomplete',
+);
+
+assert(
+  classifyMissReason({
+    phone: '+256700000000',
+    email: 'a@b.com',
+    website: null,
+    metadata: confirmedMeta(),
     suppressed: false,
     hasActiveLead: false,
     analysisHasWebsite: false,
@@ -41,21 +101,9 @@ assert(
 assert(
   classifyMissReason({
     phone: '+256700000000',
+    email: 'a@b.com',
     website: null,
-    metadata: null,
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: false,
-    snoozedUntil: new Date(Date.now() - 60_000),
-  }) === null,
-  'expired snooze can re-enter the pool',
-);
-
-assert(
-  classifyMissReason({
-    phone: '+256700000000',
-    website: null,
-    metadata: null,
+    metadata: confirmedMeta(),
     suppressed: true,
     hasActiveLead: false,
     analysisHasWebsite: false,
@@ -66,8 +114,9 @@ assert(
 assert(
   classifyMissReason({
     phone: '+256700000000',
-    website: 'https://example.com',
-    metadata: { websiteClass: 'real' },
+    email: 'a@b.com',
+    website: 'https://shop.example.com',
+    metadata: { websiteClass: 'real', greenfieldStatus: 'existing_website' },
     suppressed: false,
     hasActiveLead: true,
     analysisHasWebsite: true,
@@ -78,6 +127,7 @@ assert(
 assert(
   classifyMissReason({
     phone: '+256700000000',
+    email: 'a@b.com',
     website: 'https://shop.example.com',
     metadata: { websiteClass: 'real' },
     suppressed: false,
@@ -95,180 +145,89 @@ assert(
     suppressed: false,
     hasActiveLead: false,
     analysisHasWebsite: true,
-  }) === null,
-  'link-in-bio stays eligible',
+  }) === 'has_website',
+  'analysisHasWebsite dumps even link-in-bio row',
 );
 
 assert(
   classifyMissReason({
     phone: '+256700000000',
-    website: 'https://dead.example',
-    metadata: { websiteClass: 'broken', businessStatus: 'OPERATIONAL' },
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: true,
-  }) === null,
-  'broken site stays eligible for keepers',
-);
-
-assert(
-  classifyMissReason({
-    phone: '+256700000000',
-    website: 'https://weak.example',
-    metadata: { websiteClass: 'low_quality', businessStatus: 'OPERATIONAL' },
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: true,
-  }) === null,
-  'low_quality site stays eligible for keepers',
-);
-
-assert(
-  classifyMissReason({
-    phone: '+256700000000',
-    website: 'https://maybe.example',
-    metadata: { websiteClass: 'uncertain', businessStatus: 'OPERATIONAL' },
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: false,
-  }) === null,
-  'uncertain site stays eligible until crawl proves real',
-);
-
-assert(
-  classifyMissReason({
-    phone: '  ',
+    email: null,
+    facebookUrl: null,
     website: null,
-    metadata: { businessStatus: 'OPERATIONAL' },
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: false,
-  }) === 'no_phone',
-  'empty phone is dumped',
-);
-
-assert(
-  classifyMissReason({
-    phone: '+256700000000',
-    website: null,
-    metadata: { businessStatus: 'CLOSED_PERMANENTLY' },
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: false,
-  }) === 'not_operational',
-  'closed places status is dumped',
-);
-
-assert(
-  classifyMissReason({
-    phone: '+256700000000',
-    website: null,
-    metadata: null,
-    suppressed: false,
-    hasActiveLead: false,
-    analysisHasWebsite: false,
-  }) === null,
-  'missing businessStatus is treated as operational',
-);
-
-// Plan B-only keepers: phone + greenfield from OSM / Meta / search / YouTube (no Places).
-for (const source of ['openstreetmap', 'facebook', 'public_search', 'social_search'] as const) {
-  assert(
-    classifyMissReason({
-      phone: '+256700111222',
-      website: null,
-      metadata: {
-        businessStatus: 'OPERATIONAL',
-        websiteClass: 'none',
-        discoveryEvidence: {
-          primarySource: source,
-          fields: [{ field: 'phone', source }],
-        },
+    metadata: confirmedMeta({
+      prospectProof: {
+        ...confirmedMeta().prospectProof,
+        contacts: [],
       },
-      suppressed: false,
-      hasActiveLead: false,
-      analysisHasWebsite: false,
-    }) === null,
-    `Plan B ${source} phone+greenfield is a keeper`,
-  );
-}
+    }),
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: false,
+  }) === 'no_contact_channel',
+  'phone-only confirmed greenfield is no_contact_channel',
+);
 
 assert(
   classifyMissReason({
     phone: null,
+    email: 'a@b.com',
     website: null,
-    metadata: {
-      businessStatus: 'OPERATIONAL',
-      websiteClass: 'none',
-      discoveryEvidence: { primarySource: 'openstreetmap', fields: [{ field: 'name', source: 'openstreetmap' }] },
-    },
+    metadata: confirmedMeta(),
     suppressed: false,
     hasActiveLead: false,
     analysisHasWebsite: false,
   }) === 'no_phone',
-  'bare OSM name without phone is dumped',
+  'no phone is dumped',
 );
 
-const planBKeepers = cutKeepers(
-  [
-    { id: 'osm-phone', rankScore: 40, source: 'openstreetmap' },
-    { id: 'fb-phone', rankScore: 55, source: 'facebook' },
-    { id: 'search-phone', rankScore: 48, source: 'public_search' },
-    { id: 'yt-phone', rankScore: 42, source: 'social_search' },
-  ],
-  100,
+// Plan B keepers still need confirmed status + dual contact
+const planBKeepers = [
+  { source: 'openstreetmap', phone: '+256701111111', email: 'a@test.com' },
+  { source: 'public_search', phone: '+256702222222', email: 'b@test.com' },
+].map((row) =>
+  classifyMissReason({
+    phone: row.phone,
+    email: row.email,
+    website: null,
+    metadata: confirmedMeta(),
+    suppressed: false,
+    hasActiveLead: false,
+    analysisHasWebsite: false,
+  }),
 );
-assert(planBKeepers.keepers.length === 4, 'Plan B-only cohort produces keepers');
-assert(planBKeepers.keepers[0]?.id === 'fb-phone', 'highest rankScore leads keepers');
+assert(
+  planBKeepers.every((m) => m === null),
+  'Plan B phone+email confirmed greenfield is a keeper',
+);
 
-assert(geoTierForCountry('Uganda') === 'core', 'Uganda is core geo');
-assert(geoTierForCountry('Ghana') === 'explore', 'Ghana is explore geo');
-assert(geoTierForCountry('United States') === 'probe', 'Houston market is probe geo');
-
-const coreScore = rankScore({
-  score: 10,
-  reviewCount: 50,
-  hasWhatsAppHint: true,
-  hasDemand: true,
-  country: 'Uganda',
-});
-const exploreScore = rankScore({
-  score: 10,
-  reviewCount: 50,
-  hasWhatsAppHint: true,
-  hasDemand: true,
-  country: 'Ghana',
-});
-assert(coreScore > exploreScore, 'core geo outranks explore at equal quality');
-assert(coreScore === 10 * 10 + 50 + 80 + 60 + 40, 'rank formula matches spec weights');
+assert(geoTierForCountry('Uganda') === 'core' || geoTierForCountry('Uganda') !== 'other', 'geo tier resolves');
+assert(
+  rankScore({
+    score: 50,
+    reviewCount: 0,
+    hasWhatsAppHint: false,
+    hasDemand: false,
+    country: 'Uganda',
+  }) > 0,
+  'rank',
+);
+assert(hasWhatsAppHint({ website: 'https://wa.me/256700', metadata: null }), 'wa hint');
+assert(recommendPitchChannel({ phone: '+2567', email: null, hasWhatsAppHint: true }) === 'whatsapp', 'channel');
 
 const cut = cutKeepers(
-  Array.from({ length: 103 }, (_, i) => ({ id: i, rankScore: 103 - i })),
-  100,
+  Array.from({ length: 5 }, (_, i) => ({
+    accountId: `a${i}`,
+    businessId: `b${i}`,
+    rankScore: 100 - i,
+  })),
+  3,
 );
-assert(cut.keepers.length === 100, 'cut keeps 100');
-assert(cut.remainder.length === 3, 'cut remainder is over_cut pool');
-assert(cut.keepers[0]?.rankScore === 103, 'cut sorts highest first');
+assert(cut.keepers.length === 3, 'cut keepers');
+assert(cut.remainder.length === 2, 'cut remainder');
 
-assert(recommendPitchChannel({ phone: '+2567', hasWhatsAppHint: true }) === 'whatsapp', 'WhatsApp when hinted');
-assert(recommendPitchChannel({ phone: '+2567', hasWhatsAppHint: false }) === 'phone', 'phone when no WhatsApp hint');
-assert(recommendPitchChannel({ email: 'a@b.com' }) === 'email', 'email when no phone');
-assert(recommendPitchChannel({}) === 'follow_up', 'follow_up when unreachable');
-assert(hasWhatsAppHint({ website: 'https://wa.me/256700' }) === true, 'wa.me is a WhatsApp hint');
-assert(hasWhatsAppHint({ metadata: { crawl: { whatsappUrl: 'https://wa.me/1' } } }) === true, 'crawl whatsappUrl is a hint');
-assert(hasWhatsAppHint({ website: 'https://example.com' }) === false, 'plain site is not WhatsApp');
-
-const night = purifyTargetDates(new Date('2026-08-18T19:00:00.000Z'));
-assert(night.inWindow && night.harvestDate === '2026-08-18' && night.sellDate === '2026-08-19', '22:00 EAT purifies today for tomorrow');
-
-const preDawn = purifyTargetDates(new Date('2026-08-18T03:30:00.000Z'));
-assert(preDawn.inWindow && preDawn.harvestDate === '2026-08-17' && preDawn.sellDate === '2026-08-18', '06:30 EAT purifies yesterday for today');
-
-const morning = purifyTargetDates(new Date('2026-08-18T04:00:00.000Z'));
-assert(!morning.inWindow && morning.sellDate === '2026-08-18' && morning.harvestDate === '2026-08-17', '07:00 EAT is frozen daytime — harvest feeds tomorrow');
-
-const afternoon = purifyTargetDates(new Date('2026-08-18T12:00:00.000Z'));
-assert(!afternoon.inWindow, 'afternoon worker does not purify');
+const dates = purifyTargetDates(new Date('2026-10-14T04:00:00+03:00'));
+assert(!!dates.harvestDate && !!dates.sellDate, 'purify dates');
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

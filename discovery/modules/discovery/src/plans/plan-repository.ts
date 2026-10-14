@@ -263,13 +263,15 @@ export class DiscoveryPlanRepository {
    */
   async claimDuePlans(now: Date, limit = 5) {
     const db = getDb();
+    // postgres.js raw binds reject Date objects — use ISO string for timestamptz.
+    const nowIso = now.toISOString();
     return db.transaction(async (tx) => {
       const result = await tx.execute(sql`
         SELECT id
         FROM discovery_plans
         WHERE status = 'active'
           AND next_run_at IS NOT NULL
-          AND next_run_at <= ${now}
+          AND next_run_at <= ${nowIso}
         ORDER BY priority DESC, next_run_at ASC
         LIMIT ${limit}
         FOR UPDATE SKIP LOCKED

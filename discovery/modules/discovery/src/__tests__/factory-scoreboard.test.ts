@@ -19,6 +19,31 @@ function assert(condition: boolean, name: string) {
   }
 }
 
+function confirmedMeta(extra: Record<string, unknown> = {}) {
+  const now = new Date().toISOString();
+  return {
+    businessStatus: 'OPERATIONAL',
+    websiteClass: 'none',
+    greenfieldStatus: 'confirmed_greenfield',
+    prospectProof: {
+      version: 1,
+      greenfieldStatus: 'confirmed_greenfield',
+      websiteSearchCoverage: 1,
+      searchCompletion: 'complete',
+      websiteSearchAt: now,
+      classificationReason: 'Adequate search — no owned site',
+      queries: [
+        { query: 'test', required: true, role: 'name_locality', outcome: 'empty' },
+        { query: 'test website', required: false, role: 'website_intent', outcome: 'empty' },
+      ],
+      websiteHits: [],
+      contacts: [],
+      ...extra,
+    },
+    ...extra,
+  };
+}
+
 const progress = countPitchedKeepers(['NEW', 'REVIEWED', 'CONTACTED', null, 'REPLIED']);
 assert(progress.pitched === 2, 'CONTACTED and REPLIED count as recorded pitches');
 assert(progress.unpitched === 3, 'NEW, REVIEWED, and missing lead stay unpitched');
@@ -57,8 +82,9 @@ assert(
   demandJumpBlockReason({
     cohortStatus: 'purifying',
     phone: '+256700000000',
+    email: 'a@b.test',
     website: null,
-    metadata: { websiteClass: 'none' },
+    metadata: confirmedMeta(),
     suppressed: false,
     analysisHasWebsite: false,
   }) === 'cohort_not_frozen',
@@ -69,8 +95,9 @@ assert(
   demandJumpBlockReason({
     cohortStatus: 'frozen',
     phone: '+256700000000',
+    email: 'hello@cafe.test',
     website: null,
-    metadata: { websiteClass: 'none' },
+    metadata: confirmedMeta(),
     suppressed: false,
     analysisHasWebsite: false,
     leadStatus: 'NEW',
@@ -82,8 +109,9 @@ assert(
   demandJumpBlockReason({
     cohortStatus: 'frozen',
     phone: null,
+    email: 'hello@cafe.test',
     website: null,
-    metadata: { websiteClass: 'none' },
+    metadata: confirmedMeta(),
     suppressed: false,
     analysisHasWebsite: false,
   }) === 'no_phone',
@@ -106,13 +134,26 @@ assert(
   demandJumpBlockReason({
     cohortStatus: 'frozen',
     phone: '+256700000000',
+    email: 'hello@cafe.test',
     website: null,
-    metadata: { websiteClass: 'none' },
+    metadata: confirmedMeta(),
     suppressed: false,
     analysisHasWebsite: false,
     leadStatus: 'CONTACTED',
   }) === 'already_pitched',
   'already contacted stays on Pipeline',
+);
+
+assert(
+  demandJumpBlockReason({
+    cohortStatus: 'frozen',
+    phone: '+256700000000',
+    website: null,
+    metadata: { websiteClass: 'none' },
+    suppressed: false,
+    analysisHasWebsite: false,
+  }) === 'search_incomplete',
+  'incomplete website search cannot demand-jump',
 );
 
 console.log(`\n${passed} passed, ${failed} failed`);

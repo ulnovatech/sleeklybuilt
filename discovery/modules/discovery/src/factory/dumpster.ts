@@ -1,7 +1,13 @@
 import { FACTORY_MISS_REASONS, type FactoryMissReason } from './miss-reasons';
 
 /** Dumpster rows that may compete again on a later night. Bench, not grave. */
-export const BENCH_MISS_REASONS: FactoryMissReason[] = ['over_cut', 'no_phone'];
+export const BENCH_MISS_REASONS: FactoryMissReason[] = [
+  'over_cut',
+  'no_phone',
+  'no_contact_channel',
+  'uncertain_website',
+  'search_incomplete',
+];
 
 export const DUMPSTER_OPS = [
   'restore',
@@ -16,7 +22,10 @@ export type DumpsterOp = (typeof DUMPSTER_OPS)[number];
 export const FACTORY_MISS_REASON_LABELS: Record<FactoryMissReason, string> = {
   over_cut: 'Over the 100',
   no_phone: 'No phone',
-  has_website: 'Real website',
+  no_contact_channel: 'Phone only — need another channel',
+  has_website: 'Existing owned website',
+  uncertain_website: 'Website evidence uncertain',
+  search_incomplete: 'Website search incomplete',
   already_pursued: 'Already pursued',
   not_operational: 'Closed / not operational',
   suppressed: 'Suppressed',
@@ -41,6 +50,11 @@ export function suggestedDumpsterOps(reason?: string | null): DumpsterOp[] {
       return ['restore', 'pitch_anyway', 'snooze'];
     case 'no_phone':
       return ['snooze', 'pitch_anyway'];
+    case 'no_contact_channel':
+      return ['snooze', 'restore'];
+    case 'uncertain_website':
+    case 'search_incomplete':
+      return ['restore', 'snooze'];
     case 'has_website':
       return ['mark_has_website', 'suppress'];
     case 'not_operational':

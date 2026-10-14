@@ -12,7 +12,9 @@ async function loop() {
     console.log(
       `Factory plans ready — core ${factory.core}, explore ${factory.explore}; Places cap ${factory.placesCap}` +
         (factory.survivalMode ? '; PLAN B (Places dormant)' : '') +
-        (factory.sourcesHealed ? `; healed ${factory.sourcesHealed} plan source(s)` : ''),
+        (factory.sourcesHealed ? `; healed ${factory.sourcesHealed} plan source(s)` : '') +
+        (factory.cadenceHealed ? `; healed ${factory.cadenceHealed} cadence(s) → every 2h` : '') +
+        (factory.statusHealed ? `; reactivated ${factory.statusHealed} plan(s)` : ''),
     );
     if (factory.cseCxPersisted) {
       console.log('Persisted GOOGLE_CSE_CX from env into Settings.');

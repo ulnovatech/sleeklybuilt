@@ -156,10 +156,20 @@ export class BiProfileService {
       completenessScore: profile.completeness.score,
     });
 
-    await this.accountRepo.update(account.id, {
+    const resolvedOwned =
+      footprint.resolvedWebsite?.trim() ||
+      profile.digitalFootprint.linkInBioPages.find((p) => p.resolvedWebsite)?.resolvedWebsite?.trim() ||
+      null;
+    const priorMeta = (account.metadata as Record<string, unknown> | null) ?? {};
+    const priorClass = priorMeta.websiteClass;
+    const accountUpdate: {
+      lastEnrichedAt: Date;
+      metadata: Record<string, unknown>;
+      website?: string;
+    } = {
       lastEnrichedAt: new Date(),
       metadata: {
-        ...(account.metadata as Record<string, unknown> | null),
+        ...priorMeta,
         biProfile: {
           completenessScore: profile.completeness.score,
           enrichedAt: profile.enrichedAt,
@@ -172,7 +182,35 @@ export class BiProfileService {
           hasOnlineBooking: profile.infrastructure.flags.hasOnlineBooking,
         },
       },
-    });
+    };
+
+    // Persist BI-resolved owned destination onto canonical account when ownership is established.
+    // Do not overwrite crawl-proven real/broken/low_quality with a weaker class.
+    if (
+      resolvedOwned &&
+      priorClass !== 'real' &&
+      priorClass !== 'broken' &&
+      priorClass !== 'low_quality'
+    ) {
+      accountUpdate.website = account.website?.trim() || resolvedOwned;
+      accountUpdate.metadata = {
+        ...accountUpdate.metadata,
+        websiteClass: 'uncertain',
+        greenfieldStatus: 'existing_website',
+        prospectProof: {
+          ...((priorMeta.prospectProof as Record<string, unknown> | undefined) ?? {}),
+          version: 1,
+          greenfieldStatus: 'existing_website',
+          ownedWebsiteUrl: resolvedOwned,
+          classificationReason: 'BI link-in-bio or footprint resolved an owned website destination',
+          websiteSearchAt: new Date().toISOString(),
+          searchCompletion: 'complete',
+          websiteSearchCoverage: 1,
+        },
+      };
+    }
+
+    await this.accountRepo.update(account.id, accountUpdate);
 
     const nowHasWebsite = hasRealWebsite({
       hasWebsite: profile.presence?.hasWebsite ?? false,
