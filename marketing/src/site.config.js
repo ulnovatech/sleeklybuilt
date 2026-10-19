@@ -11,9 +11,9 @@ export const siteConfig = {
   email: 'sales@sleeklybuilt.pro',
   location: 'Kampala, Uganda',
   addressNote: 'By appointment · Kampala',
-  phones: ['+256 791779448', '+256 749594464', '+256 772169960'],
-  primaryPhone: '+256791779448',
-  whatsapp: 'https://wa.me/256749594464',
+  phones: ['+256 776770930', '+256 791779448', '+256 772169960'],
+  primaryPhone: '+256776770930',
+  whatsapp: 'https://wa.me/256776770930',
   social: {
     x: 'https://x.com/sleeklybuilt',
     instagram: 'https://www.instagram.com/sleeklybuilt/?hl=en',
