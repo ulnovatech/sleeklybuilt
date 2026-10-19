@@ -8,6 +8,7 @@ import Footer from './components/Footer'
 import Home from './pages/Home'
 import Order from './pages/Order'
 import OrderSuccess from './pages/OrderSuccess'
+import ClaimWaitingPage from './pages/ClaimWaitingPage'
 import Rainbow from './pages/Rainbow'
 import { useSiteConfig } from './context/SiteContactContext'
 
@@ -27,6 +28,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/order" element={<Order />} />
+          <Route path="/order/claim" element={<ClaimWaitingPage />} />
           <Route path="/order/success" element={<OrderSuccess />} />
           <Route path="/rainbow" element={<Rainbow />} />
         </Routes>

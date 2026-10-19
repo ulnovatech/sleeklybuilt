@@ -253,4 +253,61 @@ export const SettingsAPI = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+  getPayments: () => request('/settings/payments'),
+  updatePayments: (payload) =>
+    request('/settings/payments', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+};
+
+export const PaymentsAPI = {
+  queue: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/payments${qs ? `?${qs}` : ''}`);
+  },
+  get: (claimId) => request(`/payments/${encodeURIComponent(claimId)}`),
+  match: (claimId, payload) =>
+    request(`/payments/${encodeURIComponent(claimId)}/match`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  confirm: (claimId, payload) =>
+    request(`/payments/${encodeURIComponent(claimId)}/confirm`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  reject: (claimId, payload) =>
+    request(`/payments/${encodeURIComponent(claimId)}/reject`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  markAmbiguous: (claimId) =>
+    request(`/payments/${encodeURIComponent(claimId)}/ambiguous`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  retryNotify: (claimId) =>
+    request(`/payments/${encodeURIComponent(claimId)}/notify`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  recordUnmatched: (payload) =>
+    request('/payments/unmatched', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  unmatchedCandidates: (txnId) =>
+    request(`/payments/unmatched/${encodeURIComponent(txnId)}/candidates`),
+  attachUnmatched: (txnId, payload) =>
+    request(`/payments/unmatched/${encodeURIComponent(txnId)}/attach`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  adapters: () => request('/payments/adapters'),
+  adapterPull: (providerId, payload = { dry_run: true }) =>
+    request(`/payments/adapters/${encodeURIComponent(providerId)}/pull`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 };

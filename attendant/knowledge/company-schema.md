@@ -17,7 +17,7 @@ Company facts must not be sampled from the model's pretraining. The engine suppl
 | `primary_phone` | string | E.164-ish as stored |
 | `whatsapp_url` | string | `https://wa.me/…` |
 | `location` | string | Kampala, Uganda |
-| `address_note` | string | e.g. office under development |
+| `address_note` | string | e.g. By appointment · Kampala |
 | `social` | object | x, instagram, linkedin, youtube URLs |
 
 ## Behaviour

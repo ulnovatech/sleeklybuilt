@@ -82,8 +82,8 @@ export const websitePackages = [
       'Product search + filters',
     ],
     highlight: 'Launch your shop online and start selling 24/7',
-    cta: '/portfolio-app/order',
-    ctaLabel: 'Browse layouts to order',
+    cta: '/contact?intent=store',
+    ctaLabel: 'Let’s Build Your Store',
   },
 ]
 
@@ -98,8 +98,8 @@ export const websiteEnterprise = {
     'Built around your workflows',
   ],
   highlight: 'Digitize operations with a tailor-made web system',
-  cta: '/contact?intent=project',
-  ctaLabel: 'Request a quote',
+  cta: '/contact?intent=system',
+  ctaLabel: 'Let’s Build Your System',
 }
 
 export const appPackages = [
@@ -121,8 +121,8 @@ export const appPackages = [
     recommended: true,
     recommendedWhy: 'Most requested app starting point',
     badge: 'Recommended',
-    cta: '/contact?intent=project',
-    ctaLabel: 'Start a project',
+    cta: '/contact?intent=app',
+    ctaLabel: 'Let’s Build Your App',
   },
   {
     id: 'restaurant-app',
@@ -139,8 +139,8 @@ export const appPackages = [
       'Admin dashboard',
     ],
     highlight: 'Serve meals faster with a branded ordering system',
-    cta: '/contact?intent=project',
-    ctaLabel: 'Start a project',
+    cta: '/contact?intent=app',
+    ctaLabel: 'Let’s Build Your App',
   },
   {
     id: 'sacco-app',
@@ -157,8 +157,8 @@ export const appPackages = [
       'Secure authentication',
     ],
     highlight: 'Digitize SACCO operations securely',
-    cta: '/contact?intent=project',
-    ctaLabel: 'Start a project',
+    cta: '/contact?intent=system',
+    ctaLabel: 'Let’s Build Your System',
   },
   {
     id: 'school-app',
@@ -175,8 +175,8 @@ export const appPackages = [
       'MoMo payment options',
     ],
     highlight: 'Streamline school admin and parent communication',
-    cta: '/contact?intent=project',
-    ctaLabel: 'Start a project',
+    cta: '/contact?intent=system',
+    ctaLabel: 'Let’s Build Your System',
   },
 ]
 
@@ -191,8 +191,8 @@ export const appEnterprise = {
     'Roles and scale from day one',
   ],
   highlight: 'Exactly what your business needs — scoped before we build',
-  cta: '/contact?intent=project',
-  ctaLabel: 'Request a quote',
+  cta: '/contact?intent=software',
+  ctaLabel: 'Let’s Build Your Software',
 }
 
 /** Differentiating matrix for website packages (shared features omitted). */

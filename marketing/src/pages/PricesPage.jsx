@@ -301,8 +301,8 @@ export default function PricesPage() {
       <PageHeader
         sectionId="hero"
         eyebrow="Transparent pricing"
-        title="Packages built for Ugandan businesses"
-        intro="Website layouts from our portfolio include deposit checkout. Custom apps and systems start with a scoped quote."
+        title="Clear UGX packages — then a written quote when you need custom"
+        intro="Website and Sleek Page layouts from our portfolio include deposit checkout. Apps and systems start with a scoped quote before any build."
         actions={
           <>
             <ActionLink href={`${siteConfig.links.contact}?intent=pricing`}>

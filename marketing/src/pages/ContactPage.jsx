@@ -15,7 +15,7 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Contact"
         title="Tell us what you need"
-        intro="One question at a time. We reply within one working day."
+        intro="Form, WhatsApp, or call — pick what fits. We reply within one working day with a clear next step."
       />
 
       <Section className="section-light scroll-mt-24 py-10 md:py-14" id="contact">

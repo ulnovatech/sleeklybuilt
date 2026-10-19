@@ -1,7 +1,8 @@
 /**
- * Contact intents — max six, visitor vocabulary (patterns/contact.md).
- * `id` may be pre-selected via ?intent=
+ * Contact intents — max six chips for undecided visitors (patterns/contact.md).
+ * Product heroes deep-link via directedProductIntents (?intent=website|app|…).
  */
+
 export const contactIntents = [
   {
     id: 'project',
@@ -27,7 +28,7 @@ export const contactIntents = [
       id: 'orderRef',
       label: 'Payment or order reference',
       hint: 'So we can find your order straight away.',
-      placeholder: 'e.g. FLW-… or invoice number',
+      placeholder: 'e.g. SB-PAY-… or invoice number',
     },
     deflect: {
       text: 'You can check status yourself if you have the payment reference.',
@@ -55,7 +56,58 @@ export const contactIntents = [
   },
 ]
 
+/** Deep-link only — not shown as chips on the generic contact form. */
+export const directedProductIntents = {
+  website: { id: 'website', label: 'I want a website', subject: 'Website project', deflect: null },
+  'sleek-page': {
+    id: 'sleek-page',
+    label: 'I want a Sleek Page',
+    subject: 'Sleek Page project',
+    deflect: null,
+  },
+  app: { id: 'app', label: 'I want a mobile app', subject: 'Mobile app project', deflect: null },
+  system: {
+    id: 'system',
+    label: 'I want a business system',
+    subject: 'Business system project',
+    deflect: null,
+  },
+  store: {
+    id: 'store',
+    label: 'I want an online store',
+    subject: 'E-commerce / store project',
+    deflect: null,
+  },
+  'ai-attendant': {
+    id: 'ai-attendant',
+    label: 'I want an AI attendant',
+    subject: 'AI attendant setup',
+    deflect: null,
+  },
+  software: {
+    id: 'software',
+    label: 'I want custom software',
+    subject: 'Custom software project',
+    deflect: null,
+  },
+  branding: {
+    id: 'branding',
+    label: 'I want branding help',
+    subject: 'Branding project',
+    deflect: null,
+  },
+}
+
+export function resolveContactIntent(id) {
+  if (!id) return null
+  return (
+    contactIntents.find((item) => item.id === id) ??
+    directedProductIntents[id] ??
+    null
+  )
+}
+
 export function intentFromSearchParam(value) {
   if (!value) return null
-  return contactIntents.find((item) => item.id === value)?.id ?? null
+  return resolveContactIntent(value)?.id ?? null
 }

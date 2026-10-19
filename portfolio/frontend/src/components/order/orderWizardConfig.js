@@ -27,12 +27,12 @@ export const wizardSteps = [
   },
   {
     id: 'project',
-    title: 'Tell us about your project',
+    title: 'Tell us about your proposed project',
     subtitle: 'Layout and any custom requests',
   },
   {
     id: 'pay',
-    title: 'Review and start',
-    subtitle: 'Confirm details, then pay a deposit or request a quote',
+    title: 'Pay your deposit',
+    subtitle: 'MTN Mobile Money or Airtel Money — then tell us you’ve paid',
   },
 ]

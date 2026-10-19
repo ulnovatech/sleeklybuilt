@@ -4,7 +4,9 @@ import { FiChevronDown, FiArrowRight } from 'react-icons/fi'
 import { Section, SectionBody, SectionHeading } from '../site/Section'
 import ActionLink from '../site/ActionLink'
 import { cn } from '../../lib/utils'
-import { siteConfig } from '../../site.config'
+import { siteConfig, siteUrl } from '../../site.config'
+
+const FAQ_SCRIPT_ID = 'sleeklybuilt-jsonld-faq'
 
 /**
  * FAQ Variant A — simple accordion (design-os/patterns/faq.md).
@@ -50,6 +52,9 @@ export default function PeopleAskSection({
   title = 'Straight answers before you write',
   intro,
   id = 'faq',
+  /** Product pages pass a directed CTA; undecided surfaces keep “Start a project”. */
+  ctaHref = siteConfig.links.contact,
+  ctaLabel = 'Start a project',
 }) {
   const reducedMotion = useReducedMotion()
   const [openIds, setOpenIds] = useState(() => new Set())
@@ -63,6 +68,39 @@ export default function PeopleAskSection({
     const node = document.getElementById(match.id)
     node?.scrollIntoView({ block: 'start', behavior: reducedMotion ? 'auto' : 'smooth' })
   }, [items, reducedMotion])
+
+  /** FAQPage JSON-LD mirrors visible Q&A (semantic / AI search — not retired Google FAQ rich results). */
+  useEffect(() => {
+    if (!items.length || items.length < 4 || typeof document === 'undefined') return undefined
+
+    const base = siteUrl.replace(/\/$/, '')
+    const graph = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      '@id': `${base}${window.location.pathname || '/'}#faq`,
+      mainEntity: items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    }
+
+    let el = document.getElementById(FAQ_SCRIPT_ID)
+    if (!el) {
+      el = document.createElement('script')
+      el.type = 'application/ld+json'
+      el.id = FAQ_SCRIPT_ID
+      document.head.appendChild(el)
+    }
+    el.textContent = JSON.stringify(graph)
+
+    return () => {
+      el?.remove()
+    }
+  }, [items])
 
   if (!items.length || items.length < 4) return null
 
@@ -101,12 +139,18 @@ export default function PeopleAskSection({
         <div className="mt-10 max-w-3xl rounded-dos-xl border border-subtle bg-surface-raised p-6 sm:p-7">
           <p className="display-card text-emerald-deep">Still deciding?</p>
           <p className="mt-2 text-body text-ink-soft">
-            Tell us what you need. We reply within one working day — no auto-reply black hole.
+            Tell us what you need on the contact form, or message us on WhatsApp. We reply within one working
+            day.
           </p>
-          <ActionLink href={siteConfig.links.contact} variant="emerald" className="mt-5">
-            Start a project
-            <FiArrowRight aria-hidden="true" />
-          </ActionLink>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <ActionLink href={ctaHref} variant="emerald">
+              {ctaLabel}
+              <FiArrowRight aria-hidden="true" />
+            </ActionLink>
+            <ActionLink href={siteConfig.whatsapp} variant="ghostLight" className="sm:w-auto">
+              Message on WhatsApp
+            </ActionLink>
+          </div>
         </div>
       </SectionBody>
     </Section>

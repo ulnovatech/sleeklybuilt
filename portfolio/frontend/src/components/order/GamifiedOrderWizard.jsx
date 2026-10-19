@@ -1,10 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { FiArrowLeft, FiArrowRight, FiCheck, FiInfo, FiLock } from 'react-icons/fi'
+import { FiArrowLeft, FiArrowRight, FiCheck, FiInfo } from 'react-icons/fi'
 import { apiEndpoints } from '../../site.config'
 import { formatUgx, getPlanById, pricingPlans } from '../../config/packages'
 import { orderCountries, wizardSteps } from './orderWizardConfig'
 import PackageDetailsDialog from './PackageDetailsDialog'
+import PayStep from './PayStep'
 
 const emptyForm = {
   websiteName: '',
@@ -38,6 +40,7 @@ function cn(...parts) {
  * and review-before-pay (Wave 9 Phase C).
  */
 export default function GamifiedOrderWizard({ templateName = '', templateData = null, initialPackage = '' }) {
+  const navigate = useNavigate()
   const formId = useId()
   const stepStatusId = `${formId}-step-status`
   const summaryRef = useRef(null)
@@ -54,7 +57,6 @@ export default function GamifiedOrderWizard({ templateName = '', templateData = 
     template: templateName,
     package: packageSeed,
   })
-  const [paying, setPaying] = useState(false)
   const [quoteSubmitting, setQuoteSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
   const [attempted, setAttempted] = useState(false)
@@ -152,51 +154,12 @@ export default function GamifiedOrderWizard({ templateName = '', templateData = 
     setStep(index)
   }
 
-  const startPayment = async () => {
-    setAttempted(true)
-    const nextErrors = validateStepFields('pay')
-    setErrors(nextErrors)
-    if (Object.keys(nextErrors).length) {
-      const first = Object.keys(nextErrors)[0]
-      const target = wizardSteps.findIndex((s) =>
-        s.id === 'package'
-          ? first === 'package'
-          : s.id === 'contact'
-            ? ['fullName', 'email', 'phone'].includes(first)
-            : first === 'websiteName',
-      )
-      if (target >= 0) setStep(target)
-      queueMicrotask(() => summaryRef.current?.focus())
-      return
-    }
-
-    setPaying(true)
-    try {
-      const response = await fetch(apiEndpoints.paymentInit, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          template: form.template || form.websiteName,
-          websiteName: form.websiteName,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok && result.success && result.payment_link) {
-        toast.success('Opening secure checkout…')
-        window.location.href = result.payment_link
-        return
-      }
-
-      toast.error(result.message || 'Could not start payment. Please try again.')
-    } catch (error) {
-      console.error(error)
-      toast.error('Something went wrong. Please try again.')
-    } finally {
-      setPaying(false)
-    }
+  const handleClaimSuccess = (result) => {
+    toast.success(result.message || 'We’ve got your payment claim.')
+    const phone = form.phone || ''
+    navigate(
+      `/order/claim?ref=${encodeURIComponent(result.claim_ref)}&phone=${encodeURIComponent(phone)}`,
+    )
   }
 
   const requestQuoteOnly = async () => {
@@ -520,62 +483,15 @@ export default function GamifiedOrderWizard({ templateName = '', templateData = 
         ) : null}
 
         {currentStep.id === 'pay' ? (
-          <div className="space-y-5">
-            <div className="rounded-xl border border-subtle bg-surface-sunken p-5">
-              <h3 className="font-semibold text-ink">Order summary</h3>
-              <dl className="mt-4 space-y-3 text-sm">
-                {[
-                  { step: 0, label: 'Package', value: selectedPlan?.title },
-                  { step: 2, label: 'Layout', value: form.websiteName },
-                  { step: 1, label: 'Name', value: form.fullName },
-                  { step: 1, label: 'Email', value: form.email },
-                  { step: 1, label: 'Phone', value: `${form.countryCode}${form.phone}` },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-start justify-between gap-4">
-                    <div>
-                      <dt className="text-content-muted">{row.label}</dt>
-                      <dd className="font-medium text-ink">{row.value || '—'}</dd>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => goToStep(row.step)}
-                      className="shrink-0 text-meta font-semibold text-emerald-deep underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                ))}
-                <div className="flex justify-between gap-4 border-t border-subtle pt-3">
-                  <dt className="font-semibold text-ink">Deposit due now</dt>
-                  <dd className="text-lg font-bold text-emerald-deep">{formatUgx(selectedPlan.depositUgx)}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <p className="rounded-xl border border-subtle bg-surface-raised p-4 text-sm text-ink-soft">
-              Pay your deposit with MTN MoMo, Airtel Money, card, or bank transfer via Flutterwave. After payment we
-              contact you for business details and start building.
-            </p>
-
-            <button
-              type="button"
-              onClick={startPayment}
-              disabled={paying || quoteSubmitting}
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-action-primary-hover px-6 py-3 text-meta font-semibold text-cream transition hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-60"
-            >
-              <FiLock className="h-5 w-5" aria-hidden="true" />
-              {paying ? 'Opening Flutterwave…' : `Pay ${formatUgx(selectedPlan.depositUgx)} & start build`}
-            </button>
-
-            <button
-              type="button"
-              onClick={requestQuoteOnly}
-              disabled={quoteSubmitting || paying}
-              className="w-full text-center text-sm font-medium text-ink-soft underline-offset-2 hover:text-emerald-deep hover:underline disabled:opacity-60"
-            >
-              {quoteSubmitting ? 'Sending quote request…' : 'Skip payment — request a quote only'}
-            </button>
-          </div>
+          <PayStep
+            formId={formId}
+            form={form}
+            selectedPlan={selectedPlan}
+            goToStep={goToStep}
+            onClaimSuccess={handleClaimSuccess}
+            quoteSubmitting={quoteSubmitting}
+            onRequestQuote={requestQuoteOnly}
+          />
         ) : null}
       </div>
 

@@ -34,6 +34,135 @@ if ($txRef === '' || $phone === '') {
 $fullPhone = preg_replace('/\s+/', '', $countryCode . $phone);
 
 try {
+    // MoMo claim refs (SB-PAY-*) — Phase 2+ track path (no Flutterwave)
+    if (stripos($txRef, 'SB-PAY-') === 0) {
+        require_once __DIR__ . '/../../../php/payments/momo_schema.php';
+        uln_ensure_payment_claims_tables($pdo);
+
+        $claimRef = strtoupper($txRef);
+        $stmt = $pdo->prepare(
+            'SELECT c.claim_ref, c.status AS claim_status, c.submitted_at, c.claimed_payer_phone, c.metadata,
+                    s.customer_name, s.customer_phone, s.country_code, s.template_key, s.package, s.amount_ugx
+             FROM payment_claims c
+             INNER JOIN payment_sessions s ON s.id = c.payment_session_id
+             WHERE c.claim_ref = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$claimRef]);
+        $claim = $stmt->fetch();
+
+        if (!$claim) {
+            http_response_code(404);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No order found with that reference. Check your payment claim reference and try again.',
+                'code' => 'not_found',
+            ]);
+            exit;
+        }
+
+        $phoneOk = uln_phones_match(
+            ($claim['country_code'] ?? '') . ($claim['customer_phone'] ?? ''),
+            $fullPhone
+        ) || uln_phones_match($claim['customer_phone'], $phone)
+            || uln_phones_match($claim['claimed_payer_phone'] ?? '', $phone)
+            || uln_phones_match($claim['claimed_payer_phone'] ?? '', $fullPhone);
+
+        if (!$phoneOk) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Phone number does not match this order reference.',
+                'code' => 'phone_mismatch',
+            ]);
+            exit;
+        }
+
+        $packages = uln_packages();
+        $packageMeta = $packages[$claim['package']] ?? [
+            'title' => ucfirst((string) $claim['package']),
+            'price_ugx' => 0,
+        ];
+        $meta = json_decode((string) ($claim['metadata'] ?? ''), true);
+        if (is_array($meta) && !empty($meta['package_title'])) {
+            $packageMeta['title'] = $meta['package_title'];
+        }
+
+        $st = (string) $claim['claim_status'];
+        $verified = $st === 'verified' || $st === 'overpaid';
+        $partial = $st === 'partial';
+        $statusMap = [
+            'awaiting_verification' => [
+                'label' => 'Waiting for verification',
+                'headline' => "We're checking your payment",
+                'next_step' => 'We verify against our merchant account — usually within one working day. You do not need a MoMo transaction reference.',
+            ],
+            'verified' => [
+                'label' => 'Payment confirmed',
+                'headline' => 'Deposit verified — we\'ll start building soon',
+                'next_step' => 'Our team will contact you for business details and next steps.',
+            ],
+            'partial' => [
+                'label' => 'Partial payment received',
+                'headline' => 'We received part of your deposit',
+                'next_step' => 'Contact us about the remaining balance.',
+            ],
+            'overpaid' => [
+                'label' => 'Payment received',
+                'headline' => 'Deposit received — we\'ll start building soon',
+                'next_step' => 'Your package is confirmed. Our team will contact you; if the amount differs from expected, we\'ll follow up.',
+            ],
+            'rejected' => [
+                'label' => 'Could not verify yet',
+                'headline' => "We couldn't match a payment yet",
+                'next_step' => 'Contact us with your claim reference and we will help.',
+            ],
+            'not_found' => [
+                'label' => 'Payment not found yet',
+                'headline' => "We couldn't match a payment yet",
+                'next_step' => 'If you already paid, contact us with your claim reference.',
+            ],
+            'ambiguous' => [
+                'label' => 'Waiting for verification',
+                'headline' => "We're checking your payment",
+                'next_step' => 'Our team is reviewing your claim. Keep your reference handy.',
+            ],
+        ];
+        $statusInfo = $statusMap[$st] ?? $statusMap['awaiting_verification'];
+
+        $timeline = [
+            ['id' => 'submitted', 'label' => 'Details submitted', 'done' => true],
+            ['id' => 'claimed', 'label' => 'Payment claimed', 'done' => true],
+            ['id' => 'deposit', 'label' => 'Deposit verified', 'done' => $verified || $partial],
+            ['id' => 'build', 'label' => 'Project in progress', 'done' => false],
+            ['id' => 'launch', 'label' => 'Ready to launch', 'done' => false],
+        ];
+
+        echo json_encode([
+            'success' => true,
+            'order' => [
+                'reference' => $claim['claim_ref'],
+                'status' => $st,
+                'status_label' => $statusInfo['label'],
+                'headline' => $statusInfo['headline'],
+                'next_step' => $statusInfo['next_step'],
+                'customer_name' => $claim['customer_name'],
+                'template' => $claim['template_key'],
+                'package' => $claim['package'],
+                'package_title' => $packageMeta['title'],
+                'deposit_label' => uln_format_ugx((int) $claim['amount_ugx']),
+                'package_total_label' => (int) ($packageMeta['price_ugx'] ?? 0) > 0
+                    ? uln_format_ugx((int) $packageMeta['price_ugx'])
+                    : null,
+                'template_reserved' => false,
+                'submitted_at' => $claim['submitted_at'],
+                'paid_at' => ($verified || $partial) ? $claim['submitted_at'] : null,
+                'timeline' => $timeline,
+            ],
+        ]);
+        exit;
+    }
+
     uln_ensure_order_payments_table($pdo);
 
     $stmt = $pdo->prepare('SELECT * FROM order_payments WHERE tx_ref = ? LIMIT 1');
@@ -84,7 +213,7 @@ try {
         'pending' => [
             'label' => 'Awaiting payment',
             'headline' => 'Complete your deposit to start your build',
-            'next_step' => 'Finish payment via Flutterwave, or start again from the portfolio.',
+            'next_step' => 'Finish your deposit with MTN Mobile Money or Airtel Money, or start again from the portfolio.',
         ],
         'successful' => [
             'label' => 'Deposit confirmed',

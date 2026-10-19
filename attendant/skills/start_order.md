@@ -17,8 +17,8 @@ They want to order a layout / package and have accepted submitting a request.
 Confirm summary including package title from `uln_packages()`. After success:
 
 1. Report that it is a **request / quote**, not a paid order.
-2. Server emits **payment handoff** `client_action` to `portfolio-order` (`/portfolio-app/order`) so the visitor continues in the existing Flutterwave checkout.
-3. Do **not** call `payment-init.php`, invent a second payment stack, or collect card/MoMo fields in chat.
+2. Server emits **payment handoff** `client_action` to `portfolio-order` (`/portfolio-app/order`) so the visitor continues checkout with **MTN Mobile Money or Airtel Money**.
+3. Do **not** call `payment-init.php`, invent a second payment stack, or collect card/MoMo PINs in chat.
 
 ## Allowed tools
 

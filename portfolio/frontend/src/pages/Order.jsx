@@ -59,8 +59,9 @@ export default function Order() {
             Tell us about your project — then start with a deposit
           </h1>
           <p className="mt-4 text-body text-ink-soft">
-            Complete a short guided form. When you&apos;re ready, pay a deposit with Flutterwave (MoMo, card, or bank)
-            and we begin building.
+            Complete a short guided form. Pay your deposit using MTN Mobile Money or Airtel Money. Once your payment
+            is verified, we&apos;ll contact you within 5 minutes to collect your business details and begin building
+            your website.
           </p>
         </div>
 
@@ -95,7 +96,7 @@ export default function Order() {
                   },
                   {
                     title: 'We build it',
-                    body: 'After payment, we contact you for business details and start. Customizations are included.',
+                    body: 'Once payment is verified, we contact you within 5 minutes for business details and begin building your website. Customizations are included.',
                   },
                   {
                     title: 'Go live',

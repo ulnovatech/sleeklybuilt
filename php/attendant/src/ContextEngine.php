@@ -122,11 +122,11 @@ final class ContextEngine
             'description' =>
                 'SleeklyBuilt crafts custom websites, mobile apps, graphics, and business systems for clients in Uganda and beyond.',
             'email' => 'sales@sleeklybuilt.pro',
-            'phones' => ['+256 791779448', '+256 749594464', '+256 772169960'],
-            'primary_phone' => '+256791779448',
-            'whatsapp_url' => 'https://wa.me/256749594464',
+            'phones' => ['+256 776770930', '+256 791779448', '+256 772169960'],
+            'primary_phone' => '+256776770930',
+            'whatsapp_url' => 'https://wa.me/256776770930',
             'location' => 'Kampala, Uganda',
-            'address_note' => 'Office under development',
+            'address_note' => 'By appointment · Kampala',
             'policies_index' => '/policies',
             'authority_note' =>
                 'Policies and catalogue tools beat improvisation. Prefer get_company_document / search_knowledge for policy facts.',

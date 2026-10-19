@@ -98,7 +98,8 @@ export default function TrackOrderPage() {
           <div className="rounded-xl border border-subtle bg-surface-raised p-5 shadow-sm sm:p-6">
             <h2 className="font-display text-lg font-semibold text-emerald-deep">{order ? 'Your order status' : 'Look up your order'}</h2>
             <p className="mt-1 text-meta text-ink-soft">
-              Reference usually starts with <span className="font-mono text-ink">ULN-</span>
+              Reference usually starts with <span className="font-mono text-ink">SB-PAY-</span> (MoMo) or{' '}
+              <span className="font-mono text-ink">ULN-</span> (legacy).
             </p>
 
             {!order ? (
@@ -128,7 +129,7 @@ export default function TrackOrderPage() {
                     aria-describedby={[`${formId}-ref-hint`, errors.reference ? `${formId}-ref-error` : null]
                       .filter(Boolean)
                       .join(' ')}
-                    placeholder="ULN-…"
+                    placeholder="SB-PAY-… or ULN-…"
                     className={cn('field-input mt-2 font-mono text-sm', errors.reference && 'field-input-error')}
                   />
                   {errors.reference ? (

@@ -7,7 +7,11 @@ import { defaultDialCode } from './CountrySelect'
 import SubmissionConfirmation from '../site/SubmissionConfirmation'
 import { apiEndpoints } from '../../site.config'
 import { useSiteConfig } from '../../context/SiteContactContext'
-import { contactIntents, intentFromSearchParam } from '../../config/contactIntents'
+import {
+  contactIntents,
+  intentFromSearchParam,
+  resolveContactIntent,
+} from '../../config/contactIntents'
 import { useFormSubmit } from '../../lib/useFormSubmit'
 import { cn } from '../../lib/utils'
 
@@ -188,10 +192,7 @@ export default function GamifiedContactForm() {
     },
   })
 
-  const selectedIntent = useMemo(
-    () => contactIntents.find((item) => item.id === form.intentId) ?? null,
-    [form.intentId],
-  )
+  const selectedIntent = useMemo(() => resolveContactIntent(form.intentId), [form.intentId])
 
   const prompts = useMemo(() => activePrompts(form), [form])
   const safeIndex = Math.min(promptIndex, prompts.length - 1)
@@ -425,6 +426,15 @@ export default function GamifiedContactForm() {
             aria-labelledby={questionId}
             className="grid gap-2"
           >
+            {selectedIntent && !contactIntents.some((i) => i.id === selectedIntent.id) ? (
+              <div
+                className="flex min-h-11 items-center rounded-lg border border-action-primary/40 bg-action-primary-hover/5 px-3.5 py-2.5 text-left text-body text-emerald-deep"
+                role="status"
+              >
+                <span className="flex-1">{selectedIntent.label}</span>
+                <FiCheck className="h-4 w-4 shrink-0 text-emerald" aria-hidden="true" />
+              </div>
+            ) : null}
             {contactIntents.map((intent) => {
               const checked = form.intentId === intent.id
               return (
@@ -460,7 +470,7 @@ export default function GamifiedContactForm() {
             aria-labelledby={questionId}
             aria-invalid={attempted && error ? true : undefined}
             aria-describedby={error ? `${formId}-err` : undefined}
-            placeholder="FLW-… or invoice number"
+            placeholder="SB-PAY-… or invoice number"
             className={cn('field-input', attempted && error && 'field-input-error')}
             autoComplete="off"
           />

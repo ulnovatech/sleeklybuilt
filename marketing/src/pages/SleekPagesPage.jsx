@@ -2,8 +2,10 @@ import ProductPageLayout from '../components/site/ProductPageLayout'
 import LayoutsGallery from '../components/site/LayoutsGallery'
 import Reveal from '../components/motion/Reveal'
 import { sleekPagesContent } from '../config/productPages'
+import { productCta } from '../config/productCtas'
 
 export default function SleekPagesPage() {
+  const cta = productCta('sleek-pages')
   return (
     <ProductPageLayout
       eyebrow={sleekPagesContent.eyebrow}
@@ -11,6 +13,7 @@ export default function SleekPagesPage() {
       intro={sleekPagesContent.intro}
       features={sleekPagesContent.features}
       faq={sleekPagesContent.faq}
+      primaryAction={{ href: cta.href, label: cta.label }}
       secondaryAction={{ href: '#layouts', label: 'Browse layouts' }}
     >
       <Reveal>

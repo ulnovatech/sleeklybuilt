@@ -38,6 +38,16 @@ $allowed = getenv('ALLOWED_ORIGINS')
     ?: 'http://localhost:5174,http://localhost:5177,http://localhost:3000,http://localhost,http://hub.34.66.94.12.nip.io,http://34.66.94.12';
 $allowedOrigins = array_filter(array_map('trim', explode(',', $allowed)));
 
+// Capacitor Android (androidScheme=https) and iOS WebView origins — always allow.
+// These are not public websites; they are the phone Admin APK / Cap host.
+$capacitorOrigins = [
+    'https://localhost',
+    'http://localhost',
+    'capacitor://localhost',
+    'ionic://localhost',
+];
+$allowedOrigins = array_values(array_unique(array_merge($allowedOrigins, $capacitorOrigins)));
+
 if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: $origin");
     header('Vary: Origin');
@@ -52,7 +62,9 @@ if ($origin !== '' && in_array($origin, $allowedOrigins, true)) {
     }
 }
 
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+// Include Idempotency-Key — admin-mobile operator replies send it; missing it
+// makes Capacitor/WebView CORS preflight fail with TypeError "Failed to fetch".
+header('Access-Control-Allow-Headers: Content-Type, Authorization, Idempotency-Key, X-Requested-With');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Credentials: true');
 
@@ -110,6 +122,13 @@ function api_is_public_route(string $method, string $path): bool
         return true;
     }
     if ($path === '/api/public/site-contact' && $method === 'GET') {
+        return true;
+    }
+    if ($path === '/api/public/payment-providers' && $method === 'GET') {
+        return true;
+    }
+    // Public APK update manifest (same data as /admin-app/latest.json)
+    if ($path === '/api/mobile/app-update' && $method === 'GET') {
         return true;
     }
     return false;

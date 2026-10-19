@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../../../php/payments/momo_schema.php';
+
 function uln_ensure_order_payments_table(PDO $pdo): void
 {
     $pdo->exec(

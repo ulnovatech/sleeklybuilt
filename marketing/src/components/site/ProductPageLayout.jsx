@@ -19,6 +19,11 @@ export default function ProductPageLayout({
   features,
   faq,
   secondaryAction,
+  /** Product-directed hero CTA — never the generic “Start a project”. */
+  primaryAction = {
+    href: siteConfig.links.contact,
+    label: 'Let’s Build Your Solution',
+  },
   children,
 }) {
   usePageSeo()
@@ -32,8 +37,8 @@ export default function ProductPageLayout({
         intro={intro}
         actions={
           <>
-            <ActionLink href={siteConfig.links.contact}>
-              Start a project
+            <ActionLink href={primaryAction.href}>
+              {primaryAction.label}
               <FiArrowRight aria-hidden="true" />
             </ActionLink>
             {secondaryAction ? (
@@ -55,10 +60,17 @@ export default function ProductPageLayout({
         <PeopleAskSection
           items={faq}
           intro="Questions buyers ask about this product line before they write."
+          ctaHref={primaryAction.href}
+          ctaLabel={primaryAction.label}
         />
       </Reveal>
 
-      <ContactCtaBand />
+      <ContactCtaBand
+        title="Ready when you are"
+        body="Tell us what you need. We reply within one working day — or sooner when you are ready to start."
+        ctaHref={primaryAction.href}
+        ctaLabel={primaryAction.label}
+      />
     </>
   )
 }

@@ -135,6 +135,16 @@ dc exec -T php-fpm \
   php /var/www/public_html/php/attendant/scripts/apply_attendant_migration.php \
   || echo "WARN: attendant migration skipped"
 
+echo "==> apply_payment_provider_config_migration"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_payment_provider_config_migration.php \
+  || echo "WARN: payment provider migration skipped"
+
+echo "==> apply_clear_office_note_migration"
+dc exec -T php-fpm \
+  php /var/www/public_html/sleekly-dash/backend/scripts/apply_clear_office_note_migration.php \
+  || echo "WARN: office note migration skipped"
+
 echo "==> template screenshot deps (puppeteer)"
 dc exec -T php-fpm \
   sh -lc 'dir=/var/www/public_html/sleekly-dash/backend/scripts/template-screenshots

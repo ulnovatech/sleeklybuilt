@@ -25,6 +25,8 @@ const Prospects = lazy(() => import('./pages/Prospects'))
 const ImportProspects = lazy(() => import('./pages/ImportProspects'))
 const Templates = lazy(() => import('./pages/Templates'))
 const Settings = lazy(() => import('./pages/Settings'))
+const Payments = lazy(() => import('./pages/Payments'))
+const PaymentVerify = lazy(() => import('./pages/PaymentVerify'))
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -56,6 +58,8 @@ createRoot(document.getElementById('root')).render(
             <Route path="import/competitors" element={<LazyPage><ImportCompetitors /></LazyPage>} />
             <Route path="import/prospects" element={<LazyPage><ImportProspects /></LazyPage>} />
             <Route path="templates" element={<LazyPage><Templates /></LazyPage>} />
+            <Route path="payments" element={<LazyPage><Payments /></LazyPage>} />
+            <Route path="payments/:claimId" element={<LazyPage><PaymentVerify /></LazyPage>} />
             <Route path="settings" element={<LazyPage><Settings /></LazyPage>} />
             <Route path="*" element={<div className="p-8 text-center text-red-500">404 — Page Not Found</div>} />
           </Route>

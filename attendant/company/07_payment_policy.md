@@ -4,12 +4,11 @@
 
 ## Accepted methods
 
-- Mobile Money
+- MTN Mobile Money
 - Airtel Money
-- Flutterwave (secure online payment page where appropriate)
 - Other approved methods when agreed in writing
 
-SleeklyBuilt does **not** collect card PANs or Mobile Money PINs in chat. Pay only through approved secure channels.
+SleeklyBuilt does **not** collect card PANs or Mobile Money PINs in chat. Pay only through approved secure channels (deposit checkout uses MTN MoMo or Airtel Money).
 
 ## Commitment structure
 

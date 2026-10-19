@@ -8,7 +8,7 @@ import { siteConfig } from '../site.config'
 export const sleekPagesContent = {
   id: 'sleek-pages',
   eyebrow: 'Sleek Pages',
-  title: 'Premium layouts that go live in a day',
+  title: 'Not every business needs a massive website',
   intro: 'Pick a layout, we personalise it to your brand, and you are online — without a weeks-long build.',
   secondaryAction: {
     href: siteConfig.links.portfolio,
@@ -134,7 +134,7 @@ export const mobileAppsContent = {
   id: 'mobile-apps',
   eyebrow: 'Mobile Apps',
   title: 'Apps your customers can actually pay with',
-  intro: 'Android and iOS products with Mobile Money, admin dashboards and reporting — built for how people here already buy and work.',
+  intro: 'Android and iOS installable with payment options like Mobile Money, admin dashboards and reporting — built for how people already buy and work.',
   features: [
     {
       title: 'Payments that match the market',

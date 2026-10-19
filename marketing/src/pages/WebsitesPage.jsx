@@ -2,8 +2,10 @@ import ProductPageLayout from '../components/site/ProductPageLayout'
 import LayoutsGallery from '../components/site/LayoutsGallery'
 import Reveal from '../components/motion/Reveal'
 import { websitesContent } from '../config/productPages'
+import { productCta } from '../config/productCtas'
 
 export default function WebsitesPage() {
+  const cta = productCta('websites')
   return (
     <ProductPageLayout
       eyebrow={websitesContent.eyebrow}
@@ -11,6 +13,7 @@ export default function WebsitesPage() {
       intro={websitesContent.intro}
       features={websitesContent.features}
       faq={websitesContent.faq}
+      primaryAction={{ href: cta.href, label: cta.label }}
       secondaryAction={{ href: '#layouts', label: 'Browse layouts' }}
     >
       <Reveal>

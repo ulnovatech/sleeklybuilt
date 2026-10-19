@@ -33,7 +33,7 @@ export const homePeopleAsk = [
     id: 'get-started',
     question: 'How do we get started?',
     answer:
-      'Tell us what you need on the contact page. A real person replies within one working day with a clear next step — usually a short call and a written plan.',
+      'Tell us what you need on the contact page, or message us on WhatsApp. A real person replies within one working day with a clear next step — usually a short call and a written plan.',
   },
   {
     id: 'see-work',
