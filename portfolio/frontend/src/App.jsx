@@ -7,6 +7,7 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Order from './pages/Order'
+import AttendantOrder from './pages/AttendantOrder'
 import OrderSuccess from './pages/OrderSuccess'
 import ClaimWaitingPage from './pages/ClaimWaitingPage'
 import Rainbow from './pages/Rainbow'
@@ -28,6 +29,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/order" element={<Order />} />
+          <Route path="/order/attendant" element={<AttendantOrder />} />
           <Route path="/order/claim" element={<ClaimWaitingPage />} />
           <Route path="/order/success" element={<OrderSuccess />} />
           <Route path="/rainbow" element={<Rainbow />} />

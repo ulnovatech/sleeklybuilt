@@ -60,8 +60,14 @@ assert(provider.includes('pendingChoices') || provider.includes('setPendingChoic
 assert(provider.includes('message_delta'), 'provider handles streaming deltas')
 assert(provider.includes("status: 'streaming'"), 'streaming status until complete')
 assert(provider.includes('minimizePanel'), 'provider exposes minimizePanel')
+assert(provider.includes('openWithPrompt'), 'provider exposes openWithPrompt')
 assert(provider.includes('minimized'), 'provider tracks minimized')
 assert(provider.includes('site'), 'provider accepts site contact config')
+
+const attendantPage = read('src/pages/AttendantProductPage.jsx')
+assert(attendantPage.includes('openWithPrompt'), 'product page uses openWithPrompt')
+assert(attendantPage.includes('useAttendant'), 'product page uses shared useAttendant')
+assert(!attendantPage.includes('AttendantRoot'), 'product page does not mount a second AttendantRoot')
 
 const api = read(pkg('src/api.js'))
 assert(api.includes('choice.php'), 'api posts to choice.php')

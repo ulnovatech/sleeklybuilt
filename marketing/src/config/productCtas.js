@@ -1,4 +1,5 @@
 import { siteConfig } from '../site.config'
+import { ATTENDANT_ORDER_PATH } from './attendantProduct'
 
 /**
  * Signature product CTAs — “Let’s Build Your…” / “Let’s Set Up Your…”.
@@ -33,7 +34,9 @@ export const productCtas = {
   },
   'ai-attendant': {
     label: 'Let’s Set Up Your AI Attendant',
-    href: `${siteConfig.links.contact}?intent=ai-attendant`,
+    /** Uganda: first-month MoMo claim path. International buyers use internationalHref. */
+    href: ATTENDANT_ORDER_PATH,
+    internationalHref: `${siteConfig.links.contact}?intent=ai-attendant`,
     projectNoun: 'AI attendant',
   },
   software: {

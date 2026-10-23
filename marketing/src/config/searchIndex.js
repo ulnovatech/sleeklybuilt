@@ -2,6 +2,7 @@ import { siteConfig } from '../site.config'
 import { productLines } from './products'
 import { productCatalogSearchEntries } from './productCatalog'
 import { businessFitSearchEntries } from './businessFit'
+import { attendantProduct } from './attendantProduct'
 
 /**
  * Static half of the search index. Layout results are fetched live from the
@@ -15,6 +16,13 @@ export const productEntries = [
     href: line.href,
     keywords: line.keywords,
   })),
+  {
+    id: attendantProduct.cmdk.id,
+    label: attendantProduct.cmdk.label,
+    description: attendantProduct.cmdk.hint,
+    href: attendantProduct.cmdk.href,
+    keywords: attendantProduct.cmdk.keywords,
+  },
   ...productCatalogSearchEntries,
   ...businessFitSearchEntries,
 ]

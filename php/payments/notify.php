@@ -84,9 +84,14 @@ function uln_momo_notify_after_verify(PDO $pdo, int $claimId, bool $forceRetry =
     }
 
     $packageTitle = $meta['package_title'] ?? null;
+    $isSubscription = (($meta['product_kind'] ?? '') === 'subscription')
+        || uln_is_subscription_product((string) $row['package']);
+
     if (!$packageTitle) {
         try {
-            $packageTitle = uln_package_or_fail((string) $row['package'])['title'];
+            $packageTitle = $isSubscription
+                ? uln_subscription_product_or_fail((string) $row['package'])['title']
+                : uln_package_or_fail((string) $row['package'])['title'];
         } catch (Throwable $e) {
             $packageTitle = (string) $row['package'];
         }
@@ -104,8 +109,9 @@ function uln_momo_notify_after_verify(PDO $pdo, int $claimId, bool $forceRetry =
         'PAYMENT_VERIFIED:' . $claimId . ':team',
         'team_email',
         $forceRetry,
-        function () use ($row, $amountLabel, $receiptNumber, $packageTitle, $activationRow, $isPartial, $isOverpaid): void {
-            uln_notify_lead('website_order', [
+        function () use ($row, $amountLabel, $receiptNumber, $packageTitle, $activationRow, $isPartial, $isOverpaid, $isSubscription, $meta): void {
+            $leadType = $isSubscription ? 'attendant_subscription' : 'website_order';
+            $payload = [
                 'source_id' => $activationRow['website_order_id'] ?? null,
                 'template' => $row['template_key'],
                 'name' => $row['customer_name'],
@@ -118,8 +124,18 @@ function uln_momo_notify_after_verify(PDO $pdo, int $claimId, bool $forceRetry =
                 'payment_ref' => $row['claim_ref'],
                 'receipt' => $receiptNumber,
                 'momo_status' => $isPartial ? 'partial' : ($isOverpaid ? 'overpaid' : 'verified'),
-                'reserved_in_catalog' => !empty($activationRow['template_reserved']) ? 'yes' : 'no',
-            ]);
+                'reserved_in_catalog' => $isSubscription
+                    ? 'n/a'
+                    : (!empty($activationRow['template_reserved']) ? 'yes' : 'no'),
+            ];
+            if ($isSubscription) {
+                $payload['product_kind'] = 'subscription';
+                $payload['onboarding'] = 'Collect business details and set up attendant';
+                if (!empty($meta['website_url'])) {
+                    $payload['website_url'] = $meta['website_url'];
+                }
+            }
+            uln_notify_lead($leadType, $payload);
         }
     );
 
@@ -132,10 +148,31 @@ function uln_momo_notify_after_verify(PDO $pdo, int $claimId, bool $forceRetry =
             'PAYMENT_VERIFIED:' . $claimId . ':customer_email',
             'customer_email',
             $forceRetry,
-            function () use ($row, $amountLabel, $receiptNumber, $packageTitle, $providerLabel, $isPartial, $isOverpaid, $customerEmail): void {
+            function () use ($row, $amountLabel, $receiptNumber, $packageTitle, $providerLabel, $isPartial, $isOverpaid, $customerEmail, $isSubscription): void {
                 $brand = getenv('BRAND_NAME') ?: 'SleeklyBuilt';
                 $from = getenv('MAIL_FROM') ?: 'noreply@sleeklybuilt.pro';
-                if ($isPartial) {
+                if ($isSubscription) {
+                    if ($isPartial) {
+                        $subject = "[{$brand}] Partial Attendant payment — {$row['claim_ref']}";
+                        $body = "Hi {$row['customer_name']},\n\n"
+                          . "We've received part of your Sleekly Attendant payment ({$amountLabel}) via {$providerLabel}.\n\n"
+                          . "Claim reference: {$row['claim_ref']}\n"
+                          . ($receiptNumber !== '' ? "Receipt: {$receiptNumber}\n" : '')
+                          . "Product: {$packageTitle}\n\n"
+                          . "Please contact us about the remaining balance so we can complete verification.\n\n"
+                          . "— {$brand}\n";
+                    } else {
+                        $subject = "[{$brand}] Attendant payment verified — {$row['claim_ref']}";
+                        $body = "Hi {$row['customer_name']},\n\n"
+                          . "Payment verified.\n\n"
+                          . "We've received your {$amountLabel} payment via {$providerLabel} for {$packageTitle}.\n\n"
+                          . ($receiptNumber !== '' ? "Receipt: {$receiptNumber}\n" : '')
+                          . "Reference: {$row['claim_ref']}\n\n"
+                          . "We will contact you to collect business details and set up your attendant.\n\n"
+                          . "You do not need to send a Mobile Money transaction reference.\n\n"
+                          . "— {$brand}\n";
+                    }
+                } elseif ($isPartial) {
                     $subject = "[{$brand}] Partial payment received — {$row['claim_ref']}";
                     $body = "Hi {$row['customer_name']},\n\n"
                       . "We've received part of your payment ({$amountLabel}) via {$providerLabel}.\n\n"

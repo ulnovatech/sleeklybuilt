@@ -9,6 +9,7 @@ import NavLink from '../components/layout/NavLink'
 import Reveal from '../components/motion/Reveal'
 import { productLines } from '../config/products'
 import { productsIndexFaq } from '../config/productPages'
+import { attendantProduct } from '../config/attendantProduct'
 import { siteConfig } from '../site.config'
 import { usePageSeo } from '../lib/usePageSeo'
 
@@ -82,6 +83,29 @@ export default function ProductsPage() {
             </li>
           ))}
         </ul>
+
+        <div className="mt-10 border-t border-subtle pt-10">
+          <p className="eyebrow">Subscription</p>
+          <p className="mt-3 max-w-measure text-body text-ink-soft">
+            Not a website build line — a monthly attendant for an existing site (or a hosted link).
+          </p>
+          <NavLink
+            item={{ href: attendantProduct.catalogue.href }}
+            className="group mt-6 flex max-w-xl items-start gap-5 rounded-2xl border border-emerald/25 bg-surface-raised p-6 shadow-sm transition duration-fast ease-dos hover:-translate-y-0.5 hover:border-emerald/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-dos focus-visible:ring-offset-2 sm:p-7"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="display-card text-emerald-deep">{attendantProduct.catalogue.name}</span>
+              <span className="mt-2 block text-body text-ink-soft">{attendantProduct.catalogue.blurb}</span>
+            </span>
+            <span className="mt-1.5 flex shrink-0 items-center gap-1 text-meta font-semibold text-emerald-deep">
+              {attendantProduct.catalogue.ctaLabel}
+              <FiArrowRight
+                aria-hidden="true"
+                className="transition duration-fast group-hover:translate-x-1 group-hover:text-accent"
+              />
+            </span>
+          </NavLink>
+        </div>
       </Section>
 
       <Reveal>

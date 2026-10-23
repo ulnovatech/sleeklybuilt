@@ -2,6 +2,7 @@
 
 /**
  * Website package pricing — server-side source of truth for deposits.
+ * Subscription SKUs live in uln_subscription_products() and must never enter uln_packages().
  */
 function uln_packages(): array
 {
@@ -35,6 +36,38 @@ function uln_package_or_fail(string $packageId): array
     }
 
     return $packages[$packageId];
+}
+
+/**
+ * Isolated subscription catalogue (MoMo claim path). Not selectable via website order wizard.
+ *
+ * @return array<string, array{title:string,amount_ugx:int,kind:string,template_key:string}>
+ */
+function uln_subscription_products(): array
+{
+    return [
+        'attendant-monthly' => [
+            'title' => 'Sleekly Attendant: first month',
+            'amount_ugx' => 49000,
+            'kind' => 'subscription',
+            'template_key' => 'sleekly-attendant',
+        ],
+    ];
+}
+
+function uln_subscription_product_or_fail(string $productId): array
+{
+    $products = uln_subscription_products();
+    if (!isset($products[$productId])) {
+        throw new InvalidArgumentException('Invalid subscription product selected.');
+    }
+
+    return $products[$productId];
+}
+
+function uln_is_subscription_product(string $productId): bool
+{
+    return isset(uln_subscription_products()[$productId]);
 }
 
 function uln_format_ugx(int $amount): string

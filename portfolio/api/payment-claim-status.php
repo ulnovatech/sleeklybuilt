@@ -99,6 +99,8 @@ try {
 
     $verified = $claimStatus === 'verified' || $claimStatus === 'overpaid';
     $partial = $claimStatus === 'partial';
+    $isSubscription = (($meta['product_kind'] ?? '') === 'subscription')
+        || (function_exists('uln_is_subscription_product') && uln_is_subscription_product((string) $row['package']));
 
     $statusLabel = match ($claimStatus) {
         'awaiting_verification' => 'Waiting for verification',
@@ -122,6 +124,20 @@ try {
         $receiptNumber = $r->fetchColumn() ?: null;
     }
 
+    if ($isSubscription) {
+        $message = $verified
+            ? 'Payment verified. We will contact you to collect business details and set up your attendant.'
+            : ($partial
+                ? 'We received part of your Attendant payment. Contact us about the balance.'
+                : 'We’re checking your payment against our merchant account — usually within one working day. This claim is not marked paid until we verify it.');
+    } else {
+        $message = $verified
+            ? 'Payment confirmed. We’ve received your payment and your package is confirmed. Our team will contact you about next steps.'
+            : ($partial
+                ? 'We received part of the deposit. Contact us about the balance.'
+                : 'We’re checking your payment against our merchant account — usually within one working day.');
+    }
+
     echo json_encode([
         'success' => true,
         'claim_ref' => $row['claim_ref'],
@@ -133,16 +149,13 @@ try {
         'provider_label' => $meta['display_name'] ?? strtoupper((string) $row['provider']),
         'package' => $row['package'],
         'package_title' => $meta['package_title'] ?? $row['package'],
+        'product_kind' => $isSubscription ? 'subscription' : 'website',
         'customer_name' => $row['customer_name'],
         'submitted_at' => $row['submitted_at'],
         'paid' => $verified || $partial,
         'verified' => $verified,
         'receipt_number' => $receiptNumber,
-        'message' => $verified
-            ? 'Payment confirmed. We’ve received your payment and your package is confirmed. Our team will contact you about next steps.'
-            : ($partial
-                ? 'We received part of the deposit. Contact us about the balance.'
-                : 'We’re checking your payment against our merchant account — usually within one working day.'),
+        'message' => $message,
     ]);
 } catch (Throwable $e) {
     http_response_code(500);

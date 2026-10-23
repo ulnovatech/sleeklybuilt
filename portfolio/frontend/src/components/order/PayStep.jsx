@@ -2,12 +2,15 @@
  * MoMo pay step — amount, payer, provider instructions, claim CTA.
  * Design OS: checkout + multi_step_form · UX-GATE C1
  * Absolute: claim ≠ paid; no MoMo tx ref; codes from API only.
+ *
+ * Website wizard: pass form + selectedPlan (deposit).
+ * Subscription: pass amountUgx, productTitle, amountCaption, buildClaimBody, hideQuoteRequest.
  */
 
 import { useEffect, useState } from 'react'
 import { FiCopy, FiLock, FiRefreshCw } from 'react-icons/fi'
 import toast from 'react-hot-toast'
-import { apiEndpoints } from '../../site.config'
+import { apiEndpoints, hubHref } from '../../site.config'
 import { formatUgx } from '../../config/packages'
 
 function cn(...parts) {
@@ -23,6 +26,16 @@ export default function PayStep({
   quoteSubmitting,
   onRequestQuote,
   disabled = false,
+  /** Optional amount override (subscription first month, etc.) */
+  amountUgx,
+  productTitle,
+  /** Shown under the amount — default "deposit" */
+  amountCaption = 'deposit',
+  /** Optional summary rows: { step, label, value }[] — defaults to website wizard rows */
+  summaryRows,
+  /** Optional claim body builder; receives payer fields already applied */
+  buildClaimBody,
+  hideQuoteRequest = false,
 }) {
   const [providers, setProviders] = useState([])
   const [configLoading, setConfigLoading] = useState(true)
@@ -34,6 +47,9 @@ export default function PayStep({
   const [payerPhone, setPayerPhone] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [claiming, setClaiming] = useState(false)
+
+  const amount = amountUgx ?? selectedPlan?.depositUgx ?? 0
+  const title = productTitle ?? selectedPlan?.title ?? 'Order'
 
   const loadProviders = async () => {
     setConfigLoading(true)
@@ -90,18 +106,25 @@ export default function PayStep({
 
     setClaiming(true)
     try {
+      const payerFields = {
+        provider,
+        payerIsCustomer,
+        payerName: payerIsCustomer ? undefined : payerName.trim(),
+        payerPhone: payerIsCustomer ? undefined : payerPhone.trim(),
+      }
+      const body = buildClaimBody
+        ? buildClaimBody(payerFields)
+        : {
+            ...form,
+            template: form.template || form.websiteName,
+            websiteName: form.websiteName,
+            ...payerFields,
+          }
+
       const response = await fetch(apiEndpoints.paymentClaim, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          template: form.template || form.websiteName,
-          websiteName: form.websiteName,
-          provider,
-          payerIsCustomer,
-          payerName: payerIsCustomer ? undefined : payerName.trim(),
-          payerPhone: payerIsCustomer ? undefined : payerPhone.trim(),
-        }),
+        body: JSON.stringify(body),
       })
       const result = await response.json().catch(() => ({}))
       if (response.ok && result.success && result.claim_ref) {
@@ -119,34 +142,40 @@ export default function PayStep({
 
   const busy = claiming || quoteSubmitting || disabled
 
+  const rows =
+    summaryRows ??
+    [
+      { step: 0, label: 'Package', value: selectedPlan?.title },
+      { step: 2, label: 'Layout', value: form?.websiteName },
+      { step: 1, label: 'Contact', value: form?.fullName },
+    ]
+
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-subtle bg-surface-sunken p-5">
         <p className="text-meta text-content-muted">Amount due</p>
         <p className="mt-1 font-display text-3xl font-semibold tracking-tight text-emerald-deep sm:text-4xl">
-          {formatUgx(selectedPlan.depositUgx)}
+          {formatUgx(amount)}
         </p>
         <p className="mt-2 text-sm text-ink-soft">
-          {selectedPlan?.title} · deposit
+          {title} · {amountCaption}
         </p>
         <dl className="mt-4 space-y-2 border-t border-subtle pt-4 text-sm">
-          {[
-            { step: 0, label: 'Package', value: selectedPlan?.title },
-            { step: 2, label: 'Layout', value: form.websiteName },
-            { step: 1, label: 'Contact', value: form.fullName },
-          ].map((row) => (
+          {rows.map((row) => (
             <div key={row.label} className="flex items-start justify-between gap-3">
               <div>
                 <dt className="text-content-muted">{row.label}</dt>
                 <dd className="font-medium text-ink">{row.value || '—'}</dd>
               </div>
-              <button
-                type="button"
-                onClick={() => goToStep(row.step)}
-                className="shrink-0 text-meta font-semibold text-emerald-deep underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
-              >
-                Edit
-              </button>
+              {typeof goToStep === 'function' && typeof row.step === 'number' ? (
+                <button
+                  type="button"
+                  onClick={() => goToStep(row.step)}
+                  className="shrink-0 text-meta font-semibold text-emerald-deep underline-offset-2 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                >
+                  Edit
+                </button>
+              ) : null}
             </div>
           ))}
         </dl>
@@ -174,8 +203,18 @@ export default function PayStep({
       ) : null}
 
       {!configLoading && !configError && unavailable ? (
-        <div className="rounded-xl border border-subtle bg-surface-raised p-4 text-sm text-ink-soft" role="status">
-          Payments are temporarily unavailable. Request a quote or contact us — we will help you pay another way.
+        <div className="rounded-dos-xl border border-subtle bg-surface-raised p-4 text-sm text-ink-soft" role="status">
+          <p>Payments are temporarily unavailable. We will help you pay another way.</p>
+          {hideQuoteRequest ? (
+            <a
+              href={hubHref('contact?intent=ai-attendant')}
+              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-dos-lg border border-subtle bg-surface-raised px-4 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+            >
+              Contact us about setup
+            </a>
+          ) : (
+            <p className="mt-2">Request a quote below, or contact us.</p>
+          )}
         </div>
       ) : null}
 
@@ -285,7 +324,7 @@ export default function PayStep({
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface-sunken px-3 py-2.5">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-content-muted">
-                      {selected.provider === 'mtn' ? 'Merchant code' : 'Merchant number'}
+                      Pay-to number
                     </p>
                     <p className="font-mono text-lg font-semibold text-emerald-deep">
                       {selected.merchant_identifier}
@@ -293,12 +332,7 @@ export default function PayStep({
                   </div>
                   <button
                     type="button"
-                    onClick={() =>
-                      copyText(
-                        selected.provider === 'mtn' ? 'Merchant code' : 'Merchant number',
-                        selected.merchant_identifier,
-                      )
-                    }
+                    onClick={() => copyText('Pay-to number', selected.merchant_identifier)}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full border border-subtle bg-surface-raised px-3 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   >
                     <FiCopy aria-hidden="true" />
@@ -308,11 +342,11 @@ export default function PayStep({
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface-sunken px-3 py-2.5">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-content-muted">Exact amount</p>
-                    <p className="text-lg font-semibold text-ink">{formatUgx(selectedPlan.depositUgx)}</p>
+                    <p className="text-lg font-semibold text-ink">{formatUgx(amount)}</p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyText('Amount', String(selectedPlan.depositUgx))}
+                    onClick={() => copyText('Amount', String(amount))}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full border border-subtle bg-surface-raised px-3 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                   >
                     <FiCopy aria-hidden="true" />
@@ -322,7 +356,9 @@ export default function PayStep({
                 {selected.ussd_instruction ? (
                   <p className="text-sm text-ink-soft">{selected.ussd_instruction}</p>
                 ) : null}
-                <p className="text-sm font-medium text-ink">Send the exact amount. You do not need a transaction reference.</p>
+                <p className="text-sm font-medium text-ink">
+                  Send the exact amount. You do not need a transaction reference.
+                </p>
               </div>
             </div>
           ) : null}
@@ -339,14 +375,16 @@ export default function PayStep({
         </>
       ) : null}
 
-      <button
-        type="button"
-        onClick={onRequestQuote}
-        disabled={busy}
-        className="w-full text-center text-sm font-medium text-ink-soft underline-offset-2 hover:text-emerald-deep hover:underline disabled:opacity-60"
-      >
-        {quoteSubmitting ? 'Sending quote request…' : 'Request a quote instead'}
-      </button>
+      {!hideQuoteRequest && typeof onRequestQuote === 'function' ? (
+        <button
+          type="button"
+          onClick={onRequestQuote}
+          disabled={busy}
+          className="w-full text-center text-sm font-medium text-ink-soft underline-offset-2 hover:text-emerald-deep hover:underline disabled:opacity-60"
+        >
+          {quoteSubmitting ? 'Sending quote request…' : 'Request a quote instead'}
+        </button>
+      ) : null}
     </div>
   )
 }

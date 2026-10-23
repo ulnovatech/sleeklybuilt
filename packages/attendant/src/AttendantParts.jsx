@@ -149,13 +149,19 @@ export function AttendantMessage({ message }) {
       <div
         className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
           isVisitor
-            ? 'bg-action-primary text-cream'
-            : 'bg-surface-sunken text-content-primary'
+            ? 'rounded-br-md bg-action-primary text-cream'
+            : isHuman
+              ? 'rounded-bl-md border border-action-primary/25 bg-action-primary/10 text-content-primary'
+              : 'rounded-bl-md bg-surface-sunken text-content-primary'
         }`}
       >
         {isHuman ? (
-          <span className="mb-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-content-muted">
+          <span className="mb-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-action-primary">
             Team
+          </span>
+        ) : !isVisitor ? (
+          <span className="mb-1 block text-[0.65rem] font-semibold uppercase tracking-wide text-content-muted">
+            Attendant
           </span>
         ) : null}
         <p className="whitespace-pre-wrap">{message.text}</p>

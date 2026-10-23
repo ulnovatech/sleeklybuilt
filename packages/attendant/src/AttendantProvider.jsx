@@ -15,19 +15,106 @@ import { buildPageContext, pageIdFromPath } from './pageContext.js'
 const STORAGE_TOKEN = 'sb_attendant_session'
 const STORAGE_CONV = 'sb_attendant_conversation'
 const STORAGE_RECENT = 'sb_attendant_recent_pages'
+const STORAGE_MSGS = 'sb_attendant_messages'
 
 const DEFAULT_SITE = {
   name: 'SleeklyBuilt',
-  whatsapp: 'https://wa.me/256749594464',
-  primaryPhone: '+256791779448',
+  whatsapp: 'https://wa.me/256776770930',
+  primaryPhone: '+256776770930',
   email: 'sales@sleeklybuilt.pro',
 }
 
 const AttendantContext = createContext(null)
 
+/** Persist across browser restarts (migrate from older sessionStorage keys). */
+function storageGet(key) {
+  try {
+    const fromLocal = localStorage.getItem(key)
+    if (fromLocal != null && fromLocal !== '') return fromLocal
+  } catch {
+    /* ignore */
+  }
+  try {
+    const fromSession = sessionStorage.getItem(key)
+    if (fromSession != null && fromSession !== '') {
+      try {
+        localStorage.setItem(key, fromSession)
+      } catch {
+        /* ignore */
+      }
+      return fromSession
+    }
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+
+function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    /* ignore */
+  }
+  try {
+    sessionStorage.setItem(key, value)
+  } catch {
+    /* ignore */
+  }
+}
+
+function storageRemove(key) {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    /* ignore */
+  }
+  try {
+    sessionStorage.removeItem(key)
+  } catch {
+    /* ignore */
+  }
+}
+
+function readCachedMessages(conversationId) {
+  if (!conversationId) return []
+  try {
+    const raw = storageGet(STORAGE_MSGS)
+    const parsed = raw ? JSON.parse(raw) : null
+    if (!parsed || parsed.conversationId !== conversationId || !Array.isArray(parsed.messages)) {
+      return []
+    }
+    return parsed.messages
+  } catch {
+    return []
+  }
+}
+
+function writeCachedMessages(conversationId, messages) {
+  if (!conversationId) return
+  try {
+    const slim = (messages || [])
+      .filter((m) => m && m.text && m.role !== 'streaming')
+      .slice(-80)
+      .map((m) => ({
+        id: m.id,
+        serverId: m.serverId,
+        role: m.role,
+        text: m.text,
+        status: m.status || 'sent',
+      }))
+    storageSet(
+      STORAGE_MSGS,
+      JSON.stringify({ conversationId, messages: slim, savedAt: Date.now() }),
+    )
+  } catch {
+    /* ignore */
+  }
+}
+
 function readRecent() {
   try {
-    const raw = sessionStorage.getItem(STORAGE_RECENT)
+    const raw = storageGet(STORAGE_RECENT)
     const parsed = raw ? JSON.parse(raw) : []
     return Array.isArray(parsed) ? parsed.filter((x) => typeof x === 'string') : []
   } catch {
@@ -39,8 +126,29 @@ function pushRecent(pageId) {
   if (!pageId || pageId === 'unknown') return readRecent()
   const prev = readRecent().filter((id) => id !== pageId)
   const next = [pageId, ...prev].slice(0, 8)
-  sessionStorage.setItem(STORAGE_RECENT, JSON.stringify(next))
+  storageSet(STORAGE_RECENT, JSON.stringify(next))
   return next
+}
+
+function mapServerMessages(incoming, { includeVisitor = false } = {}) {
+  const out = []
+  for (const m of incoming || []) {
+    if (!m) continue
+    // Live poll skips visitor echoes; full hydrate needs both sides of the thread.
+    if (m.role === 'visitor' && !includeVisitor) continue
+    let role = 'attendant'
+    if (m.role === 'human') role = 'human'
+    else if (m.role === 'system') role = 'system'
+    else if (m.role === 'visitor') role = 'visitor'
+    out.push({
+      id: `srv-${m.id}`,
+      serverId: m.id,
+      role,
+      text: m.text,
+      status: 'sent',
+    })
+  }
+  return out
 }
 
 /**
@@ -64,12 +172,12 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [minimized, setMinimized] = useState(false)
-  const [sessionToken, setSessionToken] = useState(() => sessionStorage.getItem(STORAGE_TOKEN) || '')
-  const [conversationId, setConversationId] = useState(
-    () => sessionStorage.getItem(STORAGE_CONV) || '',
-  )
+  const [sessionToken, setSessionToken] = useState(() => storageGet(STORAGE_TOKEN) || '')
+  const [conversationId, setConversationId] = useState(() => storageGet(STORAGE_CONV) || '')
   const [sessionStatus, setSessionStatus] = useState('idle') // idle | loading | ready | error
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(() =>
+    readCachedMessages(storageGet(STORAGE_CONV) || ''),
+  )
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState(null)
   const [pendingConfirm, setPendingConfirm] = useState(null)
@@ -82,6 +190,21 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
   const streamBufRef = useRef('')
   const lastMsgIdRef = useRef(0)
   const pollFailRef = useRef(0)
+  const hydratedRef = useRef(false)
+
+  // Keep lastMsgId aligned with cached/server ids for resume polling.
+  useEffect(() => {
+    let max = 0
+    for (const m of messages) {
+      const n = Number(m.serverId || 0)
+      if (Number.isFinite(n) && n > max) max = n
+    }
+    if (max > lastMsgIdRef.current) lastMsgIdRef.current = max
+  }, [messages])
+
+  useEffect(() => {
+    if (conversationId) writeCachedMessages(conversationId, messages)
+  }, [conversationId, messages])
 
   const recent = useMemo(() => readRecent(), [location.pathname])
   const pageContext = useMemo(
@@ -103,11 +226,14 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
     pushRecent(pageIdFromPath(location.pathname, { host, basePath }))
   }, [location.pathname, host, basePath])
 
-  // Poll for human/system messages while escalated or human_active.
+  // Poll while the panel is open so operator interjection (autonomous → human_active)
+  // surfaces without waiting for the visitor's next turn. Faster when a human is in.
   useEffect(() => {
+    if (!open || !sessionToken) return undefined
+
     const humanControlled =
       escalationState === 'escalated' || escalationState === 'human_active'
-    if (!open || !humanControlled || !sessionToken) return undefined
+    const intervalMs = humanControlled ? 3000 : 8000
 
     let cancelled = false
     const tick = async () => {
@@ -144,7 +270,8 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
         })
       } catch (err) {
         pollFailRef.current += 1
-        if (!cancelled && pollFailRef.current >= 3) {
+        // Only surface poll errors when a human is already expected (escalated path).
+        if (!cancelled && humanControlled && pollFailRef.current >= 3) {
           setError({
             code: err?.code || 'backend_error',
             message:
@@ -157,28 +284,73 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
 
     pollFailRef.current = 0
     tick()
-    const timer = window.setInterval(tick, 3000)
+    const timer = window.setInterval(tick, intervalMs)
     return () => {
       cancelled = true
       window.clearInterval(timer)
     }
   }, [open, escalationState, sessionToken])
 
+  const hydrateFromServer = useCallback(async (token) => {
+    if (!token) return false
+    try {
+      const data = await pollMessages({ sessionToken: token, afterId: 0 })
+      if (data.escalation_state) setEscalationState(data.escalation_state)
+      if (data.conversation_id) {
+        setConversationId(data.conversation_id)
+        storageSet(STORAGE_CONV, data.conversation_id)
+      }
+      const mapped = mapServerMessages(data.messages, { includeVisitor: true })
+      if (mapped.length > 0) {
+        setMessages(mapped)
+        let max = 0
+        for (const m of mapped) {
+          const n = Number(m.serverId || 0)
+          if (n > max) max = n
+        }
+        lastMsgIdRef.current = max
+      }
+      hydratedRef.current = true
+      return true
+    } catch (err) {
+      if (err?.code === 'unauthorized' || /invalid or expired/i.test(err?.message || '')) {
+        return false
+      }
+      // Soft-fail hydrate — cached local messages still show.
+      hydratedRef.current = true
+      return true
+    }
+  }, [])
+
   const ensureSession = useCallback(async (force = false) => {
-    const existing =
-      !force && (sessionToken || sessionStorage.getItem(STORAGE_TOKEN) || '')
+    const existing = !force && (sessionToken || storageGet(STORAGE_TOKEN) || '')
     if (existing) {
-      setSessionStatus('ready')
-      return existing
+      const ok = await hydrateFromServer(existing)
+      if (ok) {
+        setSessionToken(existing)
+        storageSet(STORAGE_TOKEN, existing)
+        setSessionStatus('ready')
+        return existing
+      }
+      // Expired token — fall through to a fresh session.
+      storageRemove(STORAGE_TOKEN)
+      storageRemove(STORAGE_CONV)
+      storageRemove(STORAGE_MSGS)
+      setSessionToken('')
+      setConversationId('')
+      setMessages([])
+      lastMsgIdRef.current = 0
+      hydratedRef.current = false
     }
     setSessionStatus('loading')
     try {
       const data = await createSession()
-      sessionStorage.setItem(STORAGE_TOKEN, data.session_token)
-      sessionStorage.setItem(STORAGE_CONV, data.conversation_id)
+      storageSet(STORAGE_TOKEN, data.session_token)
+      storageSet(STORAGE_CONV, data.conversation_id)
       setSessionToken(data.session_token)
       setConversationId(data.conversation_id)
       setSessionStatus('ready')
+      hydratedRef.current = true
       return data.session_token
     } catch (err) {
       setSessionStatus('error')
@@ -188,7 +360,7 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
       })
       throw err
     }
-  }, [sessionToken])
+  }, [sessionToken, hydrateFromServer])
 
   const openPanel = useCallback(() => {
     setOpen(true)
@@ -204,11 +376,14 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
   const clearError = useCallback(() => setError(null), [])
 
   const resetSession = useCallback(async () => {
-    sessionStorage.removeItem(STORAGE_TOKEN)
-    sessionStorage.removeItem(STORAGE_CONV)
+    storageRemove(STORAGE_TOKEN)
+    storageRemove(STORAGE_CONV)
+    storageRemove(STORAGE_MSGS)
     setSessionToken('')
     setConversationId('')
     setMessages([])
+    lastMsgIdRef.current = 0
+    hydratedRef.current = false
     setPendingConfirm(null)
     setPendingChoices(null)
     setConfirmResult(null)
@@ -282,6 +457,22 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
             }
             if (event === 'escalation_status' && payload.escalation_state) {
               setEscalationState(payload.escalation_state)
+              const notice = typeof payload.message === 'string' ? payload.message.trim() : ''
+              if (notice) {
+                setMessages((prev) => {
+                  if (prev.some((m) => m.role === 'system' && m.text === notice)) return prev
+                  return [
+                    ...prev.filter((m) => m.id !== 'stream'),
+                    {
+                      id: `sys-${Date.now()}`,
+                      role: 'system',
+                      text: notice,
+                      status: 'sent',
+                    },
+                  ]
+                })
+                streamBufRef.current = ''
+              }
             }
             if (event === 'confirmation_required') {
               setPendingConfirm({
@@ -310,7 +501,7 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
             if (event === 'done') {
               if (payload.conversation_id) {
                 setConversationId(payload.conversation_id)
-                sessionStorage.setItem(STORAGE_CONV, payload.conversation_id)
+                storageSet(STORAGE_CONV, payload.conversation_id)
               }
             }
           },
@@ -354,6 +545,22 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
       }
     },
     [streaming, pendingConfirm, pendingChoices, ensureSession, pageContext, navigate],
+  )
+
+  /** Open the existing panel and optionally send a starter message (one widget instance). */
+  const openWithPrompt = useCallback(
+    (text) => {
+      setOpen(true)
+      setMinimized(false)
+      setError(null)
+      const trimmed = typeof text === 'string' ? text.trim() : ''
+      if (!trimmed) {
+        ensureSession().catch(() => {})
+        return
+      }
+      void sendMessage(trimmed)
+    },
+    [ensureSession, sendMessage],
   )
 
   const cancelConfirm = useCallback(() => {
@@ -444,6 +651,22 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
             }
             if (event === 'escalation_status' && payload.escalation_state) {
               setEscalationState(payload.escalation_state)
+              const notice = typeof payload.message === 'string' ? payload.message.trim() : ''
+              if (notice) {
+                setMessages((prev) => {
+                  if (prev.some((m) => m.role === 'system' && m.text === notice)) return prev
+                  return [
+                    ...prev.filter((m) => m.id !== 'stream'),
+                    {
+                      id: `sys-${Date.now()}`,
+                      role: 'system',
+                      text: notice,
+                      status: 'sent',
+                    },
+                  ]
+                })
+                streamBufRef.current = ''
+              }
             }
             if (event === 'confirmation_required') {
               setPendingConfirm({
@@ -471,7 +694,7 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
             }
             if (event === 'done' && payload.conversation_id) {
               setConversationId(payload.conversation_id)
-              sessionStorage.setItem(STORAGE_CONV, payload.conversation_id)
+              storageSet(STORAGE_CONV, payload.conversation_id)
             }
           },
         })
@@ -576,6 +799,7 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
       open,
       minimized,
       openPanel,
+      openWithPrompt,
       minimizePanel,
       pageContext,
       sessionStatus,
@@ -602,6 +826,7 @@ export function AttendantProvider({ children, site: siteProp, host = 'marketing'
       open,
       minimized,
       openPanel,
+      openWithPrompt,
       minimizePanel,
       pageContext,
       sessionStatus,

@@ -27,6 +27,7 @@ export const siteConfig = {
     mobileApps: '/mobile-apps',
     businessSystems: '/business-systems',
     products: '/products',
+    attendant: '/products/attendant',
     contact: '/contact',
     portfolio: '/portfolio-app/',
     about: '/about',

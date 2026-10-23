@@ -26,6 +26,11 @@ class RequestsController {
             'table' => 'website_orders',
             'id' => 'id', 'name' => 'name', 'phone' => 'phone', 'description' => 'details', 'submitted_at' => 'submitted_at'
         ],
+        /** Same CRM table as website_order — used for MoMo Attendant subscription notify/push deep-links. */
+        'attendant_subscription' => [
+            'table' => 'website_orders',
+            'id' => 'id', 'name' => 'name', 'phone' => 'phone', 'description' => 'details', 'submitted_at' => 'submitted_at'
+        ],
         'contactus' => [
             'table' => 'contactus',
             'id' => 'id', 'name' => 'name', 'phone' => 'phone', 'description' => 'message', 'email' => 'email', 'submitted_at' => 'received_at'
@@ -84,9 +89,19 @@ class RequestsController {
             $unionParts = [];
             $binds = [];
             $i = 0;
+            $tablesUsed = [];
             foreach ($requestedTypes as $typeKey) {
                 $meta = $this->sources[$typeKey];
                 $tbl = $meta['table'];
+                if (!$this->tableExists($tbl)) {
+                    continue;
+                }
+                // Avoid duplicating rows when multiple type keys share one table
+                // (e.g. website_order + attendant_subscription → website_orders).
+                if (isset($tablesUsed[$tbl])) {
+                    continue;
+                }
+                $tablesUsed[$tbl] = $typeKey;
                 $idCol = $meta['id'] ?? 'id';
                 $nameCol = $meta['name'] ?? 'NULL';
                 $phoneCol = $meta['phone'] ?? 'NULL';
@@ -106,6 +121,10 @@ class RequestsController {
                 FROM `{$tbl}`";
                 $binds[":type_{$i}"] = $typeKey;
                 $i++;
+            }
+
+            if ($unionParts === []) {
+                return ['data' => [], 'page' => $page, 'per_page' => $perPage, 'total' => 0, 'total_pages' => 0];
             }
 
             $unionSQL = implode(" UNION ALL ", $unionParts);
@@ -235,7 +254,7 @@ class RequestsController {
         $out['contacted'] = $contact !== null;
         $out['contact'] = $contact;
 
-        if ($type === 'website_order') {
+        if ($type === 'website_order' || $type === 'attendant_subscription') {
             require_once __DIR__ . '/../services/OrderPaymentSummaryService.php';
             $paymentService = new OrderPaymentSummaryService($this->pdo);
             $payment = $paymentService->forWebsiteOrder($out);

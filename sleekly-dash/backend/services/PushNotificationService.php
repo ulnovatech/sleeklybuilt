@@ -96,6 +96,12 @@ class PushNotificationService
                 'data' => array_map('strval', $data),
                 'android' => [
                     'priority' => 'HIGH',
+                    'notification' => [
+                        'channel_id' => 'admin_alerts_v1',
+                        'sound' => 'alert_lock',
+                        'default_vibrate_timings' => true,
+                        'notification_priority' => 'PRIORITY_MAX',
+                    ],
                 ],
             ],
         ];
@@ -182,6 +188,7 @@ class PushNotificationService
         $map = [
             'attendant_escalation' => 'Attendant needs a human',
             'website_order' => 'New website order',
+            'attendant_subscription' => 'New Attendant subscription',
             'contactus' => 'New contact form',
             'appdev' => 'New app dev inquiry',
             'graphdes' => 'New graphic design inquiry',

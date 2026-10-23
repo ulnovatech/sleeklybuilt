@@ -94,10 +94,25 @@ function uln_momo_activate_after_verify(PDO $pdo, int $claimId, string $actorLab
     $claimRef = (string) $row['claim_ref'];
     $fullPhone = preg_replace('/\s+/', '', $countryCode . $phone);
 
-    try {
-        $packageMeta = uln_package_or_fail($package);
-    } catch (Throwable $e) {
-        $packageMeta = ['title' => $package, 'price_ugx' => 0];
+    $claimMeta = json_decode((string) ($row['metadata'] ?? ''), true);
+    if (!is_array($claimMeta)) {
+        $claimMeta = [];
+    }
+    $isSubscription = (($claimMeta['product_kind'] ?? '') === 'subscription')
+        || uln_is_subscription_product($package);
+
+    if ($isSubscription) {
+        try {
+            $packageMeta = uln_subscription_product_or_fail($package);
+        } catch (Throwable $e) {
+            $packageMeta = ['title' => $package, 'amount_ugx' => $amount, 'price_ugx' => $amount];
+        }
+    } else {
+        try {
+            $packageMeta = uln_package_or_fail($package);
+        } catch (Throwable $e) {
+            $packageMeta = ['title' => $package, 'price_ugx' => 0];
+        }
     }
 
     $receipt = $pdo->prepare(
@@ -106,20 +121,44 @@ function uln_momo_activate_after_verify(PDO $pdo, int $claimId, string $actorLab
     $receipt->execute([$claimId]);
     $receiptNumber = (string) ($receipt->fetchColumn() ?: '');
 
-    $details = "Package: {$package}\nTemplate: {$templateKey}";
-    $details .= "\nDeposit: " . uln_format_ugx($amount);
-    $details .= "\nPackage total: " . uln_format_ugx((int) ($packageMeta['price_ugx'] ?? 0));
-    $details .= "\nPayment claim: {$claimRef}";
-    $details .= "\nProvider: " . strtoupper((string) $row['provider']);
-    $details .= "\nStatus: " . ($depositSatisfied ? 'Deposit verified (MoMo)' : 'Partial payment (MoMo)');
-    if ($receiptNumber !== '') {
-        $details .= "\nReceipt: {$receiptNumber}";
-    }
-    if ($businessName !== '') {
-        $details .= "\nBusiness: {$businessName}";
-    }
-    if ($notes !== '') {
-        $details .= "\nNotes: {$notes}";
+    if ($isSubscription) {
+        $details = 'Sleekly Attendant subscription, first month, onboarding required';
+        $details .= "\nProduct: " . (string) ($packageMeta['title'] ?? $package);
+        $details .= "\nAmount: " . uln_format_ugx($amount);
+        $details .= "\nPayment claim: {$claimRef}";
+        $details .= "\nProvider: " . strtoupper((string) $row['provider']);
+        $details .= "\nStatus: " . ($depositSatisfied ? 'First month verified (MoMo)' : 'Partial payment (MoMo)');
+        if ($receiptNumber !== '') {
+            $details .= "\nReceipt: {$receiptNumber}";
+        }
+        if ($businessName !== '') {
+            $details .= "\nBusiness: {$businessName}";
+        }
+        if (!empty($claimMeta['website_url'])) {
+            $details .= "\nWebsite: " . $claimMeta['website_url'];
+        }
+        if (!empty($claimMeta['needs_hosted_link'])) {
+            $details .= "\nDelivery: hosted attendant link";
+        }
+        if ($notes !== '') {
+            $details .= "\nNotes: {$notes}";
+        }
+    } else {
+        $details = "Package: {$package}\nTemplate: {$templateKey}";
+        $details .= "\nDeposit: " . uln_format_ugx($amount);
+        $details .= "\nPackage total: " . uln_format_ugx((int) ($packageMeta['price_ugx'] ?? 0));
+        $details .= "\nPayment claim: {$claimRef}";
+        $details .= "\nProvider: " . strtoupper((string) $row['provider']);
+        $details .= "\nStatus: " . ($depositSatisfied ? 'Deposit verified (MoMo)' : 'Partial payment (MoMo)');
+        if ($receiptNumber !== '') {
+            $details .= "\nReceipt: {$receiptNumber}";
+        }
+        if ($businessName !== '') {
+            $details .= "\nBusiness: {$businessName}";
+        }
+        if ($notes !== '') {
+            $details .= "\nNotes: {$notes}";
+        }
     }
 
     $orderId = null;
@@ -143,7 +182,8 @@ function uln_momo_activate_after_verify(PDO $pdo, int $claimId, string $actorLab
             ];
         }
 
-        if ($depositSatisfied) {
+        // Website deposits only: reserve layout catalog. Subscriptions never touch templates.
+        if ($depositSatisfied && !$isSubscription) {
             $tplStmt = $pdo->prepare(
                 "SELECT * FROM templates
                  WHERE (name = ? OR folder_name = ?)
@@ -190,9 +230,13 @@ function uln_momo_activate_after_verify(PDO $pdo, int $claimId, string $actorLab
             error_log('MoMo activation website_orders insert failed: ' . $e->getMessage());
         }
 
-        $result = $depositSatisfied
-            ? ($reserved ? 'deposit_activated' : 'deposit_recorded')
-            : 'partial_recorded';
+        if ($isSubscription) {
+            $result = $depositSatisfied ? 'subscription_recorded' : 'partial_recorded';
+        } else {
+            $result = $depositSatisfied
+                ? ($reserved ? 'deposit_activated' : 'deposit_recorded')
+                : 'partial_recorded';
+        }
 
         $pdo->prepare(
             'INSERT INTO payment_activations

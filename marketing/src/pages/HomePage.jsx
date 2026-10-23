@@ -2,6 +2,7 @@ import HeroSection from '../components/sections/HeroSection'
 import PositioningSection from '../components/sections/PositioningSection'
 import ProblemsWeSolveSection from '../components/sections/ProblemsWeSolveSection'
 import WhatWeBuildSection from '../components/sections/WhatWeBuildSection'
+import AttendantSpotlightSection from '../components/sections/AttendantSpotlightSection'
 import SelectedWorkSection from '../components/sections/SelectedWorkSection'
 import HowWeWorkSection from '../components/sections/HowWeWorkSection'
 import PeopleAskSection from '../components/sections/PeopleAskSection'
@@ -32,6 +33,10 @@ export default function HomePage() {
 
       <Reveal>
         <WhatWeBuildSection />
+      </Reveal>
+
+      <Reveal>
+        <AttendantSpotlightSection />
       </Reveal>
 
       <Reveal>

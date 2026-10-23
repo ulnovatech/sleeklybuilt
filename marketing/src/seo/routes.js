@@ -29,41 +29,49 @@ export const marketingRoutes = [
     path: '/prices',
     changefreq: 'monthly',
     priority: 0.8,
-    title: 'Pricing | SleeklyBuilt websites, apps & systems',
+    title: 'UGX pricing | SleeklyBuilt websites & apps',
     description:
-      'Transparent pricing for SleeklyBuilt websites, layout packages, and custom apps. Get a clear quote for your next build.',
+      'Published UGX packages for websites and Sleek Pages, plus clear quotes for apps and systems. See what you pay before you start.',
   },
   {
     path: '/contact',
     changefreq: 'monthly',
     priority: 0.9,
-    title: "Let's talk | Contact SleeklyBuilt",
+    title: 'Contact SleeklyBuilt | Form, WhatsApp or call',
     description:
-      'Start a project with SleeklyBuilt. Tell us about your website, app, or business system — we reply with a clear next step.',
+      'Start a website, Sleek Page, app, or system project. Reach us by form, WhatsApp, or phone — reply within one working day.',
   },
   {
     path: '/products',
     changefreq: 'monthly',
     priority: 0.8,
-    title: 'Products | SleeklyBuilt digital offerings',
+    title: 'Products | Sleek Pages, websites, apps & systems',
     description:
-      'Explore SleeklyBuilt products — from marketing sites to apps and operations systems tailored to how your business works.',
+      'Browse SleeklyBuilt offerings by need — fast Sleek Pages, multi-page websites, mobile apps, and business systems.',
+  },
+  {
+    path: '/products/attendant',
+    changefreq: 'monthly',
+    priority: 0.85,
+    title: 'Sleekly Attendant — AI attendant for your website | SleeklyBuilt',
+    description:
+      'Give every visitor a clearer path to becoming your customer. Sleekly Attendant answers questions, guides people through your site, and captures enquiries — set up with you for UGX 49,000/month in Uganda or US$12/month internationally.',
   },
   {
     path: '/websites',
     changefreq: 'monthly',
     priority: 0.8,
-    title: 'Custom websites | SleeklyBuilt',
+    title: 'Custom websites in Uganda | SleeklyBuilt Kampala',
     description:
-      'Custom websites built for Ugandan and international businesses — fast, clear, and ready to grow with you.',
+      'Custom websites for businesses in Uganda and across Africa — WhatsApp-ready, mobile-first, with clear UGX packages.',
   },
   {
     path: '/mobile-apps',
     changefreq: 'monthly',
     priority: 0.8,
-    title: 'Mobile apps | SleeklyBuilt',
+    title: 'Mobile apps | SleeklyBuilt Uganda',
     description:
-      'Mobile app development with SleeklyBuilt — practical products for customers and internal teams.',
+      'Practical mobile apps for customers and teams — scoped with a clear quote before build starts.',
   },
   {
     path: '/business-systems',
@@ -71,15 +79,15 @@ export const marketingRoutes = [
     priority: 0.8,
     title: 'Business systems | SleeklyBuilt',
     description:
-      'Custom business systems and dashboards that match how your team actually works — not generic templates.',
+      'Custom business systems and dashboards that match how your team works — inventory, booking, ops, and more.',
   },
   {
     path: '/sleek-pages',
     changefreq: 'monthly',
-    priority: 0.7,
-    title: 'Sleek Pages | Fast marketing sites by SleeklyBuilt',
+    priority: 0.8,
+    title: 'Sleek Pages | Go live fast | SleeklyBuilt',
     description:
-      'Sleek Pages — intentional marketing sites you can launch quickly, then extend as your business grows.',
+      'Premium compact site layouts personalised for your brand — often live within about a day once content is ready.',
   },
   {
     path: '/track-order',

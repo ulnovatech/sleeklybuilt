@@ -13,6 +13,7 @@ export default function ClaimWaitingPage() {
   const [searchParams] = useSearchParams()
   const claimRef = (searchParams.get('ref') || searchParams.get('claim_ref') || '').toUpperCase()
   const phone = searchParams.get('phone') || ''
+  const productHint = (searchParams.get('product') || '').toLowerCase()
 
   const [state, setState] = useState({ status: 'loading', data: null, error: '' })
 
@@ -68,26 +69,32 @@ export default function ClaimWaitingPage() {
   const verified = Boolean(data?.verified)
   const partial = data?.status === 'partial'
   const rejected = data?.status === 'rejected' || data?.status === 'not_found'
+  const isSubscription =
+    data?.product_kind === 'subscription' || productHint === 'attendant'
 
   return (
-    <div className="bg-surface-base py-12 md:py-16">
+    <div className="bg-surface-base py-12 max-lg:pb-24 md:py-16">
       <div className="mx-auto max-w-lg px-6">
         {state.status === 'loading' ? (
-          <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Loading payment status">
-            <div className="h-8 w-2/3 rounded bg-surface-sunken" />
-            <div className="h-24 rounded-xl bg-surface-sunken" />
-            <div className="h-16 rounded-xl bg-surface-sunken" />
+          <div
+            className="animate-pulse space-y-4 motion-reduce:animate-none"
+            aria-busy="true"
+            aria-label="Loading payment status"
+          >
+            <div className="h-8 w-2/3 rounded-dos-md bg-surface-sunken" />
+            <div className="h-24 rounded-dos-xl bg-surface-sunken" />
+            <div className="h-16 rounded-dos-xl bg-surface-sunken" />
           </div>
         ) : null}
 
         {state.status === 'error' && !data ? (
-          <div className="rounded-xl border border-status-danger/30 bg-status-danger/5 p-6" role="alert">
+          <div className="rounded-dos-xl border border-status-danger/30 bg-status-danger/5 p-6" role="alert">
             <h1 className="font-display text-display-card text-emerald-deep">Couldn’t load status</h1>
             <p className="mt-3 text-body text-ink-soft">{state.error}</p>
             <button
               type="button"
               onClick={load}
-              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-dos-lg border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
             >
               <FiRefreshCw aria-hidden="true" />
               Try again
@@ -108,24 +115,26 @@ export default function ClaimWaitingPage() {
               <p className="eyebrow">{verified ? 'Verified' : partial ? 'Partial' : 'Payment claim'}</p>
               <h1 className="mt-2 font-display text-display-section text-emerald-deep">
                 {verified
-                  ? 'Your payment is verified'
+                  ? isSubscription
+                    ? 'Payment verified — setup is next'
+                    : 'Your payment is verified'
                   : partial
                     ? 'We received part of your payment'
                     : rejected
                       ? 'We could not verify this payment yet'
-                      : 'We’re checking your payment'}
+                      : 'Awaiting verification'}
               </h1>
               <p className="mt-3 text-body text-ink-soft">{data.message}</p>
             </header>
 
-            <section className="rounded-xl border border-subtle bg-surface-raised p-5">
+            <section className="rounded-dos-xl border border-subtle bg-surface-raised p-5">
               <p className="text-xs font-medium uppercase tracking-wide text-content-muted">Your reference</p>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
                 <p className="font-mono text-xl font-semibold text-emerald-deep">{data.claim_ref}</p>
                 <button
                   type="button"
                   onClick={copyRef}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-subtle px-3 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-dos-lg border border-subtle px-3 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
                 >
                   <FiCopy aria-hidden="true" />
                   Copy
@@ -134,7 +143,7 @@ export default function ClaimWaitingPage() {
               <p className="mt-2 text-sm text-ink-soft">Keep this reference and your phone number to track status.</p>
             </section>
 
-            <section className="rounded-xl border border-subtle bg-surface-sunken p-5 text-sm">
+            <section className="rounded-dos-xl border border-subtle bg-surface-sunken p-5 text-sm">
               <dl className="space-y-3">
                 <div className="flex justify-between gap-4">
                   <dt className="text-content-muted">Status</dt>
@@ -149,21 +158,43 @@ export default function ClaimWaitingPage() {
                   <dd className="font-medium text-ink">{data.provider_label}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-content-muted">Package</dt>
+                  <dt className="text-content-muted">{isSubscription ? 'Product' : 'Package'}</dt>
                   <dd className="font-medium text-ink">{data.package_title}</dd>
                 </div>
               </dl>
             </section>
 
             {verified && data.receipt_number ? (
-              <section className="rounded-xl border border-status-success/25 bg-status-success-surface p-5">
-                <p className="text-meta font-semibold text-status-success">Payment confirmed</p>
+              <section className="rounded-dos-xl border border-status-success/25 bg-status-success-surface p-5">
+                <p className="text-meta font-semibold text-status-success">
+                  {isSubscription ? 'Payment verified' : 'Payment confirmed'}
+                </p>
                 <p className="mt-2 text-body text-ink">
-                  We&apos;ve received your {data.amount_label} payment via {data.provider_label}. Your{' '}
-                  {data.package_title} package is confirmed — our team will contact you about next steps.
+                  {isSubscription ? (
+                    <>
+                      We&apos;ve received your {data.amount_label} payment via {data.provider_label} for{' '}
+                      {data.package_title}. We will contact you to collect business details and set up your
+                      attendant.
+                    </>
+                  ) : (
+                    <>
+                      We&apos;ve received your {data.amount_label} payment via {data.provider_label}. Your{' '}
+                      {data.package_title} package is confirmed — our team will contact you about next steps.
+                    </>
+                  )}
                 </p>
                 <p className="mt-3 text-sm font-medium text-emerald-deep">
                   Receipt: <span className="font-mono">{data.receipt_number}</span>
+                </p>
+              </section>
+            ) : null}
+
+            {verified && isSubscription && !data.receipt_number ? (
+              <section className="rounded-dos-xl border border-status-success/25 bg-status-success-surface p-5">
+                <p className="text-meta font-semibold text-status-success">Next steps</p>
+                <p className="mt-2 text-body text-ink">
+                  Your Attendant payment is verified. Our team will contact you to collect business details and
+                  set up your attendant. Renewals are paid monthly by Mobile Money — nothing auto-charges.
                 </p>
               </section>
             ) : null}
@@ -180,21 +211,32 @@ export default function ClaimWaitingPage() {
                 type="button"
                 onClick={load}
                 disabled={state.status === 'refreshing'}
-                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-60"
+                className={
+                  verified
+                    ? 'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-dos-lg border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-60'
+                    : 'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-dos-lg bg-action-primary-hover px-5 text-meta font-semibold text-cream hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos disabled:opacity-60'
+                }
               >
                 <FiRefreshCw aria-hidden="true" />
                 {state.status === 'refreshing' ? 'Refreshing…' : 'Refresh status'}
               </button>
               <a
                 href={siteConfig.whatsapp || hubHref('contact')}
-                className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-action-primary-hover px-5 text-meta font-semibold text-cream hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos"
+                className={
+                  verified
+                    ? 'inline-flex min-h-11 flex-1 items-center justify-center rounded-dos-lg bg-action-primary-hover px-5 text-meta font-semibold text-cream hover:bg-action-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-dos'
+                    : 'inline-flex min-h-11 flex-1 items-center justify-center rounded-dos-lg border border-subtle bg-surface-raised px-5 text-meta font-semibold text-emerald-deep focus:outline-none focus-visible:ring-2 focus-visible:ring-dos'
+                }
               >
                 Contact us
               </a>
             </div>
 
             <p className="text-center text-sm text-ink-soft">
-              <Link to="/order" className="font-semibold text-emerald-deep underline-offset-2 hover:underline">
+              <Link
+                to={isSubscription ? '/order/attendant' : '/order'}
+                className="font-semibold text-emerald-deep underline-offset-2 hover:underline"
+              >
                 Back to order
               </Link>
             </p>

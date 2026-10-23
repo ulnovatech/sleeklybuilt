@@ -38,6 +38,17 @@ Session keys (`sb_attendant_session`, `sb_attendant_conversation`, `sb_attendant
 
 Closed and minimized states always show the **message** icon. Minimize control (chevron-down) lives only in `AttendantHeader`.
 
+## Programmatic open
+
+```jsx
+const { openPanel, openWithPrompt } = useAttendant()
+
+openPanel()
+openWithPrompt('How can an AI attendant help on my website?')
+```
+
+`openWithPrompt` expands the existing panel and sends the starter message through the normal chat path. Do not mount a second attendant.
+
 ## Tailwind
 
 Include package sources in the host app `content` globs:
